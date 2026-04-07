@@ -12,12 +12,15 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05050c);
-scene.fog = new THREE.Fog(0x05050c, 40, 160);
+// Slightly lifted so silhouettes separate from the void (was pure black crush)
+scene.background = new THREE.Color(0x0a0e18);
+scene.fog = new THREE.Fog(0x0a0e18, 48, 175);
 
 const camera = new THREE.PerspectiveCamera(
   58,

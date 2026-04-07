@@ -19,9 +19,11 @@ export class Track {
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(22, 400),
       new THREE.MeshStandardMaterial({
-        color: 0x0a0a12,
-        metalness: 0.2,
-        roughness: 0.85,
+        color: 0x121520,
+        metalness: 0.15,
+        roughness: 0.88,
+        emissive: 0x020408,
+        emissiveIntensity: 0.12,
       })
     );
     road.rotation.x = -Math.PI / 2;
@@ -62,11 +64,18 @@ export class Track {
 
   _sideProps() {
     const rackMat = new THREE.MeshStandardMaterial({
-      color: 0x2a2a3a,
-      metalness: 0.5,
-      roughness: 0.4,
-      emissive: 0x001020,
-      emissiveIntensity: 0.3,
+      color: 0x3d4658,
+      metalness: 0.42,
+      roughness: 0.52,
+      emissive: 0x0c1830,
+      emissiveIntensity: 0.55,
+    });
+    const poleMat = new THREE.MeshStandardMaterial({
+      color: 0x4a5068,
+      metalness: 0.35,
+      roughness: 0.55,
+      emissive: 0x1a1038,
+      emissiveIntensity: 0.4,
     });
     for (let i = 0; i < 24; i++) {
       const z = -180 + i * 14;
@@ -82,11 +91,7 @@ export class Track {
 
       const pole = new THREE.Mesh(
         new THREE.CylinderGeometry(0.15, 0.2, 5, 6),
-        new THREE.MeshStandardMaterial({
-          color: 0x333344,
-          emissive: 0x110022,
-          emissiveIntensity: 0.2,
-        })
+        poleMat
       );
       pole.position.set(-11, 2.5, z + 4);
       this.group.add(pole);
@@ -97,7 +102,7 @@ export class Track {
   }
 
   _horizon() {
-    const grid = new THREE.GridHelper(400, 80, 0x224466, 0x112233);
+    const grid = new THREE.GridHelper(400, 80, 0x336688, 0x1a2840);
     grid.position.y = 0.01;
     grid.position.z = -120;
     const s = grid.scale;
@@ -118,14 +123,36 @@ export class Track {
   }
 
   _lights() {
-    const amb = new THREE.AmbientLight(0x334455, 0.45);
+    // Base fill — stops pure-black side faces
+    const amb = new THREE.AmbientLight(0xb8c8e0, 0.72);
     this.group.add(amb);
-    const d = new THREE.DirectionalLight(0xaaccff, 0.35);
-    d.position.set(10, 40, 20);
-    this.group.add(d);
-    const p = new THREE.PointLight(0xff00aa, 0.4, 100);
-    p.position.set(0, 8, -30);
-    this.group.add(p);
+
+    const hemi = new THREE.HemisphereLight(0x8899bb, 0x1a1520, 0.55);
+    hemi.position.set(0, 80, 0);
+    this.group.add(hemi);
+
+    // Key from ahead-above (highway “headlights / moon”)
+    const key = new THREE.DirectionalLight(0xd8e8ff, 0.95);
+    key.position.set(-6, 32, 28);
+    this.group.add(key);
+
+    // Rim toward camera — defines vertical edges of roadside props
+    const rim = new THREE.DirectionalLight(0xaaccff, 0.45);
+    rim.position.set(0, 14, 42);
+    this.group.add(rim);
+
+    // Side fills: hit inward faces of left/right racks (toward the track)
+    const fillL = new THREE.PointLight(0x55ddff, 1.15, 55, 1.8);
+    fillL.position.set(-10, 4.5, 8);
+    this.group.add(fillL);
+
+    const fillR = new THREE.PointLight(0xcc77ff, 0.95, 55, 1.8);
+    fillR.position.set(10, 4.5, 8);
+    this.group.add(fillR);
+
+    const accent = new THREE.PointLight(0xff66aa, 0.55, 90, 2);
+    accent.position.set(0, 9, -25);
+    this.group.add(accent);
   }
 
   update(dt, scrollOffset) {

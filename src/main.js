@@ -36,8 +36,9 @@ const game = new Game(renderer, scene, camera, ui);
 ui.setHandlers({
   onStart: () => game.startFromMenu(),
   onResume: () => game.resume(),
-  onRestart: () => game.restartFromPause(),
+  onRestart: () => game.startFromMenu(),
   onMenu: () => game.backToMenu(),
+  onSaveScore: () => game.saveScore(),
   onRecoveryYes: () => game.onRecoveryYes(),
   onRecoveryNo: () => game.onRecoveryNo(),
   onUnstick: () => game.forceUnstick(),

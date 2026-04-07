@@ -300,23 +300,31 @@ export class Spawner {
 
   _makeShieldMesh() {
     const g = new THREE.Group();
-    const shape = new THREE.Shape();
-    shape.moveTo(0, 0.55);
-    shape.quadraticCurveTo(0.48, 0.55, 0.48, 0.2);
-    shape.lineTo(0.42, -0.1);
-    shape.quadraticCurveTo(0.3, -0.4, 0, -0.6);
-    shape.quadraticCurveTo(-0.3, -0.4, -0.42, -0.1);
-    shape.lineTo(-0.48, 0.2);
-    shape.quadraticCurveTo(-0.48, 0.55, 0, 0.55);
 
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: 0.12,
+    // Classic heater shield: flat top, wide shoulders, tapers to bottom point
+    const s = new THREE.Shape();
+    s.moveTo(-0.44, 0.5);
+    s.lineTo(0.44, 0.5);
+    s.lineTo(0.46, 0.42);
+    s.lineTo(0.44, 0.05);
+    s.lineTo(0.34, -0.25);
+    s.lineTo(0.18, -0.48);
+    s.lineTo(0, -0.62);
+    s.lineTo(-0.18, -0.48);
+    s.lineTo(-0.34, -0.25);
+    s.lineTo(-0.44, 0.05);
+    s.lineTo(-0.46, 0.42);
+    s.lineTo(-0.44, 0.5);
+
+    const body = new THREE.ExtrudeGeometry(s, {
+      depth: 0.15,
       bevelEnabled: true,
-      bevelThickness: 0.04,
+      bevelThickness: 0.035,
       bevelSize: 0.03,
       bevelSegments: 2,
+      curveSegments: 1,
     });
-    geo.center();
+    body.center();
     const mat = new THREE.MeshStandardMaterial({
       color: 0xaa44ff,
       emissive: 0x440088,
@@ -324,21 +332,31 @@ export class Spawner {
       metalness: 0.5,
       roughness: 0.3,
     });
-    const mesh = new THREE.Mesh(geo, mat);
-    g.add(mesh);
+    const shieldBody = new THREE.Mesh(body, mat);
+    g.add(shieldBody);
 
-    const trim = new THREE.Mesh(
-      new THREE.TorusGeometry(0.32, 0.03, 6, 20),
-      new THREE.MeshStandardMaterial({
-        color: 0xddaaff,
-        emissive: 0x6622aa,
-        emissiveIntensity: 0.4,
-        metalness: 0.6,
-        roughness: 0.25,
-      })
+    // Vertical bar (cross detail)
+    const barMat = new THREE.MeshStandardMaterial({
+      color: 0xddaaff,
+      emissive: 0x7733cc,
+      emissiveIntensity: 0.5,
+      metalness: 0.6,
+      roughness: 0.25,
+    });
+    const vBar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.85, 0.06),
+      barMat
     );
-    trim.position.z = 0.06;
-    g.add(trim);
+    vBar.position.set(0, 0, 0.1);
+    g.add(vBar);
+
+    // Horizontal bar
+    const hBar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.65, 0.08, 0.06),
+      barMat.clone()
+    );
+    hBar.position.set(0, 0.1, 0.1);
+    g.add(hBar);
 
     g.userData.core = g;
     return g;
@@ -377,7 +395,11 @@ export class Spawner {
       e.mesh.position.y =
         baseY + Math.sin(t * 3 + e.bobPhase) * 0.12;
       const c = e.mesh.userData.core;
-      if (c) {
+      if (!c) continue;
+      const st = e.subtype;
+      if (st === "POLICY_SHIELD" || st === "PLAYBOOK") {
+        c.rotation.y += dt * 2.2;
+      } else {
         c.rotation.x += dt * 1.8;
         c.rotation.y += dt * 2.2;
       }

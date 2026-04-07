@@ -103,16 +103,39 @@
       </div>
 
       <div id="game-over" class="overlay panel hidden">
-        <h2>Run Complete</h2>
-        <div class="stats-grid">
-          <div>Final Score <span id="go-score">0</span></div>
-          <div>Best <span id="go-best">0</span></div>
-          <div>Obstacles Hit <span id="go-hits">0</span></div>
-          <div>Pickups <span id="go-pickups">0</span></div>
-          <div>Correct Answers <span id="go-correct">0</span></div>
+        <h2>Game Over</h2>
+
+        <div id="go-entry" class="go-entry">
+          <p class="go-final-score">Score: <span id="go-score">0</span></p>
+          <div class="go-stats-row">
+            <span>Obstacles <span id="go-hits">0</span></span>
+            <span>Pickups <span id="go-pickups">0</span></span>
+            <span>Correct <span id="go-correct">0</span></span>
+          </div>
+          <label class="go-name-label" for="go-name-input">Enter your name</label>
+          <div class="go-name-row">
+            <input type="text" id="go-name-input" class="go-name-input" maxlength="16" placeholder="AAA" autocomplete="off" />
+            <button type="button" id="btn-save-score" class="btn primary">Save</button>
+          </div>
         </div>
-        <button type="button" id="btn-restart-go" class="btn primary">Restart</button>
-        <button type="button" id="btn-menu-go" class="btn">Back to Menu</button>
+
+        <div id="go-leaderboard" class="go-leaderboard hidden">
+          <h3 class="lb-title">Leaderboard</h3>
+          <div class="lb-scroll" id="lb-scroll">
+            <table class="lb-table">
+              <thead>
+                <tr><th>#</th><th>Name</th><th>Score</th></tr>
+              </thead>
+              <tbody id="lb-body"></tbody>
+            </table>
+          </div>
+          <p class="lb-hint">Scroll to see more</p>
+        </div>
+
+        <div class="go-buttons">
+          <button type="button" id="btn-restart-go" class="btn primary">Play Again</button>
+          <button type="button" id="btn-menu-go" class="btn">Back to Menu</button>
+        </div>
       </div>
 
       <div id="recovery-overlay" class="overlay panel compact hidden">

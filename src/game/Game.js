@@ -12,6 +12,9 @@ import {
   getBestScore,
   hasSeenRecoveryTip,
   markRecoveryTipSeen,
+  addLeaderboardEntry,
+  getLastName,
+  setLastName,
 } from "../utils/storage.js";
 import { preload, play, startLoop, stopLoop } from "../utils/audio.js";
 
@@ -384,17 +387,23 @@ export class Game {
     this.player.setAutomationFlowActive(false);
     stopLoop();
     play(SFX.GAME_OVER, 0.8);
-    const best = getBestScore();
     setBestScoreIfHigher(this.score);
     this.ui.setGameOverStats({
       score: this.score,
-      best: Math.max(best, this.score),
       hits: this.obstaclesHit,
       pickups: this.pickupsCollected,
       correct: this.sessionCorrect,
     });
+    this.ui.resetGameOver(getLastName());
     this.ui.showHud(false);
     this.ui.showGameOver(true);
+  }
+
+  saveScore() {
+    const name = this.ui.getEnteredName() || "AAA";
+    setLastName(name);
+    const { rank, board } = addLeaderboardEntry(name, this.score);
+    this.ui.showLeaderboard(board, rank);
   }
 
   /** Recovery prompt */

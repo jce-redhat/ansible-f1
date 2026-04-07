@@ -3,6 +3,8 @@ const KEYS = {
   TOTAL_CORRECT: "builtToAutomate_totalCorrect",
   TOTAL_RUNS: "builtToAutomate_totalRuns",
   RECOVERY_TIP: "builtToAutomate_recoveryTipSeen",
+  LEADERBOARD: "builtToAutomate_leaderboard",
+  LAST_NAME: "builtToAutomate_lastName",
 };
 
 function readNumber(key, fallback = 0) {
@@ -68,4 +70,48 @@ export function markRecoveryTipSeen() {
   } catch {
     /* ignore */
   }
+}
+
+const MAX_LEADERBOARD = 50;
+
+export function getLeaderboard() {
+  try {
+    const raw = localStorage.getItem(KEYS.LEADERBOARD);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr.slice(0, MAX_LEADERBOARD);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @returns {{ rank: number, board: Array<{name:string, score:number, ts:number}> }}
+ */
+export function addLeaderboardEntry(name, score) {
+  const board = getLeaderboard();
+  const entry = { name, score: Math.floor(score), ts: Date.now() };
+  board.push(entry);
+  board.sort((a, b) => b.score - a.score);
+  if (board.length > MAX_LEADERBOARD) board.length = MAX_LEADERBOARD;
+  try {
+    localStorage.setItem(KEYS.LEADERBOARD, JSON.stringify(board));
+  } catch { /* ignore */ }
+  const rank = board.indexOf(entry);
+  return { rank, board };
+}
+
+export function getLastName() {
+  try {
+    return localStorage.getItem(KEYS.LAST_NAME) || "";
+  } catch {
+    return "";
+  }
+}
+
+export function setLastName(name) {
+  try {
+    localStorage.setItem(KEYS.LAST_NAME, name);
+  } catch { /* ignore */ }
 }

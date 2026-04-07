@@ -28,10 +28,14 @@ export class UI {
 
       bestScoreMenu: document.getElementById("menu-best"),
       goScore: document.getElementById("go-score"),
-      goBest: document.getElementById("go-best"),
       goHits: document.getElementById("go-hits"),
       goPickups: document.getElementById("go-pickups"),
       goCorrect: document.getElementById("go-correct"),
+      goEntry: document.getElementById("go-entry"),
+      goNameInput: document.getElementById("go-name-input"),
+      goLeaderboard: document.getElementById("go-leaderboard"),
+      lbBody: document.getElementById("lb-body"),
+      lbScroll: document.getElementById("lb-scroll"),
 
       quizPrompt: document.getElementById("quiz-prompt"),
       quizOpts: document.getElementById("quiz-options"),
@@ -58,6 +62,16 @@ export class UI {
     on("btn-restart-pause", () => this.onRestart && this.onRestart());
     on("btn-restart-go", () => this.onRestart && this.onRestart());
     on("btn-menu-go", () => this.onMenu && this.onMenu());
+    on("btn-save-score", () => this.onSaveScore && this.onSaveScore());
+    const nameInput = document.getElementById("go-name-input");
+    if (nameInput) {
+      nameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (this.onSaveScore) this.onSaveScore();
+        }
+      });
+    }
     on("recovery-yes", () => this.onRecoveryYes && this.onRecoveryYes());
     on("recovery-no", () => this.onRecoveryNo && this.onRecoveryNo());
     on("btn-unstick", () => this.onUnstick && this.onUnstick());
@@ -68,6 +82,7 @@ export class UI {
     this.onResume = h.onResume;
     this.onRestart = h.onRestart;
     this.onMenu = h.onMenu;
+    this.onSaveScore = h.onSaveScore;
     this.onRecoveryYes = h.onRecoveryYes;
     this.onRecoveryNo = h.onRecoveryNo;
     this.onUnstick = h.onUnstick;
@@ -286,10 +301,53 @@ export class UI {
 
   setGameOverStats(stats) {
     if (this.el.goScore) this.el.goScore.textContent = String(Math.floor(stats.score));
-    if (this.el.goBest) this.el.goBest.textContent = String(Math.floor(stats.best));
     if (this.el.goHits) this.el.goHits.textContent = String(stats.hits);
     if (this.el.goPickups) this.el.goPickups.textContent = String(stats.pickups);
     if (this.el.goCorrect) this.el.goCorrect.textContent = String(stats.correct);
+  }
+
+  /** Reset game over screen to entry mode (name input visible, leaderboard hidden). */
+  resetGameOver(lastName) {
+    if (this.el.goEntry) this.el.goEntry.classList.remove("hidden");
+    if (this.el.goLeaderboard) this.el.goLeaderboard.classList.add("hidden");
+    if (this.el.goNameInput) {
+      this.el.goNameInput.value = lastName || "";
+      setTimeout(() => this.el.goNameInput.focus(), 80);
+    }
+  }
+
+  getEnteredName() {
+    return this.el.goNameInput ? this.el.goNameInput.value.trim() : "";
+  }
+
+  /** Switch from entry to leaderboard view and render the table. */
+  showLeaderboard(board, highlightRank) {
+    if (this.el.goEntry) this.el.goEntry.classList.add("hidden");
+    const lb = this.el.goLeaderboard;
+    if (lb) lb.classList.remove("hidden");
+
+    const body = this.el.lbBody;
+    if (!body) return;
+    body.innerHTML = "";
+    board.forEach((entry, i) => {
+      const tr = document.createElement("tr");
+      if (i === highlightRank) tr.classList.add("lb-current");
+      const tdRank = document.createElement("td");
+      tdRank.textContent = String(i + 1);
+      const tdName = document.createElement("td");
+      tdName.textContent = entry.name || "???";
+      const tdScore = document.createElement("td");
+      tdScore.textContent = String(entry.score);
+      tr.append(tdRank, tdName, tdScore);
+      body.appendChild(tr);
+    });
+
+    if (this.el.lbScroll && highlightRank >= 0) {
+      const rows = body.querySelectorAll("tr");
+      if (rows[highlightRank]) {
+        setTimeout(() => rows[highlightRank].scrollIntoView({ block: "center" }), 100);
+      }
+    }
   }
 
   shake() {

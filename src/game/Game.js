@@ -13,6 +13,14 @@ import {
   hasSeenRecoveryTip,
   markRecoveryTipSeen,
 } from "../utils/storage.js";
+import { preload, play } from "../utils/audio.js";
+
+const SFX = {
+  SHIELD_HIT: "./assets/audio/shield-hit.wav",
+  GAME_OVER: "./assets/audio/game-over.wav",
+};
+
+preload(Object.values(SFX));
 
 /**
  * @typedef {'boot'|'main_menu'|'running'|'quiz'|'paused'|'game_over'} GameState
@@ -353,6 +361,7 @@ export class Game {
     this.recoveryPrompt = false;
     this.ui.showRecovery(false, false);
     this.player.setAutomationFlowActive(false);
+    play(SFX.GAME_OVER, 0.8);
     const best = getBestScore();
     setBestScoreIfHigher(this.score);
     this.ui.setGameOverStats({
@@ -547,6 +556,7 @@ export class Game {
     this.spawner.removeEntity(e);
     if (this.shield) {
       this.shield = false;
+      play(SFX.SHIELD_HIT, 0.7);
       this.ui.setStatus(
         "Obstacle hit — shield blocked it! (Shield used up)",
         CONFIG.STATUS_HIT_MS

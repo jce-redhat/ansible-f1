@@ -42,7 +42,7 @@ export class Game {
     this.quiz = new QuizSystem();
 
     this.runTime = 0;
-    this.stability = CONFIG.STARTING_STABILITY;
+    this.health = CONFIG.STARTING_HEALTH;
     this.score = 0;
     this.streak = 0;
     this.worldSpeed = CONFIG.BASE_SPEED;
@@ -63,7 +63,6 @@ export class Game {
     this.shakeAmp = 0;
 
     this._lastTs = performance.now();
-    this._scrollForTrack = 0;
 
     this._bindKeys();
     this._bindQuizUi();
@@ -148,7 +147,7 @@ export class Game {
     this.quiz.resetPool();
     this.spawner.reset();
     this.runTime = 0;
-    this.stability = CONFIG.STARTING_STABILITY;
+    this.health = CONFIG.STARTING_HEALTH;
     this.score = 0;
     this.streak = 0;
     this.worldSpeed = CONFIG.BASE_SPEED;
@@ -181,9 +180,30 @@ export class Game {
     this.timeScale = 1;
     this.ui.showGameOver(false);
     this.ui.showPause(false);
+    this.ui.showQuiz(false);
+    this.ui.showRecovery(false, false);
     this.ui.showHud(false);
     this.ui.showMainMenu(true);
     this.ui.updateMenuBest(getBestScore());
+  }
+
+  /**
+   * Emergency un-stick: tears down whatever overlay is blocking and returns to running.
+   * Bound to the persistent escape-hatch button in the bottom-right.
+   */
+  forceUnstick() {
+    if (this.state === "main_menu" || this.state === "game_over") return;
+    this.recoveryPrompt = false;
+    this.timeScale = 1;
+    this._quizBusy = false;
+    this._quizPhase = "question";
+    this.quizMode = null;
+    this.currentQuestion = null;
+    this.ui.showQuiz(false);
+    this.ui.showRecovery(false, false);
+    this.ui.showPause(false);
+    this.state = "running";
+    this.ui.setStatus("Resumed — keep driving!", CONFIG.STATUS_MESSAGE_MS);
   }
 
   _answerQuiz(optionIndex) {
@@ -244,7 +264,7 @@ export class Game {
     if (mode === "recovery") {
       if (ok) {
         const nextStreak = this.streak + CONFIG.REMEDIATION_CORRECT_STREAK;
-        lines.push(`+${CONFIG.REMEDIATION_RESTORE} Stability (toward max 100)`);
+        lines.push(`+${CONFIG.REMEDIATION_RESTORE} health (toward max 100)`);
         lines.push(`Streak → ${nextStreak}`);
         if (nextStreak >= CONFIG.STREAK_FOR_FLOW) {
           lines.push(
@@ -253,11 +273,11 @@ export class Game {
         }
         return { title: "CORRECT!", lines };
       }
-      const after = this.stability - CONFIG.REMEDIATION_WRONG_PENALTY;
-      lines.push(`−${CONFIG.REMEDIATION_WRONG_PENALTY} Stability`);
+      const after = this.health - CONFIG.REMEDIATION_WRONG_PENALTY;
+      lines.push(`−${CONFIG.REMEDIATION_WRONG_PENALTY} health`);
       lines.push("Streak reset to 0");
       if (after <= 0) {
-        lines.push("Stability at 0 — run ends after this screen");
+        lines.push("Health at 0 — run ends after this screen");
       }
       return { title: "WRONG", lines };
     }
@@ -289,20 +309,20 @@ export class Game {
       }
     } else if (mode === "recovery") {
       if (correct) {
-        this.stability = Math.min(
-          CONFIG.STARTING_STABILITY,
-          this.stability + CONFIG.REMEDIATION_RESTORE
+        this.health = Math.min(
+          CONFIG.STARTING_HEALTH,
+          this.health + CONFIG.REMEDIATION_RESTORE
         );
         this.streak += CONFIG.REMEDIATION_CORRECT_STREAK;
         this.sessionCorrect += 1;
         addTotalCorrectAnswers(1);
-        this.ui.setStatus("Stability restored", CONFIG.STATUS_MESSAGE_MS);
+        this.ui.setStatus("Health restored", CONFIG.STATUS_MESSAGE_MS);
         this._checkStreakAutomation();
       } else {
         this.streak = 0;
-        this.stability -= CONFIG.REMEDIATION_WRONG_PENALTY;
+        this.health -= CONFIG.REMEDIATION_WRONG_PENALTY;
         this.ui.setStatus("Remediation failed", CONFIG.STATUS_MESSAGE_MS);
-        if (this.stability <= 0) {
+        if (this.health <= 0) {
           this._gameOver();
           return;
         }
@@ -428,7 +448,7 @@ export class Game {
     const ws = CONFIG.BASE_SPEED * speedMult;
     const flowActive = now < this.automationFlowUntil;
     this.ui.updateHud({
-      stability: this.stability,
+      health: this.health,
       score: this.score,
       speed: ws,
       streak: this.streak,
@@ -441,8 +461,7 @@ export class Game {
 
   _updateRun(effDt, now, rawDt, spawnScale) {
     this.runTime += effDt;
-    this._scrollForTrack += this.worldSpeed * effDt;
-    this.track.update(effDt, this._scrollForTrack);
+    this.track.update(effDt, this.worldSpeed);
 
     const ramp = Math.min(
       CONFIG.MAX_SPEED_MULT,
@@ -483,14 +502,16 @@ export class Game {
     const obstacleHits = hits.filter((h) => h.entity.kind === "obstacle");
     const pickupHits = hits.filter((h) => h.entity.kind === "pickup");
 
-    if (obstacleHits.length) {
+    // Process one collision per frame: obstacles take priority, and skip
+    // pickups while recovery prompt is open (prevents boost-quiz getting stuck).
+    if (obstacleHits.length && !this.recoveryPrompt) {
       this._onHitObstacle(obstacleHits[0].entity);
-    } else if (pickupHits.length) {
+    } else if (pickupHits.length && !this.recoveryPrompt) {
       this._onPickup(pickupHits[0].entity);
     }
 
     this.ui.updateHud({
-      stability: this.stability,
+      health: this.health,
       score: this.score,
       speed: ws,
       streak: this.streak,
@@ -513,18 +534,18 @@ export class Game {
     }
 
     const dmg = CONFIG.OBSTACLE_DAMAGE;
-    this.stability -= dmg;
+    this.health -= dmg;
     this.obstaclesHit += 1;
     this.ui.flashDamage();
     this.ui.shake();
     this.shakeUntil = performance.now() + 200;
     this.shakeAmp = 0.35;
     this.ui.setStatus(
-      `Obstacle hit! −${dmg} Stability (Outage). You’re at ${Math.max(0, Math.floor(this.stability))}.`,
+      `Obstacle hit! −${dmg} health (Outage). You’re at ${Math.max(0, Math.floor(this.health))}.`,
       CONFIG.STATUS_HIT_MS
     );
 
-    if (this.stability <= 0) {
+    if (this.health <= 0) {
       this._gameOver();
       return;
     }
@@ -556,7 +577,7 @@ export class Game {
     } else if (t === "POLICY_SHIELD") {
       this.shield = true;
       this.ui.setStatus(
-        "Pickup: Policy Shield — next obstacle hit won’t cost Stability",
+        "Pickup: Policy Shield — next obstacle hit won’t cost health",
         CONFIG.STATUS_HIT_MS
       );
     } else if (t === "BOOST_TOKEN") {

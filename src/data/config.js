@@ -38,8 +38,8 @@ export const CONFIG = {
   OBSTACLE_NAME: "Outage",
   OBSTACLE_DAMAGE: 20,
 
-  // Stability
-  STARTING_STABILITY: 100,
+  // Health (run survival meter)
+  STARTING_HEALTH: 100,
   REMEDIATION_WRONG_PENALTY: 5,
   REMEDIATION_RESTORE: 10,
 

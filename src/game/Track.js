@@ -48,16 +48,22 @@ export class Track {
   }
 
   _laneMarkers() {
+    this.markerGroup = new THREE.Group();
+    this.group.add(this.markerGroup);
+
     const mat = new THREE.MeshBasicMaterial({
       color: 0x00ffcc,
       transparent: true,
       opacity: 0.85,
     });
-    for (let z = -200; z < 80; z += 8) {
+    this._markerSpacing = 8;
+    this._markerCount = 40;
+    for (let i = 0; i < this._markerCount; i++) {
+      const z = -200 + i * this._markerSpacing;
       for (const x of [-1.6, 1.6]) {
         const m = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 3.2), mat);
         m.position.set(x, 0.03, z);
-        this.group.add(m);
+        this.markerGroup.add(m);
       }
     }
   }
@@ -155,9 +161,20 @@ export class Track {
     this.group.add(accent);
   }
 
-  update(dt, scrollOffset) {
-    // Subtle parallax: shift lane marker material feel via group z drift optional
-    this.group.position.z = (scrollOffset * 0.02) % 4;
+  /**
+   * @param {number} dt — frame delta (seconds)
+   * @param {number} worldSpeed — current forward speed (units/s)
+   */
+  update(dt, worldSpeed) {
+    if (!this.markerGroup) return;
+    const totalLen = this._markerSpacing * this._markerCount;
+    this.markerGroup.position.z += worldSpeed * dt;
+    if (this.markerGroup.position.z > this._markerSpacing) {
+      this.markerGroup.position.z -= this._markerSpacing;
+    }
+    if (this.markerGroup.position.z > totalLen) {
+      this.markerGroup.position.z %= this._markerSpacing;
+    }
   }
 
   dispose() {

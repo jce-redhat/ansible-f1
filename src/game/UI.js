@@ -14,7 +14,7 @@ export class UI {
       flash: document.getElementById("screen-flash"),
       canvasWrap: document.getElementById("game-root"),
 
-      stability: document.getElementById("hud-stability"),
+      health: document.getElementById("hud-health"),
       score: document.getElementById("hud-score"),
       speed: document.getElementById("hud-speed"),
       streak: document.getElementById("hud-streak"),
@@ -56,6 +56,7 @@ export class UI {
     on("btn-menu-go", () => this.onMenu && this.onMenu());
     on("recovery-yes", () => this.onRecoveryYes && this.onRecoveryYes());
     on("recovery-no", () => this.onRecoveryNo && this.onRecoveryNo());
+    on("btn-unstick", () => this.onUnstick && this.onUnstick());
   }
 
   setHandlers(h) {
@@ -65,6 +66,7 @@ export class UI {
     this.onMenu = h.onMenu;
     this.onRecoveryYes = h.onRecoveryYes;
     this.onRecoveryNo = h.onRecoveryNo;
+    this.onUnstick = h.onUnstick;
   }
 
   showMainMenu(visible) {
@@ -156,7 +158,7 @@ export class UI {
 
   updateHud(data) {
     const {
-      stability,
+      health,
       score,
       speed,
       streak,
@@ -165,8 +167,8 @@ export class UI {
       boostRemaining,
       boostTotal,
     } = data;
-    if (this.el.stability)
-      this.el.stability.textContent = `${Math.max(0, Math.floor(stability))}`;
+    if (this.el.health)
+      this.el.health.textContent = `${Math.max(0, Math.floor(health))}`;
     if (this.el.score) this.el.score.textContent = `${Math.floor(score)}`;
     if (this.el.speed)
       this.el.speed.textContent = `${speed.toFixed(1)}`;

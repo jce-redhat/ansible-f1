@@ -27,7 +27,14 @@
       <div id="hud" class="hud hidden">
         <div class="hud-left">
           <div class="hud-stats">
-            <div>Stability <span id="hud-stability">100</span></div>
+            <div class="hud-stat-block">
+              <div>
+                Health <span id="hud-health">100</span>
+              </div>
+              <p class="hud-stat-hint">
+                Your run meter — outages drain it. At 0, game over.
+              </p>
+            </div>
             <div>Score <span id="hud-score">0</span></div>
             <div>Speed <span id="hud-speed">0</span></div>
             <div>Streak <span id="hud-streak">0</span></div>
@@ -79,6 +86,10 @@
         <button type="button" id="btn-start" class="btn primary">Start Run</button>
         <ul class="help">
           <li>Move: ← / → or A / D</li>
+          <li>
+            <strong>Health</strong> is your run meter: hits lower it; recover with
+            remediation quizzes when offered.
+          </li>
           <li>Collect pickups · Dodge outages</li>
           <li>Answer fast questions for boosts &amp; recovery</li>
         </ul>
@@ -106,16 +117,16 @@
 
       <div id="recovery-overlay" class="overlay panel compact hidden">
         <h3>Attempt remediation?</h3>
-        <p class="hint">Answer a skill check to recover Stability.</p>
+        <p class="hint">Answer a skill check to recover health.</p>
         <div id="recovery-first-tip" class="recovery-first-tip hidden">
           <p class="recovery-tip-title">First time? Here’s the tradeoff:</p>
           <ul class="recovery-tip-list">
             <li>
-              <strong>Yes — take the quiz:</strong> Correct → +10 Stability, streak up, counts toward Automation Flow.
-              Wrong → <strong>lose 5 more Stability</strong> (on top of the hit you already took).
+              <strong>Yes — take the quiz:</strong> Correct → +10 health, streak up, counts toward Automation Flow.
+              Wrong → <strong>lose 5 more health</strong> (on top of the hit you already took).
             </li>
             <li>
-              <strong>No — skip:</strong> No quiz. You keep current Stability and continue immediately — no extra penalty, but no recovery or streak gain.
+              <strong>No — skip:</strong> No quiz. You keep current health and continue immediately — no extra penalty, but no recovery or streak gain.
             </li>
           </ul>
         </div>
@@ -139,6 +150,10 @@
           <p id="quiz-result-explain" class="quiz-result-explain"></p>
         </div>
       </div>
+
+      <button type="button" id="btn-unstick" class="btn-unstick" title="Stuck? Click to force-resume the run">
+        Skip / Unstick
+      </button>
     </div>
 
     <script type="module" src="./src/main.js"></script>

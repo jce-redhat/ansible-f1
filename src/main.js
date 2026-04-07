@@ -40,6 +40,7 @@ ui.setHandlers({
   onMenu: () => game.backToMenu(),
   onRecoveryYes: () => game.onRecoveryYes(),
   onRecoveryNo: () => game.onRecoveryNo(),
+  onUnstick: () => game.forceUnstick(),
 });
 
 game.state = "main_menu";

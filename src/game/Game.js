@@ -595,6 +595,8 @@ export class Game {
     this.spawner.removeEntity(e);
     this.pickupsCollected += 1;
 
+    if (t !== "POLICY_SHIELD") play(SFX.PICKUP, 0.6);
+
     if (t === "PLAYBOOK") {
       const pts = Math.floor(CONFIG.PICKUP_SCORE.PLAYBOOK * this._flowMult());
       this.score += pts;

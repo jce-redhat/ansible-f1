@@ -17,7 +17,10 @@ import { preload, play } from "../utils/audio.js";
 
 const SFX = {
   SHIELD_HIT: "./assets/audio/shield-hit.wav",
+  SHIELD_ON: "./assets/audio/shield-on.wav",
+  PICKUP: "./assets/audio/pickup.wav",
   GAME_OVER: "./assets/audio/game-over.wav",
+  START_RUN: "./assets/audio/start-run.wav",
 };
 
 preload(Object.values(SFX));
@@ -148,6 +151,7 @@ export class Game {
     this.ui.showPause(false);
     this.ui.showHud(true);
     this.ui.setStatus("Go!", 1500);
+    play(SFX.START_RUN, 0.75);
   }
 
   resetRun() {
@@ -607,6 +611,7 @@ export class Game {
       );
     } else if (t === "POLICY_SHIELD") {
       this.shield = true;
+      play(SFX.SHIELD_ON, 0.75);
       this.ui.setStatus(
         "Pickup: Policy Shield — next obstacle hit won’t cost health",
         CONFIG.STATUS_HIT_MS

@@ -137,15 +137,15 @@ export class Track {
 
     // Generic background buildings (blocky, 16-bit style)
     const buildings = [
-      { x: -50, w: 10, h: 22, d: 8, color: 0x2a3048 },
-      { x: -38, w: 8, h: 30, d: 7, color: 0x343a55 },
-      { x: -26, w: 12, h: 18, d: 9, color: 0x282e44 },
-      { x: -15, w: 7, h: 26, d: 6, color: 0x303650 },
-      { x: -5, w: 9, h: 20, d: 7, color: 0x2c3248 },
-      { x: 5, w: 8, h: 15, d: 6, color: 0x262c40 },
-      { x: 38, w: 11, h: 16, d: 8, color: 0x282e44 },
-      { x: 48, w: 7, h: 28, d: 6, color: 0x343a55 },
-      { x: 58, w: 10, h: 20, d: 8, color: 0x2a3048 },
+      { x: -50, w: 10, h: 15, d: 8, color: 0x2a3048 },
+      { x: -38, w: 8, h: 20, d: 7, color: 0x343a55 },
+      { x: -26, w: 12, h: 12, d: 9, color: 0x282e44 },
+      { x: -15, w: 7, h: 18, d: 6, color: 0x303650 },
+      { x: -5, w: 9, h: 14, d: 7, color: 0x2c3248 },
+      { x: 5, w: 8, h: 10, d: 6, color: 0x262c40 },
+      { x: 38, w: 11, h: 11, d: 8, color: 0x282e44 },
+      { x: 48, w: 7, h: 19, d: 6, color: 0x343a55 },
+      { x: 58, w: 10, h: 14, d: 8, color: 0x2a3048 },
     ];
 
     for (const b of buildings) {
@@ -183,7 +183,7 @@ export class Track {
 
     // --- Red Hat HQ building (center-right, tallest, distinctive) ---
     const rhqW = 14;
-    const rhqH = 38;
+    const rhqH = 26;
     const rhqD = 10;
     const rhqX = 22;
 

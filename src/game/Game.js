@@ -35,7 +35,7 @@ const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
 preload(Object.values(SFX));
 
 /**
- * @typedef {'boot'|'main_menu'|'running'|'quiz'|'paused'|'game_over'} GameState
+ * @typedef {'boot'|'main_menu'|'running'|'quiz'|'paused'|'game_over'|'billboard'} GameState
  */
 
 export class Game {
@@ -78,6 +78,7 @@ export class Game {
     this.playbookPts = 0;
     this.collectionCount = 0;
     this.collectionPts = 0;
+    this.pickupSpeedMult = 1;
 
     this.recoveryPrompt = false;
     this.timeScale = 1;
@@ -86,10 +87,23 @@ export class Game {
     this.shakeUntil = 0;
     this.shakeAmp = 0;
 
+    // Billboard interaction
+    this._raycaster = new THREE.Raycaster();
+    this._mouse = new THREE.Vector2();
+    this._dragMoved = false;
+    this._pointerDown = null;
+    this._hoveredBillboard = null;
+    this._activeBillboard = null;
+    this._bbTargetPos = new THREE.Vector3();
+    this._bbTargetLook = new THREE.Vector3();
+    this._bbCurrentLook = new THREE.Vector3(0, 1.2, -2);
+    this._bbZooming = false;
+
     this._lastTs = performance.now();
 
     this._bindKeys();
     this._bindQuizUi();
+    this._bindBillboardInput();
     this._quizBusy = false;
     /** @type {'question'|'result'} */
     this._quizPhase = "question";
@@ -98,6 +112,14 @@ export class Game {
   _bindKeys() {
     window.addEventListener("keydown", (e) => {
       if (this.state === "main_menu" || this.state === "game_over") return;
+
+      if (this.state === "billboard") {
+        if (e.code === "Escape" || e.code === "Space") {
+          this.closeBillboard();
+          e.preventDefault();
+        }
+        return;
+      }
 
       if (
         this.state === "quiz" &&
@@ -158,6 +180,80 @@ export class Game {
     }
   }
 
+  _bindBillboardInput() {
+    const c = this.renderer.domElement;
+    c.addEventListener("pointerdown", (e) => {
+      this._pointerDown = { x: e.clientX, y: e.clientY };
+      this._dragMoved = false;
+    });
+    c.addEventListener("pointermove", (e) => {
+      this._mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      this._mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      if (this._pointerDown) {
+        const dx = e.clientX - this._pointerDown.x;
+        const dy = e.clientY - this._pointerDown.y;
+        if (dx * dx + dy * dy > 25) this._dragMoved = true;
+      }
+      this._checkBillboardHover();
+    });
+    c.addEventListener("pointerup", () => {
+      if (!this._dragMoved && this._hoveredBillboard && this.state === "running" && !this.recoveryPrompt) {
+        this._openBillboard(this._hoveredBillboard);
+      }
+      this._pointerDown = null;
+    });
+  }
+
+  _checkBillboardHover() {
+    if (this.state !== "running" || this.recoveryPrompt) {
+      this.renderer.domElement.style.cursor = "";
+      this._hoveredBillboard = null;
+      return;
+    }
+    this._raycaster.setFromCamera(this._mouse, this.camera);
+    const meshes = this.track.getBillboardMeshes();
+    const hits = this._raycaster.intersectObjects(meshes, false);
+    if (hits.length) {
+      this._hoveredBillboard = hits[0].object.userData._billboardId || null;
+      this.renderer.domElement.style.cursor = "pointer";
+    } else {
+      this._hoveredBillboard = null;
+      this.renderer.domElement.style.cursor = "";
+    }
+  }
+
+  _openBillboard(id) {
+    this._activeBillboard = id;
+    this.state = "billboard";
+    this._bbZooming = true;
+
+    const bb = this.track.billboards[id];
+    if (!bb) return;
+
+    const pos = bb.position;
+    const faceDir = pos.x < 0 ? 1 : -1;
+    this._bbTargetPos.set(
+      pos.x + faceDir * 6,
+      pos.y + 8,
+      pos.z + 12
+    );
+    this._bbTargetLook.set(pos.x, pos.y + 7.5, pos.z);
+    this._bbCurrentLook.copy(this.camera.position).add(
+      new THREE.Vector3(0, -4, -14)
+    );
+
+    const labels = { demo1: "Demo 1", demo2: "Demo 2", demo3: "Demo 3" };
+    this.ui.showBillboard(true, labels[id] || id);
+  }
+
+  closeBillboard() {
+    this._activeBillboard = null;
+    this._bbZooming = false;
+    this.state = "running";
+    this.ui.showBillboard(false);
+    this.renderer.domElement.style.cursor = "";
+  }
+
   startFromMenu() {
     this.resetRun();
     this.state = "running";
@@ -193,6 +289,7 @@ export class Game {
     this.playbookPts = 0;
     this.collectionCount = 0;
     this.collectionPts = 0;
+    this.pickupSpeedMult = 1;
     this.recoveryPrompt = false;
     this.timeScale = 1;
     this.player.targetLaneIndex = 1;
@@ -214,7 +311,9 @@ export class Game {
     this.state = "main_menu";
     this.recoveryPrompt = false;
     this.timeScale = 1;
+    this._activeBillboard = null;
     stopLoop();
+    this.ui.showBillboard(false);
     this.ui.showGameOver(false);
     this.ui.showPause(false);
     this.ui.showQuiz(false);
@@ -230,6 +329,7 @@ export class Game {
    */
   forceUnstick() {
     if (this.state === "main_menu" || this.state === "game_over") return;
+    if (this.state === "billboard") { this.closeBillboard(); return; }
     this.recoveryPrompt = false;
     this.timeScale = 1;
     this._resetQuizFlags();
@@ -489,6 +589,11 @@ export class Game {
       return;
     }
 
+    if (this.state === "billboard") {
+      this._updateBillboardCamera(dt);
+      return;
+    }
+
     // Full pause during skill checks — no movement, spawns, collisions, or score clock
     if (this.state === "quiz") {
       this._updateCamera(0, now);
@@ -511,7 +616,7 @@ export class Game {
       CONFIG.MAX_SPEED_MULT,
       1 + this.runTime * CONFIG.SPEED_RAMP * 0.02
     );
-    let speedMult = ramp;
+    let speedMult = ramp * this.pickupSpeedMult;
     if (now < this.boostUntil) {
       speedMult *= CONFIG.BOOST_SPEED_MULT;
     }
@@ -542,6 +647,8 @@ export class Game {
       1 + this.runTime * CONFIG.SPEED_RAMP * 0.02
     );
     let speedMult = ramp;
+
+    speedMult *= this.pickupSpeedMult;
 
     if (now < this.boostUntil) {
       speedMult *= CONFIG.BOOST_SPEED_MULT;
@@ -648,19 +755,21 @@ export class Game {
       this.score += pts;
       this.playbookCount += 1;
       this.playbookPts += pts;
-      this.ui.setStatus(
-        `Pickup: Playbook — +${pts} score`,
-        CONFIG.STATUS_HIT_MS
-      );
+      if (this.playbookCount % 5 === 0) {
+        this._applyPickupSpeedUp("Playbook", this.playbookCount);
+      } else {
+        this.ui.setStatus(`Pickup: Playbook — +${pts} score`, CONFIG.STATUS_HIT_MS);
+      }
     } else if (t === "CERTIFIED_COLLECTION") {
       const pts = Math.floor(CONFIG.PICKUP_SCORE.COLLECTION * this._flowMult());
       this.score += pts;
       this.collectionCount += 1;
       this.collectionPts += pts;
-      this.ui.setStatus(
-        `Pickup: Certified Collection — +${pts} score`,
-        CONFIG.STATUS_HIT_MS
-      );
+      if (this.collectionCount % 5 === 0) {
+        this._applyPickupSpeedUp("Collection", this.collectionCount);
+      } else {
+        this.ui.setStatus(`Pickup: Certified Collection — +${pts} score`, CONFIG.STATUS_HIT_MS);
+      }
     } else if (t === "POLICY_SHIELD") {
       this.shield = true;
       this.player.setShieldActive(true);
@@ -672,6 +781,22 @@ export class Game {
     } else if (t === "BOOST_TOKEN") {
       this._openBoostQuiz();
     }
+  }
+
+  _applyPickupSpeedUp(type, count) {
+    this.pickupSpeedMult += 0.10;
+    const pct = Math.round((this.pickupSpeedMult - 1) * 100);
+    this.ui.setStatus(
+      `${count} ${type}s collected! Speed +10% (total +${pct}%)`,
+      CONFIG.STATUS_HIT_MS
+    );
+  }
+
+  _updateBillboardCamera(dt) {
+    const speed = dt * 2.5;
+    this.camera.position.lerp(this._bbTargetPos, speed);
+    this._bbCurrentLook.lerp(this._bbTargetLook, speed);
+    this.camera.lookAt(this._bbCurrentLook);
   }
 
   _updateCamera(dt, now) {

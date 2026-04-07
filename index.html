@@ -156,6 +156,7 @@
         <h2>Paused</h2>
         <button type="button" id="btn-resume" class="btn primary">Resume</button>
         <button type="button" id="btn-restart-pause" class="btn">Restart Run</button>
+        <button type="button" id="btn-menu-pause" class="btn">Main Menu</button>
         <p class="hint">Esc to resume</p>
       </div>
 
@@ -229,6 +230,23 @@
           <p id="quiz-result-title" class="quiz-result-title"></p>
           <ul id="quiz-result-lines" class="quiz-result-lines"></ul>
           <p id="quiz-result-explain" class="quiz-result-explain"></p>
+        </div>
+      </div>
+
+      <div id="billboard-overlay" class="overlay hidden">
+        <div class="billboard-panel">
+          <div class="billboard-topbar">
+            <span class="billboard-label" id="billboard-label">Demo 1</span>
+            <button type="button" id="btn-billboard-close" class="billboard-close" title="Close">&times;</button>
+          </div>
+          <div class="billboard-content" id="billboard-content">
+            <div class="billboard-placeholder">
+              <div class="billboard-placeholder-icon">&#9881;</div>
+              <h3>Side Quest</h3>
+              <p>Demo content coming soon.</p>
+              <p class="billboard-placeholder-hint">This space will host an interactive demo or presentation.</p>
+            </div>
+          </div>
         </div>
       </div>
 

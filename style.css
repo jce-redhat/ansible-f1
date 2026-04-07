@@ -285,7 +285,19 @@ body {
 }
 
 .swatch-outage {
-  background: linear-gradient(180deg, #ff3333 70%, #ffdd00 70%);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px, transparent 3px,
+      #666 3px, #666 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px, transparent 6px,
+      #666 6px, #666 7px
+    ),
+    linear-gradient(180deg, #b33319, #8b2010);
+  background-size: 100% 100%;
 }
 
 .swatch-shield {
@@ -961,6 +973,115 @@ body {
   margin: 0;
   padding-top: 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Billboard demo overlay */
+#billboard-overlay {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 5;
+  cursor: default;
+}
+
+.billboard-panel {
+  width: min(90vw, 800px);
+  height: min(80vh, 560px);
+  background: #141820;
+  border-radius: 14px;
+  border: 2px solid #2a3550;
+  box-shadow: 0 0 50px rgba(0, 120, 255, 0.08), inset 0 0 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.billboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: #1a2030;
+  border-bottom: 1px solid #2a3550;
+}
+
+.billboard-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.65rem;
+  color: var(--neon);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.billboard-close {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.billboard-close:hover {
+  background: rgba(255, 60, 60, 0.2);
+  border-color: rgba(255, 60, 60, 0.4);
+  color: #ff6666;
+}
+
+.billboard-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.billboard-placeholder {
+  text-align: center;
+  max-width: 400px;
+}
+
+.billboard-placeholder-icon {
+  font-size: 3rem;
+  color: var(--neon);
+  opacity: 0.4;
+  margin-bottom: 1rem;
+  animation: billboard-spin 8s linear infinite;
+}
+
+@keyframes billboard-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.billboard-placeholder h3 {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.8rem;
+  color: var(--neon);
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.billboard-placeholder p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.billboard-placeholder-hint {
+  font-size: 0.7rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(200, 220, 255, 0.35);
 }
 
 .btn-unstick {

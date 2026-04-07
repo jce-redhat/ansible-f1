@@ -43,6 +43,7 @@ ui.setHandlers({
   onRecoveryYes: () => game.onRecoveryYes(),
   onRecoveryNo: () => game.onRecoveryNo(),
   onUnstick: () => game.forceUnstick(),
+  onBillboardClose: () => game.closeBillboard(),
 });
 
 game.state = "main_menu";

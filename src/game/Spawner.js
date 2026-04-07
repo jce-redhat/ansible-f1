@@ -174,16 +174,15 @@ export class Spawner {
     const lane = Math.floor(Math.random() * 3);
     const z = CONFIG.SPAWN_Z - Math.random() * 15;
 
-    // Boost token rarity
     let roll = Math.random();
     let type;
-    if (roll < (warm ? 0.04 : 0.07)) {
+    if (roll < (warm ? 0.15 : 0.25)) {
       type = "BOOST_TOKEN";
-    } else if (roll < 0.35) {
+    } else if (roll < 0.50) {
       type = "PLAYBOOK";
-    } else if (roll < 0.6) {
+    } else if (roll < 0.75) {
       type = "CERTIFIED_COLLECTION";
-    } else if (roll < 0.82) {
+    } else if (roll < 0.88) {
       type = "POLICY_SHIELD";
     } else {
       type = Math.random() < 0.5 ? "PLAYBOOK" : "CERTIFIED_COLLECTION";
@@ -211,7 +210,7 @@ export class Spawner {
   _addObstacle(type, lane, z) {
     const mesh = this._makeObstacleMesh();
     const x = CONFIG.LANES[lane];
-    mesh.position.set(x, 0.75, z);
+    mesh.position.set(x, 0.0, z);
     this.scene.add(mesh);
     const hit = { ...HIT.obstacle };
     const e = {
@@ -254,22 +253,67 @@ export class Spawner {
   /** Single MVP hazard: red “Outage” block + yellow warning strip (matches HUD legend). */
   _makeObstacleMesh() {
     const g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0xff2222,
-      emissive: 0xaa0000,
-      emissiveIntensity: 0.5,
-      metalness: 0.2,
-      roughness: 0.55,
+
+    const wallW = 1.8, wallH = 1.3, wallD = 0.55;
+    const brickW = 0.38, brickH = 0.14, mortarGap = 0.025;
+
+    const brickMat = new THREE.MeshStandardMaterial({
+      color: 0xb33319, roughness: 0.82, metalness: 0.05,
+      emissive: 0x3a0800, emissiveIntensity: 0.25,
     });
-    const cube = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.2), mat);
-    cube.position.y = 0.2;
-    g.add(cube);
+    const darkBrickMat = new THREE.MeshStandardMaterial({
+      color: 0x8b2010, roughness: 0.88, metalness: 0.05,
+      emissive: 0x2a0600, emissiveIntensity: 0.2,
+    });
+    const mortarMat = new THREE.MeshStandardMaterial({
+      color: 0x888884, roughness: 0.95, metalness: 0.0,
+    });
+
+    const mortarSlab = new THREE.Mesh(
+      new THREE.BoxGeometry(wallW, wallH, wallD * 0.92), mortarMat
+    );
+    mortarSlab.position.y = wallH / 2;
+    g.add(mortarSlab);
+
+    const brickGeo = new THREE.BoxGeometry(
+      brickW - mortarGap, brickH - mortarGap, wallD
+    );
+    const stepX = brickW;
+    const stepY = brickH;
+    const cols = Math.floor(wallW / stepX);
+    const rows = Math.floor(wallH / stepY);
+    const startX = -(cols * stepX) / 2 + stepX / 2;
+
+    for (let row = 0; row < rows; row++) {
+      const offset = row % 2 === 1 ? stepX * 0.5 : 0;
+      const y = row * stepY + stepY / 2;
+      for (let col = 0; col < cols; col++) {
+        let x = startX + col * stepX + offset;
+        if (x - brickW / 2 < -wallW / 2) x += stepX * 0.5;
+        if (x + brickW / 2 > wallW / 2) continue;
+        const mat = Math.random() < 0.3 ? darkBrickMat : brickMat;
+        const brick = new THREE.Mesh(brickGeo, mat);
+        brick.position.set(x, y, 0);
+        g.add(brick);
+      }
+    }
+
+    const capMat = new THREE.MeshStandardMaterial({
+      color: 0x666662, roughness: 0.75, metalness: 0.1,
+    });
+    const cap = new THREE.Mesh(
+      new THREE.BoxGeometry(wallW + 0.06, 0.08, wallD + 0.06), capMat
+    );
+    cap.position.y = wallH + 0.04;
+    g.add(cap);
+
     const warn = new THREE.Mesh(
       new THREE.BoxGeometry(0.55, 0.16, 0.06),
-      new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      new THREE.MeshBasicMaterial({ color: 0xffee00 })
     );
-    warn.position.set(0, 0.85, 0.62);
+    warn.position.set(0, wallH + 0.14, wallD / 2 + 0.04);
     g.add(warn);
+
     return g;
   }
 

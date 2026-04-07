@@ -1,6 +1,6 @@
 import * as THREE from "three";
 /**
- * Dark roadway, glowing lane markers, rack props, horizon grid.
+ * Dark roadway, glowing lane markers, rack props, horizon grid, billboards.
  */
 export class Track {
   constructor(scene) {
@@ -8,9 +8,13 @@ export class Track {
     this.group = new THREE.Group();
     scene.add(this.group);
 
+    /** @type {Object<string, THREE.Group>} */
+    this.billboards = {};
+
     this._road();
     this._laneMarkers();
     this._sideProps();
+    this._billboards();
     this._skyline();
     this._horizon();
     this._lights();
@@ -118,6 +122,162 @@ export class Track {
       pole2.position.x = 11;
       this.propsGroup.add(pole2);
     }
+  }
+
+  _billboards() {
+    const defs = [
+      { id: "demo1", label: "Demo 1", x: 14,  z: -42, accent: 0x00c8ea },
+      { id: "demo2", label: "Demo 2", x: 15,  z: -68, accent: 0xff6644 },
+      { id: "demo3", label: "Demo 3", x: -14, z: -55, accent: 0x66ffcc },
+    ];
+
+    const boardW = 8, boardH = 5;
+    const poleH = 5;
+
+    for (const def of defs) {
+      const g = new THREE.Group();
+      g.userData.billboardId = def.id;
+
+      const poleMat = new THREE.MeshStandardMaterial({
+        color: 0x4a5a78, metalness: 0.6, roughness: 0.4,
+      });
+      for (const side of [-1, 1]) {
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.14, poleH, 8),
+          poleMat
+        );
+        pole.position.set(side * (boardW / 2 - 0.4), poleH / 2, 0);
+        g.add(pole);
+      }
+
+      const frameMat = new THREE.MeshStandardMaterial({
+        color: 0x2a3550, metalness: 0.3, roughness: 0.5,
+      });
+      const frame = new THREE.Mesh(
+        new THREE.BoxGeometry(boardW + 0.3, boardH + 0.3, 0.15),
+        frameMat
+      );
+      frame.position.y = poleH + boardH / 2;
+      g.add(frame);
+
+      const screenMat = new THREE.MeshStandardMaterial({
+        color: 0x101824, metalness: 0.05, roughness: 0.92,
+        emissive: 0x0a1020, emissiveIntensity: 0.3,
+      });
+      const screen = new THREE.Mesh(
+        new THREE.BoxGeometry(boardW, boardH, 0.18),
+        screenMat
+      );
+      screen.position.y = poleH + boardH / 2;
+      screen.position.z = 0.08;
+      g.add(screen);
+
+      const accentMat = new THREE.MeshStandardMaterial({
+        color: def.accent, emissive: def.accent, emissiveIntensity: 0.6,
+        metalness: 0.1, roughness: 0.4,
+      });
+      const stripTop = new THREE.Mesh(
+        new THREE.BoxGeometry(boardW + 0.1, 0.12, 0.2), accentMat
+      );
+      stripTop.position.set(0, poleH + boardH + 0.08, 0.1);
+      g.add(stripTop);
+      const stripBot = new THREE.Mesh(
+        new THREE.BoxGeometry(boardW + 0.1, 0.12, 0.2), accentMat
+      );
+      stripBot.position.set(0, poleH - 0.08, 0.1);
+      g.add(stripBot);
+
+      // Label text via canvas texture
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 320;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0d1420";
+      ctx.fillRect(0, 0, 512, 320);
+
+      // Border
+      const accentHex = "#" + def.accent.toString(16).padStart(6, "0");
+      ctx.strokeStyle = accentHex;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(16, 16, 480, 288);
+
+      // "SIDE QUEST" header
+      ctx.font = "bold 24px 'Courier New', monospace";
+      ctx.fillStyle = accentHex;
+      ctx.textAlign = "center";
+      ctx.fillText("SIDE QUEST", 256, 60);
+
+      // Demo label
+      ctx.font = "bold 48px 'Courier New', monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(def.label.toUpperCase(), 256, 140);
+
+      // "Click to explore" hint
+      ctx.font = "20px 'Courier New', monospace";
+      ctx.fillStyle = "rgba(200,220,255,0.5)";
+      ctx.fillText("[ Click to explore ]", 256, 200);
+
+      // Placeholder dashed box
+      ctx.setLineDash([8, 6]);
+      ctx.strokeStyle = "rgba(200,220,255,0.2)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(120, 230, 272, 60);
+      ctx.font = "16px 'Courier New', monospace";
+      ctx.fillStyle = "rgba(200,220,255,0.3)";
+      ctx.fillText("Demo content placeholder", 256, 268);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const labelMat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true,
+      });
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(boardW * 0.92, boardH * 0.92),
+        labelMat
+      );
+      label.position.y = poleH + boardH / 2;
+      label.position.z = 0.18;
+      g.add(label);
+
+      // Spotlights illuminating the board face
+      const spotL = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
+      spotL.position.set(-boardW / 3, poleH + boardH + 1.5, 3);
+      spotL.target.position.set(0, poleH + boardH / 2, 0);
+      g.add(spotL);
+      g.add(spotL.target);
+
+      const spotR = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
+      spotR.position.set(boardW / 3, poleH + boardH + 1.5, 3);
+      spotR.target.position.set(0, poleH + boardH / 2, 0);
+      g.add(spotR);
+      g.add(spotR.target);
+
+      // Accent glow
+      const glow = new THREE.PointLight(def.accent, 0.5, 12);
+      glow.position.set(0, poleH + boardH / 2, 3);
+      g.add(glow);
+
+      g.position.set(def.x, 0, def.z);
+      // Face the road
+      if (def.x < 0) g.rotation.y = -0.25;
+      else g.rotation.y = 0.25;
+
+      this.billboards[def.id] = g;
+      this.group.add(g);
+    }
+  }
+
+  getBillboardMeshes() {
+    const meshes = [];
+    for (const id of Object.keys(this.billboards)) {
+      this.billboards[id].traverse((c) => {
+        if (c.isMesh) {
+          c.userData._billboardId = id;
+          meshes.push(c);
+        }
+      });
+    }
+    return meshes;
   }
 
   _skyline() {

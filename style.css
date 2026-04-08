@@ -1153,6 +1153,87 @@ body {
   color: #fff;
 }
 
+/* --- Level select --- */
+.level-select-hint {
+  font-size: 0.78rem;
+  color: rgba(200, 220, 255, 0.5);
+  margin-bottom: 1rem;
+}
+
+.level-cards {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.level-card {
+  background: rgba(15, 20, 35, 0.85);
+  border: 2px solid rgba(100, 140, 200, 0.25);
+  border-radius: 10px;
+  padding: 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 200px;
+}
+
+.level-card:hover {
+  border-color: rgba(0, 255, 204, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 20px rgba(0, 255, 204, 0.15);
+}
+
+.level-card.active {
+  border-color: #00ffcc;
+  box-shadow: 0 0 16px rgba(0, 255, 204, 0.35);
+}
+
+.level-preview {
+  border-radius: 6px;
+  display: block;
+  width: 180px;
+  height: 120px;
+  background: #0a0e18;
+}
+
+.level-card-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e0e8ff;
+}
+
+.level-card-sub {
+  font-size: 0.72rem;
+  color: rgba(200, 220, 255, 0.5);
+  font-style: italic;
+}
+
+/* HUD level name + choose level button */
+.hud-level-name {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(0, 255, 204, 0.8);
+  margin-top: 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.btn-choose-level {
+  font-size: 0.65rem !important;
+  padding: 0.25rem 0.6rem !important;
+  margin-top: 0.3rem;
+  opacity: 0.7;
+}
+
+.btn-choose-level:hover {
+  opacity: 1;
+}
+
 .hidden {
   display: none !important;
 }

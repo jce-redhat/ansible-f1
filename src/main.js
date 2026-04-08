@@ -53,11 +53,18 @@ ui.setHandlers({
       ui.showPause(true);
     }
   },
+  onLevelSelect: (levelId) => game.switchLevel(levelId),
+  onPauseForLevelSelect: () => {
+    if (game.state === "running") {
+      game.state = "paused";
+    }
+  },
 });
 
 game.state = "main_menu";
 ui.showMainMenu(true);
 ui.updateMenuBest(getBestScore());
+ui.setActiveLevel("A");
 
 startBgm("./assets/audio/bgm.m4a", 0.1);
 

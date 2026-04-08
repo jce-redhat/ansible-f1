@@ -54,12 +54,17 @@ export class UI {
       billboardOverlay: document.getElementById("billboard-overlay"),
       billboardLabel: document.getElementById("billboard-label"),
       billboardContent: document.getElementById("billboard-content"),
+
+      levelSelect: document.getElementById("level-select"),
+      hudLevelName: document.getElementById("hud-level-name"),
     };
 
     this._statusTimer = null;
     this._recoveryCountdownId = null;
     this._recoveryAutoTimer = null;
+    this._levelSelectReturnTo = "main_menu";
     this._bindButtons();
+    this._drawLevelPreviews();
   }
 
   _bindButtons() {
@@ -90,6 +95,22 @@ export class UI {
     on("btn-unstick", () => this.onUnstick && this.onUnstick());
     on("btn-billboard-close", () => this.onBillboardClose && this.onBillboardClose());
     on("btn-touch-pause", () => this.onTouchPause && this.onTouchPause());
+
+    on("btn-choose-level", () => {
+      if (this.onPauseForLevelSelect) this.onPauseForLevelSelect();
+      this._openLevelSelect("running");
+    });
+    on("btn-choose-level-menu", () => this._openLevelSelect("main_menu"));
+    on("btn-choose-level-go", () => this._openLevelSelect("game_over"));
+    on("btn-level-back", () => this._closeLevelSelect());
+
+    document.querySelectorAll(".level-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const id = card.dataset.level;
+        if (id && this.onLevelSelect) this.onLevelSelect(id);
+        this._closeLevelSelect();
+      });
+    });
   }
 
   setHandlers(h) {
@@ -103,6 +124,8 @@ export class UI {
     this.onUnstick = h.onUnstick;
     this.onBillboardClose = h.onBillboardClose;
     this.onTouchPause = h.onTouchPause;
+    this.onLevelSelect = h.onLevelSelect;
+    this.onPauseForLevelSelect = h.onPauseForLevelSelect;
   }
 
   showMainMenu(visible) {
@@ -440,5 +463,139 @@ export class UI {
   _hideMenuLeaderboard() {
     const lb = document.getElementById("menu-leaderboard");
     if (lb) lb.classList.add("hidden");
+  }
+
+  // --- Level select ---
+
+  showLevelSelect(visible) {
+    if (this.el.levelSelect) {
+      this.el.levelSelect.classList.toggle("hidden", !visible);
+    }
+  }
+
+  setActiveLevel(levelId) {
+    document.querySelectorAll(".level-card").forEach((card) => {
+      card.classList.toggle("active", card.dataset.level === levelId);
+    });
+    if (this.el.hudLevelName) {
+      const names = { A: "Level A", B: "Level B", C: "Level C" };
+      this.el.hudLevelName.textContent = names[levelId] || levelId;
+    }
+  }
+
+  _openLevelSelect(returnTo) {
+    this._levelSelectReturnTo = returnTo;
+    this.el.mainMenu.classList.add("hidden");
+    if (this.el.gameOver) this.el.gameOver.classList.add("hidden");
+    if (this.el.pauseMenu) this.el.pauseMenu.classList.add("hidden");
+    this.showLevelSelect(true);
+  }
+
+  _closeLevelSelect() {
+    this.showLevelSelect(false);
+    if (this._levelSelectReturnTo === "main_menu") {
+      this.el.mainMenu.classList.remove("hidden");
+    } else if (this._levelSelectReturnTo === "game_over") {
+      if (this.el.gameOver) this.el.gameOver.classList.remove("hidden");
+    } else if (this._levelSelectReturnTo === "running") {
+      if (this.el.pauseMenu) this.el.pauseMenu.classList.remove("hidden");
+    }
+  }
+
+  _drawLevelPreviews() {
+    const previews = document.querySelectorAll(".level-card");
+    const themes = [
+      { bg: "#0a0e18", road: "#121520", edge: "#220044", lane: "#00ffcc", side: "#0a0e18", sky: "#050510", scenery: "city" },
+      { bg: "#7799aa", road: "#555960", edge: "#446633", lane: "#ffffff", side: "#2a5520", sky: "#6699bb", scenery: "forest" },
+      { bg: "#c4a870", road: "#8b7355", edge: "#c4a84a", lane: "#ffeecc", side: "#d4b85a", sky: "#ccaa77", scenery: "desert" },
+    ];
+
+    previews.forEach((card, i) => {
+      const canvas = card.querySelector("canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const t = themes[i];
+
+      // Sky
+      ctx.fillStyle = t.sky;
+      ctx.fillRect(0, 0, 180, 50);
+
+      // Ground / sides
+      ctx.fillStyle = t.side;
+      ctx.fillRect(0, 50, 180, 70);
+
+      // Road (center strip)
+      ctx.fillStyle = t.road;
+      ctx.beginPath();
+      ctx.moveTo(50, 50);
+      ctx.lineTo(130, 50);
+      ctx.lineTo(115, 120);
+      ctx.lineTo(65, 120);
+      ctx.closePath();
+      ctx.fill();
+
+      // Edge glow
+      ctx.strokeStyle = t.edge;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(50, 50); ctx.lineTo(65, 120);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(130, 50); ctx.lineTo(115, 120);
+      ctx.stroke();
+
+      // Lane markers
+      ctx.strokeStyle = t.lane;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.moveTo(80, 52); ctx.lineTo(82, 120);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(100, 52); ctx.lineTo(98, 120);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Scenery hints
+      if (t.scenery === "city") {
+        ctx.fillStyle = "#2a3048";
+        ctx.fillRect(5, 20, 15, 30);
+        ctx.fillRect(25, 15, 12, 35);
+        ctx.fillRect(143, 10, 18, 40);
+        ctx.fillRect(165, 22, 12, 28);
+        // Red Hat building
+        ctx.fillStyle = "#7a8a9a";
+        ctx.fillRect(135, 5, 10, 45);
+        ctx.fillStyle = "#cc0000";
+        ctx.fillRect(136, 5, 8, 4);
+      } else if (t.scenery === "forest") {
+        ctx.fillStyle = "#5c3a1a";
+        for (const x of [15, 35, 140, 160]) {
+          ctx.fillRect(x, 30, 3, 20);
+        }
+        ctx.fillStyle = "#2d6b30";
+        for (const x of [12, 32, 137, 157]) {
+          ctx.beginPath();
+          ctx.arc(x + 3, 28, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Mountains
+        ctx.fillStyle = "#3a5a4a";
+        ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(30, 10); ctx.lineTo(60, 50); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(120, 50); ctx.lineTo(155, 5); ctx.lineTo(180, 50); ctx.fill();
+      } else if (t.scenery === "desert") {
+        // Cacti
+        ctx.fillStyle = "#3a7a3a";
+        for (const x of [20, 155]) {
+          ctx.fillRect(x, 40, 3, 18);
+          ctx.fillRect(x - 3, 45, 3, 6);
+          ctx.fillRect(x + 3, 42, 3, 6);
+        }
+        // Sand mountains
+        ctx.fillStyle = "#a08050";
+        ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(35, 15); ctx.lineTo(70, 50); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(110, 50); ctx.lineTo(150, 8); ctx.lineTo(180, 50); ctx.fill();
+      }
+    });
   }
 }

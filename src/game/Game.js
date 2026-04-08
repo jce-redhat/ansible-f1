@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CONFIG } from "../data/config.js";
+import { CONFIG, LEVELS } from "../data/config.js";
 import { Player } from "./Player.js";
 import { Track } from "./Track.js";
 import { Spawner } from "./Spawner.js";
@@ -55,8 +55,9 @@ export class Game {
     this.quizMode = /** @type {'boost'|'recovery'|null} */ (null);
     this.currentQuestion = null;
 
+    this.currentLevel = "A";
     this.player = new Player(scene);
-    this.track = new Track(scene);
+    this.track = new Track(scene, this.currentLevel);
     this.spawner = new Spawner(scene);
     this.collision = new CollisionSystem(this.player);
     this.quiz = new QuizSystem();
@@ -300,7 +301,9 @@ export class Game {
       -2
     );
 
-    this._bbLabel = { demo1: "Demo 1", demo2: "Demo 2", demo3: "Demo 3" }[id] || id;
+    const theme = LEVELS[this.currentLevel];
+    const bbDef = theme && theme.billboards.find((b) => b.id === id);
+    this._bbLabel = bbDef ? bbDef.label : id;
   }
 
   closeBillboard() {
@@ -378,9 +381,27 @@ export class Game {
     this.ui.showPause(false);
     this.ui.showQuiz(false);
     this.ui.showRecovery(false, false);
+    this.ui.showLevelSelect(false);
     this.ui.showHud(false);
     this.ui.showMainMenu(true);
     this.ui.updateMenuBest(getBestScore());
+  }
+
+  switchLevel(levelId) {
+    if (!["A", "B", "C"].includes(levelId)) return;
+    this.currentLevel = levelId;
+
+    this.track.dispose();
+    this.track = new Track(this.scene, levelId);
+
+    const theme = LEVELS[levelId];
+    if (theme) {
+      this.scene.background = new THREE.Color(theme.sceneBg);
+      this.scene.fog = new THREE.Fog(theme.fog, 48, 175);
+    }
+
+    this.ui.setActiveLevel(levelId);
+    this.backToMenu();
   }
 
   /**

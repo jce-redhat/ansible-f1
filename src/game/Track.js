@@ -1,12 +1,17 @@
 import * as THREE from "three";
+import { LEVELS } from "../data/config.js";
+
 /**
- * Dark roadway, glowing lane markers, rack props, horizon grid, billboards.
+ * Themed roadway, lane markers, side props, billboards, skyline, horizon, lights.
+ * Accepts a level theme key ("A", "B", "C") to configure visuals.
  */
 export class Track {
-  constructor(scene) {
+  constructor(scene, levelId = "A") {
     this.scene = scene;
     this.group = new THREE.Group();
     scene.add(this.group);
+    this.levelId = levelId;
+    this.theme = LEVELS[levelId] || LEVELS.A;
 
     /** @type {Object<string, THREE.Group>} */
     this.billboards = {};
@@ -21,13 +26,14 @@ export class Track {
   }
 
   _road() {
+    const t = this.theme;
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(22, 400),
       new THREE.MeshStandardMaterial({
-        color: 0x121520,
+        color: t.road,
         metalness: 0.15,
         roughness: 0.88,
-        emissive: 0x020408,
+        emissive: t.roadEmissive,
         emissiveIntensity: 0.12,
       })
     );
@@ -41,8 +47,8 @@ export class Track {
     this._edgeSpacing = 20;
     this._edgeCount = 24;
     const edgeMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1a2e,
-      emissive: 0x220044,
+      color: t.edge,
+      emissive: t.edgeEmissive,
       emissiveIntensity: 0.6,
     });
     for (let i = 0; i < this._edgeCount; i++) {
@@ -57,6 +63,24 @@ export class Track {
       er.position.x = 5.8;
       this.edgeGroup.add(er);
     }
+
+    // Ground planes on each side of the road
+    if (t.scenery !== "city") {
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: t.side,
+        emissive: t.sideEmissive,
+        emissiveIntensity: 0.15,
+        roughness: 0.95,
+      });
+      const groundL = new THREE.Mesh(new THREE.PlaneGeometry(80, 400), groundMat);
+      groundL.rotation.x = -Math.PI / 2;
+      groundL.position.set(-51, -0.02, 0);
+      this.group.add(groundL);
+      const groundR = new THREE.Mesh(new THREE.PlaneGeometry(80, 400), groundMat.clone());
+      groundR.rotation.x = -Math.PI / 2;
+      groundR.position.set(51, -0.02, 0);
+      this.group.add(groundR);
+    }
   }
 
   _laneMarkers() {
@@ -64,7 +88,7 @@ export class Track {
     this.group.add(this.markerGroup);
 
     const mat = new THREE.MeshBasicMaterial({
-      color: 0x00ffcc,
+      color: this.theme.laneMarker,
       transparent: true,
       opacity: 0.85,
     });
@@ -83,28 +107,31 @@ export class Track {
   _sideProps() {
     this.propsGroup = new THREE.Group();
     this.group.add(this.propsGroup);
-
-    const rackMat = new THREE.MeshStandardMaterial({
-      color: 0x3d4658,
-      metalness: 0.42,
-      roughness: 0.52,
-      emissive: 0x0c1830,
-      emissiveIntensity: 0.55,
-    });
-    const poleMat = new THREE.MeshStandardMaterial({
-      color: 0x4a5068,
-      metalness: 0.35,
-      roughness: 0.55,
-      emissive: 0x1a1038,
-      emissiveIntensity: 0.4,
-    });
     this._propSpacing = 14;
     this._propCount = 28;
+
+    if (this.theme.scenery === "city") {
+      this._cityProps();
+    } else if (this.theme.scenery === "forest") {
+      this._forestProps();
+    } else if (this.theme.scenery === "desert") {
+      this._desertProps();
+    }
+  }
+
+  _cityProps() {
+    const rackMat = new THREE.MeshStandardMaterial({
+      color: 0x3d4658, metalness: 0.42, roughness: 0.52,
+      emissive: 0x0c1830, emissiveIntensity: 0.55,
+    });
+    const poleMat = new THREE.MeshStandardMaterial({
+      color: 0x4a5068, metalness: 0.35, roughness: 0.55,
+      emissive: 0x1a1038, emissiveIntensity: 0.4,
+    });
     for (let i = 0; i < this._propCount; i++) {
       const z = -200 + i * this._propSpacing;
       const rack = new THREE.Mesh(
-        new THREE.BoxGeometry(1.2, 3 + Math.random() * 1.5, 1.5),
-        rackMat
+        new THREE.BoxGeometry(1.2, 3 + Math.random() * 1.5, 1.5), rackMat
       );
       rack.position.set(-8.5, 1.5, z);
       this.propsGroup.add(rack);
@@ -113,8 +140,7 @@ export class Track {
       this.propsGroup.add(rack2);
 
       const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.15, 0.2, 5, 6),
-        poleMat
+        new THREE.CylinderGeometry(0.15, 0.2, 5, 6), poleMat
       );
       pole.position.set(-11, 2.5, z + 4);
       this.propsGroup.add(pole);
@@ -124,12 +150,101 @@ export class Track {
     }
   }
 
+  _forestProps() {
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: 0x5c3a1a, roughness: 0.9, metalness: 0.05,
+    });
+    const leafMat = new THREE.MeshStandardMaterial({
+      color: 0x2d6b30, roughness: 0.8, metalness: 0.05,
+      emissive: 0x0a2a0a, emissiveIntensity: 0.2,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      for (const side of [-1, 1]) {
+        const x = side * (8 + Math.random() * 5);
+        const trunkH = 3 + Math.random() * 2;
+        const trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2, 0.35, trunkH, 6), trunkMat
+        );
+        trunk.position.set(x, trunkH / 2, z + Math.random() * 4);
+        this.propsGroup.add(trunk);
+
+        const crownR = 1.2 + Math.random() * 1;
+        const crown = new THREE.Mesh(
+          new THREE.SphereGeometry(crownR, 6, 5), leafMat
+        );
+        crown.position.set(x, trunkH + crownR * 0.5, trunk.position.z);
+        this.propsGroup.add(crown);
+
+        if (Math.random() < 0.4) {
+          const x2 = side * (14 + Math.random() * 4);
+          const h2 = 2 + Math.random() * 3;
+          const t2 = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15, 0.3, h2, 6), trunkMat
+          );
+          t2.position.set(x2, h2 / 2, z + 3);
+          this.propsGroup.add(t2);
+          const c2 = new THREE.Mesh(
+            new THREE.SphereGeometry(1 + Math.random() * 0.8, 6, 5), leafMat
+          );
+          c2.position.set(x2, h2 + 0.5, z + 3);
+          this.propsGroup.add(c2);
+        }
+      }
+    }
+  }
+
+  _desertProps() {
+    const cactusMat = new THREE.MeshStandardMaterial({
+      color: 0x3a7a3a, roughness: 0.85, metalness: 0.05,
+      emissive: 0x0a200a, emissiveIntensity: 0.15,
+    });
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0xb09060, roughness: 0.92, metalness: 0.05,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      for (const side of [-1, 1]) {
+        const x = side * (8 + Math.random() * 6);
+        if (Math.random() < 0.6) {
+          // Cactus
+          const h = 2 + Math.random() * 3;
+          const cactus = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.25, 0.3, h, 8), cactusMat
+          );
+          cactus.position.set(x, h / 2, z + Math.random() * 3);
+          this.propsGroup.add(cactus);
+          // Arms
+          if (h > 3) {
+            const armH = 1 + Math.random();
+            const arm = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.12, 0.15, armH, 6), cactusMat
+            );
+            arm.position.set(x + side * 0.5, h * 0.6, cactus.position.z);
+            arm.rotation.z = side * -0.8;
+            this.propsGroup.add(arm);
+          }
+        } else {
+          // Rock
+          const rw = 0.8 + Math.random() * 1.5;
+          const rh = 0.5 + Math.random() * 1;
+          const rock = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(rw, 0), rockMat
+          );
+          rock.position.set(x, rh * 0.3, z + Math.random() * 3);
+          rock.scale.set(1, rh / rw, 1);
+          this.propsGroup.add(rock);
+        }
+      }
+    }
+  }
+
   _billboards() {
-    const defs = [
-      { id: "demo1", label: "Demo 1", x: -18, z: -65, accent: 0x00c8ea },
-      { id: "demo2", label: "Demo 2", x: 18,  z: -65, accent: 0xff6644 },
-      { id: "demo3", label: "Demo 3", x: 36,  z: -65, accent: 0x66ffcc },
-    ];
+    const defs = this.theme.billboards.map((b, i) => ({
+      ...b,
+      x: i === 0 ? -18 : i === 1 ? 18 : 36,
+      z: -65,
+    }));
 
     const boardW = 8, boardH = 5;
     const poleH = 5;
@@ -143,8 +258,7 @@ export class Track {
       });
       for (const side of [-1, 1]) {
         const pole = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.12, 0.14, poleH, 8),
-          poleMat
+          new THREE.CylinderGeometry(0.12, 0.14, poleH, 8), poleMat
         );
         pole.position.set(side * (boardW / 2 - 0.4), poleH / 2, 0);
         g.add(pole);
@@ -154,8 +268,7 @@ export class Track {
         color: 0x2a3550, metalness: 0.3, roughness: 0.5,
       });
       const frame = new THREE.Mesh(
-        new THREE.BoxGeometry(boardW + 0.3, boardH + 0.3, 0.15),
-        frameMat
+        new THREE.BoxGeometry(boardW + 0.3, boardH + 0.3, 0.15), frameMat
       );
       frame.position.y = poleH + boardH / 2;
       g.add(frame);
@@ -165,8 +278,7 @@ export class Track {
         emissive: 0x0a1020, emissiveIntensity: 0.3,
       });
       const screen = new THREE.Mesh(
-        new THREE.BoxGeometry(boardW, boardH, 0.18),
-        screenMat
+        new THREE.BoxGeometry(boardW, boardH, 0.18), screenMat
       );
       screen.position.y = poleH + boardH / 2;
       screen.position.z = 0.08;
@@ -187,7 +299,6 @@ export class Track {
       stripBot.position.set(0, poleH - 0.08, 0.1);
       g.add(stripBot);
 
-      // Label text via canvas texture
       const canvas = document.createElement("canvas");
       canvas.width = 512;
       canvas.height = 320;
@@ -195,29 +306,24 @@ export class Track {
       ctx.fillStyle = "#0d1420";
       ctx.fillRect(0, 0, 512, 320);
 
-      // Border
       const accentHex = "#" + def.accent.toString(16).padStart(6, "0");
       ctx.strokeStyle = accentHex;
       ctx.lineWidth = 4;
       ctx.strokeRect(16, 16, 480, 288);
 
-      // "SIDE QUEST" header
       ctx.font = "bold 24px 'Courier New', monospace";
       ctx.fillStyle = accentHex;
       ctx.textAlign = "center";
       ctx.fillText("SIDE QUEST", 256, 60);
 
-      // Demo label
       ctx.font = "bold 48px 'Courier New', monospace";
       ctx.fillStyle = "#ffffff";
       ctx.fillText(def.label.toUpperCase(), 256, 140);
 
-      // "Click to explore" hint
       ctx.font = "20px 'Courier New', monospace";
       ctx.fillStyle = "rgba(200,220,255,0.5)";
       ctx.fillText("[ Click to explore ]", 256, 200);
 
-      // Placeholder dashed box
       ctx.setLineDash([8, 6]);
       ctx.strokeStyle = "rgba(200,220,255,0.2)";
       ctx.lineWidth = 2;
@@ -228,37 +334,29 @@ export class Track {
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.colorSpace = THREE.SRGBColorSpace;
-      const labelMat = new THREE.MeshBasicMaterial({
-        map: tex, transparent: true,
-      });
+      const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
       const label = new THREE.Mesh(
-        new THREE.PlaneGeometry(boardW * 0.92, boardH * 0.92),
-        labelMat
+        new THREE.PlaneGeometry(boardW * 0.92, boardH * 0.92), labelMat
       );
       label.position.y = poleH + boardH / 2;
       label.position.z = 0.18;
       g.add(label);
 
-      // Spotlights illuminating the board face
       const spotL = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
       spotL.position.set(-boardW / 3, poleH + boardH + 1.5, 3);
       spotL.target.position.set(0, poleH + boardH / 2, 0);
-      g.add(spotL);
-      g.add(spotL.target);
+      g.add(spotL); g.add(spotL.target);
 
       const spotR = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
       spotR.position.set(boardW / 3, poleH + boardH + 1.5, 3);
       spotR.target.position.set(0, poleH + boardH / 2, 0);
-      g.add(spotR);
-      g.add(spotR.target);
+      g.add(spotR); g.add(spotR.target);
 
-      // Accent glow
       const glow = new THREE.PointLight(def.accent, 0.5, 12);
       glow.position.set(0, poleH + boardH / 2, 3);
       g.add(glow);
 
       g.position.set(def.x, 0, def.z);
-      // Face the road
       if (def.x < 0) g.rotation.y = -0.25;
       else g.rotation.y = 0.25;
 
@@ -285,17 +383,22 @@ export class Track {
     skylineGroup.position.set(0, 0, -120);
     this.group.add(skylineGroup);
 
+    if (this.theme.scenery === "city") {
+      this._citySkyline(skylineGroup);
+    } else if (this.theme.scenery === "forest") {
+      this._mountainSkyline(skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
+    } else if (this.theme.scenery === "desert") {
+      this._mountainSkyline(skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
+    }
+  }
+
+  _citySkyline(skylineGroup) {
     const bldgMat = (color, emissive = 0x000000) =>
       new THREE.MeshStandardMaterial({
-        color,
-        emissive,
-        emissiveIntensity: 0.7,
-        metalness: 0.1,
-        roughness: 0.85,
-        flatShading: true,
+        color, emissive, emissiveIntensity: 0.7,
+        metalness: 0.1, roughness: 0.85, flatShading: true,
       });
 
-    // Generic background buildings (blocky, 16-bit style)
     const buildings = [
       { x: -50, w: 10, h: 15, d: 8, color: 0x2a3048 },
       { x: -38, w: 8, h: 20, d: 7, color: 0x343a55 },
@@ -310,27 +413,20 @@ export class Track {
 
     for (const b of buildings) {
       const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(b.w, b.h, b.d),
-        bldgMat(b.color, 0x141830)
+        new THREE.BoxGeometry(b.w, b.h, b.d), bldgMat(b.color, 0x141830)
       );
       mesh.position.set(b.x, b.h / 2, 0);
       skylineGroup.add(mesh);
 
-      // Window grid (emissive dots)
       const winMat = new THREE.MeshBasicMaterial({
-        color: 0x5588bb,
-        transparent: true,
-        opacity: 0.8,
+        color: 0x5588bb, transparent: true, opacity: 0.8,
       });
       const rows = Math.floor(b.h / 2.5);
       const cols = Math.floor(b.w / 2.2);
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           if (Math.random() < 0.35) continue;
-          const win = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.8, 0.6),
-            winMat
-          );
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.6), winMat);
           win.position.set(
             b.x - (b.w / 2) + 1.2 + c * 2.2,
             1.5 + r * 2.5,
@@ -341,36 +437,22 @@ export class Track {
       }
     }
 
-    // --- Red Hat HQ building (center-right, tallest, distinctive) ---
-    const rhqW = 14;
-    const rhqH = 26;
-    const rhqD = 10;
-    const rhqX = 22;
-
-    // Main tower — light gray/blue tint like the real building
+    // Red Hat HQ
+    const rhqW = 14, rhqH = 26, rhqD = 10, rhqX = 22;
     const towerMat = bldgMat(0x7a8a9a, 0x1a2535);
-    const tower = new THREE.Mesh(
-      new THREE.BoxGeometry(rhqW, rhqH, rhqD),
-      towerMat
-    );
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(rhqW, rhqH, rhqD), towerMat);
     tower.position.set(rhqX, rhqH / 2, 0);
     skylineGroup.add(tower);
 
-    // Window grid on the tower
     const rhWinMat = new THREE.MeshBasicMaterial({
-      color: 0x88aacc,
-      transparent: true,
-      opacity: 0.75,
+      color: 0x88aacc, transparent: true, opacity: 0.75,
     });
     const rhRows = Math.floor(rhqH / 2.2);
     const rhCols = Math.floor(rhqW / 1.8);
     for (let r = 0; r < rhRows; r++) {
       for (let c = 0; c < rhCols; c++) {
         if (Math.random() < 0.2) continue;
-        const win = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.9, 0.7),
-          rhWinMat
-        );
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.7), rhWinMat);
         win.position.set(
           rhqX - (rhqW / 2) + 1 + c * 1.8,
           1.8 + r * 2.2,
@@ -380,27 +462,17 @@ export class Track {
       }
     }
 
-    // Red Hat sign panel on top
-    const signW = rhqW * 0.85;
-    const signH = 3.5;
+    const signW = rhqW * 0.85, signH = 3.5;
     const signMat = new THREE.MeshStandardMaterial({
-      color: 0xcc0000,
-      emissive: 0xcc0000,
-      emissiveIntensity: 0.8,
-      metalness: 0.05,
-      roughness: 0.5,
+      color: 0xcc0000, emissive: 0xcc0000, emissiveIntensity: 0.8,
+      metalness: 0.05, roughness: 0.5,
     });
-    const sign = new THREE.Mesh(
-      new THREE.BoxGeometry(signW, signH, 0.3),
-      signMat
-    );
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(signW, signH, 0.3), signMat);
     sign.position.set(rhqX, rhqH - 1.2, rhqD / 2 + 0.2);
     skylineGroup.add(sign);
 
-    // "RED HAT" text using small white blocks (pixel-art lettering)
     const textMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const pixelSize = 0.38;
-    // Simplified pixel font: R E D  H A T
     const letters = {
       R: [[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2],[0,3],[2,3],[0,4]],
       E: [[0,0],[1,0],[2,0],[0,1],[0,2],[1,2],[0,3],[0,4],[1,4],[2,4]],
@@ -412,80 +484,109 @@ export class Track {
     const word = "REDHAT";
     const totalW = word.length * 3.5 * pixelSize;
     let cursorX = rhqX - totalW / 2;
-
     for (const ch of word) {
       if (ch === " ") { cursorX += 1.5 * pixelSize; continue; }
       const dots = letters[ch];
       if (!dots) { cursorX += 3.5 * pixelSize; continue; }
       for (const [dx, dy] of dots) {
         const px = new THREE.Mesh(
-          new THREE.BoxGeometry(pixelSize * 0.85, pixelSize * 0.85, 0.15),
-          textMat
+          new THREE.BoxGeometry(pixelSize * 0.85, pixelSize * 0.85, 0.15), textMat
         );
-        px.position.set(
-          cursorX + dx * pixelSize,
-          rhqH - 0.2 - dy * pixelSize,
-          rhqD / 2 + 0.4
-        );
+        px.position.set(cursorX + dx * pixelSize, rhqH - 0.2 - dy * pixelSize, rhqD / 2 + 0.4);
         skylineGroup.add(px);
       }
       cursorX += 3.5 * pixelSize;
     }
 
-    // Fedora silhouette on top of the building (blocky pixel art)
     const hatMat = new THREE.MeshStandardMaterial({
-      color: 0xcc0000,
-      emissive: 0xaa0000,
-      emissiveIntensity: 0.6,
-      metalness: 0.05,
-      roughness: 0.5,
-      flatShading: true,
+      color: 0xcc0000, emissive: 0xaa0000, emissiveIntensity: 0.6,
+      metalness: 0.05, roughness: 0.5, flatShading: true,
     });
-    // Brim
-    const brim = new THREE.Mesh(
-      new THREE.BoxGeometry(6, 0.6, 2),
-      hatMat
-    );
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(6, 0.6, 2), hatMat);
     brim.position.set(rhqX, rhqH + 1.8, rhqD / 2 - 0.5);
     skylineGroup.add(brim);
-    // Crown
-    const crown = new THREE.Mesh(
-      new THREE.BoxGeometry(3.5, 2.2, 1.8),
-      hatMat
-    );
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.2, 1.8), hatMat);
     crown.position.set(rhqX - 0.3, rhqH + 3.2, rhqD / 2 - 0.5);
     skylineGroup.add(crown);
-    // Crown dent/pinch (slightly inset top)
     const dent = new THREE.Mesh(
       new THREE.BoxGeometry(2.4, 0.5, 1.6),
       bldgMat(0x990000, 0x660000)
     );
     dent.position.set(rhqX - 0.3, rhqH + 4.3, rhqD / 2 - 0.5);
     skylineGroup.add(dent);
-    // Tip of hat (right side bump)
-    const tip = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 1.0, 1.4),
-      hatMat
-    );
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 1.4), hatMat);
     tip.position.set(rhqX + 1.8, rhqH + 3.0, rhqD / 2 - 0.5);
     skylineGroup.add(tip);
   }
 
+  _mountainSkyline(skylineGroup, baseColor, midColor, peakColor, snowColor) {
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: baseColor, roughness: 0.9, metalness: 0.05, flatShading: true,
+    });
+    const midMat = new THREE.MeshStandardMaterial({
+      color: midColor, roughness: 0.9, metalness: 0.05, flatShading: true,
+    });
+    const peakMat = new THREE.MeshStandardMaterial({
+      color: peakColor, roughness: 0.85, metalness: 0.05, flatShading: true,
+    });
+    const snowMat = new THREE.MeshStandardMaterial({
+      color: snowColor, roughness: 0.7, metalness: 0.1, flatShading: true,
+    });
+
+    const mountains = [
+      { x: -55, h: 30, r: 16 },
+      { x: -35, h: 42, r: 20 },
+      { x: -18, h: 25, r: 14 },
+      { x: -2,  h: 38, r: 18 },
+      { x: 18,  h: 45, r: 22 },
+      { x: 38,  h: 32, r: 16 },
+      { x: 55,  h: 28, r: 15 },
+      { x: 70,  h: 36, r: 19 },
+    ];
+
+    for (const m of mountains) {
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(m.r, m.h, 6), baseMat
+      );
+      cone.position.set(m.x, m.h / 2, 0);
+      skylineGroup.add(cone);
+
+      // Mid section
+      const mid = new THREE.Mesh(
+        new THREE.ConeGeometry(m.r * 0.6, m.h * 0.55, 5), midMat
+      );
+      mid.position.set(m.x, m.h * 0.45, 0);
+      skylineGroup.add(mid);
+
+      // Snow cap on taller peaks
+      if (m.h > 30) {
+        const snow = new THREE.Mesh(
+          new THREE.ConeGeometry(m.r * 0.25, m.h * 0.18, 5), snowMat
+        );
+        snow.position.set(m.x, m.h * 0.82, 0);
+        skylineGroup.add(snow);
+      }
+    }
+  }
+
   _horizon() {
-    const grid = new THREE.GridHelper(400, 80, 0x336688, 0x1a2840);
+    const t = this.theme;
+    const isCity = t.scenery === "city";
+
+    const grid = new THREE.GridHelper(
+      400, 80,
+      isCity ? 0x336688 : (t.scenery === "forest" ? 0x447744 : 0x998855),
+      isCity ? 0x1a2840 : (t.scenery === "forest" ? 0x2a4a2a : 0x665530)
+    );
     grid.position.y = 0.01;
     grid.position.z = -120;
-    const s = grid.scale;
-    s.x = 1.2;
-    s.z = 1.5;
+    grid.scale.set(1.2, 1, 1.5);
     this.group.add(grid);
 
     const sky = new THREE.Mesh(
       new THREE.PlaneGeometry(600, 200),
       new THREE.MeshBasicMaterial({
-        color: 0x050510,
-        transparent: true,
-        opacity: 0.95,
+        color: t.sky, transparent: true, opacity: 0.95,
       })
     );
     sky.position.set(0, 80, -200);
@@ -493,42 +594,53 @@ export class Track {
   }
 
   _lights() {
-    // Base fill — stops pure-black side faces
-    const amb = new THREE.AmbientLight(0xb8c8e0, 0.72);
+    const isCity = this.theme.scenery === "city";
+
+    const amb = new THREE.AmbientLight(
+      isCity ? 0xb8c8e0 : 0xdde8f0,
+      isCity ? 0.72 : 0.9
+    );
     this.group.add(amb);
 
-    const hemi = new THREE.HemisphereLight(0x8899bb, 0x1a1520, 0.55);
+    const hemi = new THREE.HemisphereLight(
+      isCity ? 0x8899bb : 0xaabbcc,
+      isCity ? 0x1a1520 : 0x443322,
+      isCity ? 0.55 : 0.65
+    );
     hemi.position.set(0, 80, 0);
     this.group.add(hemi);
 
-    // Key from ahead-above (highway “headlights / moon”)
-    const key = new THREE.DirectionalLight(0xd8e8ff, 0.95);
+    const key = new THREE.DirectionalLight(
+      isCity ? 0xd8e8ff : 0xfff8e8,
+      isCity ? 0.95 : 1.1
+    );
     key.position.set(-6, 32, 28);
     this.group.add(key);
 
-    // Rim toward camera — defines vertical edges of roadside props
-    const rim = new THREE.DirectionalLight(0xaaccff, 0.45);
+    const rim = new THREE.DirectionalLight(
+      isCity ? 0xaaccff : 0xddccaa,
+      isCity ? 0.45 : 0.55
+    );
     rim.position.set(0, 14, 42);
     this.group.add(rim);
 
-    // Side fills: hit inward faces of left/right racks (toward the track)
-    const fillL = new THREE.PointLight(0x55ddff, 1.15, 55, 1.8);
-    fillL.position.set(-10, 4.5, 8);
-    this.group.add(fillL);
-
-    const fillR = new THREE.PointLight(0xcc77ff, 0.95, 55, 1.8);
-    fillR.position.set(10, 4.5, 8);
-    this.group.add(fillR);
-
-    const accent = new THREE.PointLight(0xff66aa, 0.55, 90, 2);
-    accent.position.set(0, 9, -25);
-    this.group.add(accent);
+    if (isCity) {
+      const fillL = new THREE.PointLight(0x55ddff, 1.15, 55, 1.8);
+      fillL.position.set(-10, 4.5, 8);
+      this.group.add(fillL);
+      const fillR = new THREE.PointLight(0xcc77ff, 0.95, 55, 1.8);
+      fillR.position.set(10, 4.5, 8);
+      this.group.add(fillR);
+      const accent = new THREE.PointLight(0xff66aa, 0.55, 90, 2);
+      accent.position.set(0, 9, -25);
+      this.group.add(accent);
+    } else {
+      const sun = new THREE.DirectionalLight(0xffeedd, 0.6);
+      sun.position.set(30, 60, -50);
+      this.group.add(sun);
+    }
   }
 
-  /**
-   * @param {number} dt — frame delta (seconds)
-   * @param {number} worldSpeed — current forward speed (units/s)
-   */
   update(dt, worldSpeed) {
     const dz = worldSpeed * dt;
 

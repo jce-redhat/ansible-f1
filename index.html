@@ -107,6 +107,8 @@
               <span><strong>Automation Flow</strong> — 3 correct answers in a row triggers 8s of 1.2× score + pickup magnet</span>
             </div>
           </div>
+          <div id="hud-level-name" class="hud-level-name">Level A</div>
+          <button type="button" id="btn-choose-level" class="btn btn-choose-level">Choose Level</button>
         </div>
         <div class="hud-right">
           <div id="hud-shield">Shield: —</div>
@@ -130,6 +132,7 @@
           Best Score <span id="menu-best">0</span>
         </div>
         <button type="button" id="btn-start" class="btn primary">Start Run</button>
+        <button type="button" id="btn-choose-level-menu" class="btn">Choose Level</button>
         <button type="button" id="btn-highscores" class="btn">High Scores</button>
 
         <div id="menu-leaderboard" class="go-leaderboard hidden">
@@ -197,6 +200,7 @@
 
         <div class="go-buttons">
           <button type="button" id="btn-restart-go" class="btn primary">Play Again</button>
+          <button type="button" id="btn-choose-level-go" class="btn">Choose Level</button>
           <button type="button" id="btn-menu-go" class="btn">Back to Menu</button>
         </div>
       </div>
@@ -253,6 +257,29 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div id="level-select" class="overlay panel hidden">
+        <h2>Choose Track</h2>
+        <p class="level-select-hint">Same gameplay, different scenery &amp; side quests</p>
+        <div class="level-cards">
+          <button class="level-card" data-level="A">
+            <canvas class="level-preview" width="180" height="120"></canvas>
+            <div class="level-card-label">Level A</div>
+            <div class="level-card-sub">Neon City</div>
+          </button>
+          <button class="level-card" data-level="B">
+            <canvas class="level-preview" width="180" height="120"></canvas>
+            <div class="level-card-label">Level B</div>
+            <div class="level-card-sub">Alpine Rally</div>
+          </button>
+          <button class="level-card" data-level="C">
+            <canvas class="level-preview" width="180" height="120"></canvas>
+            <div class="level-card-label">Level C</div>
+            <div class="level-card-sub">Desert Run</div>
+          </button>
+        </div>
+        <button type="button" id="btn-level-back" class="btn" style="margin-top:1rem">Back</button>
       </div>
 
       <button type="button" id="btn-unstick" class="btn-unstick" title="Stuck? Click to force-resume the run">

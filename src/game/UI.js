@@ -332,8 +332,12 @@ export class UI {
       collections,
       collectionPts,
     } = data;
-    if (this.el.health)
-      this.el.health.textContent = `${Math.max(0, Math.floor(health))}`;
+    if (this.el.health) {
+      const hp = Math.max(0, Math.floor(health));
+      this.el.health.textContent = `${hp}`;
+      const row = this.el.health.parentElement;
+      if (row) row.classList.toggle("danger", hp <= 25 && hp > 0);
+    }
     if (this.el.score) this.el.score.textContent = `${Math.floor(score)}`;
     if (this.el.speed)
       this.el.speed.textContent = `${speed.toFixed(1)}`;

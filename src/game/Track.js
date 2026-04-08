@@ -928,26 +928,51 @@ export class Track {
   }
 
   _coastSkyline(skylineGroup) {
-    // left: ocean horizon
+    // Ocean surface — flat plane to the left, extending to the horizon
     const oceanMat = new THREE.MeshStandardMaterial({
-      color: 0x2277aa, roughness: 0.5, metalness: 0.2, flatShading: true,
+      color: 0x1a6699, roughness: 0.35, metalness: 0.25, flatShading: true,
+      transparent: true, opacity: 0.85,
     });
     const ocean = new THREE.Mesh(
-      new THREE.PlaneGeometry(120, 30), oceanMat
+      new THREE.PlaneGeometry(160, 120), oceanMat
     );
-    ocean.position.set(-60, 8, 0);
-    ocean.rotation.y = 0.1;
+    ocean.rotation.x = -Math.PI / 2;
+    ocean.position.set(-80, 0.5, -30);
     skylineGroup.add(ocean);
 
-    // right: coastal hills
+    // Horizon band (vertical strip at back edge so ocean meets the sky)
+    const horizonMat = new THREE.MeshStandardMaterial({
+      color: 0x2288bb, roughness: 0.5, metalness: 0.15,
+    });
+    const horizon = new THREE.Mesh(
+      new THREE.PlaneGeometry(160, 10), horizonMat
+    );
+    horizon.position.set(-80, 5, -90);
+    skylineGroup.add(horizon);
+
+    // Whitecap wave lines along the shore
+    const foamMat = new THREE.MeshStandardMaterial({
+      color: 0xddeeff, roughness: 0.8, metalness: 0.0,
+      transparent: true, opacity: 0.5,
+    });
+    for (let w = 0; w < 4; w++) {
+      const foam = new THREE.Mesh(
+        new THREE.BoxGeometry(40 + Math.random() * 30, 0.15, 0.8), foamMat
+      );
+      foam.position.set(-50 - Math.random() * 20, 0.55, -15 + w * -18);
+      foam.rotation.y = (Math.random() - 0.5) * 0.1;
+      skylineGroup.add(foam);
+    }
+
+    // Right: coastal hills / cliffs
     const hillMat = new THREE.MeshStandardMaterial({
       color: 0x6a8a5a, roughness: 0.9, metalness: 0.05, flatShading: true,
     });
     const hillPositions = [
-      { x: 15, h: 20, r: 14 },
-      { x: 35, h: 28, r: 18 },
-      { x: 55, h: 22, r: 16 },
-      { x: 72, h: 18, r: 12 },
+      { x: 20, h: 22, r: 15 },
+      { x: 40, h: 30, r: 20 },
+      { x: 60, h: 24, r: 17 },
+      { x: 78, h: 18, r: 13 },
     ];
     for (const hp of hillPositions) {
       const hill = new THREE.Mesh(
@@ -957,7 +982,7 @@ export class Track {
       skylineGroup.add(hill);
     }
 
-    // clouds
+    // Clouds
     const cloudMat = new THREE.MeshStandardMaterial({
       color: 0xddeeff, roughness: 0.9, metalness: 0.0, flatShading: true,
       transparent: true, opacity: 0.5,

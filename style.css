@@ -164,6 +164,32 @@ body {
   margin-bottom: 0.15rem;
 }
 
+.hud-health-row {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+#hud-health {
+  font-size: 1.7rem;
+  font-weight: 900;
+  transition: color 0.2s;
+}
+
+.hud-health-row.danger {
+  color: #ff2222;
+  animation: health-flash 0.5s ease-in-out infinite;
+}
+
+.hud-health-row.danger #hud-health {
+  color: #ff2222;
+}
+
+@keyframes health-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .hud-stat-hint {
   margin: 0.2rem 0 0.35rem;
   padding: 0;

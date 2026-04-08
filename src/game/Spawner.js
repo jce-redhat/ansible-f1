@@ -512,7 +512,8 @@ export class Spawner {
   }
 
   _updateRivals(dz, dt, worldSpeed) {
-    const rivalDz = dz * 0.8;
+    const rivalSpeed = CONFIG.BASE_SPEED * 0.8;
+    const rivalDz = rivalSpeed * dt;
     for (let i = this.rivals.length - 1; i >= 0; i--) {
       const r = this.rivals[i];
       if (!r.active) continue;

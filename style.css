@@ -1154,6 +1154,12 @@ body {
 }
 
 /* --- Level select --- */
+#level-select.panel {
+  max-width: 740px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
 .level-select-hint {
   font-size: 0.78rem;
   color: rgba(200, 220, 255, 0.5);
@@ -1162,23 +1168,25 @@ body {
 
 .level-cards {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: center;
   flex-wrap: wrap;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .level-card {
   background: rgba(15, 20, 35, 0.85);
   border: 2px solid rgba(100, 140, 200, 0.25);
   border-radius: 10px;
-  padding: 0.6rem;
+  padding: 0.5rem;
   cursor: pointer;
   transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  width: 200px;
+  gap: 0.3rem;
+  width: 160px;
 }
 
 .level-card:hover {
@@ -1195,8 +1203,8 @@ body {
 .level-preview {
   border-radius: 6px;
   display: block;
-  width: 180px;
-  height: 120px;
+  width: 148px;
+  height: 100px;
   background: #0a0e18;
 }
 

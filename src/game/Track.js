@@ -65,7 +65,7 @@ export class Track {
     }
 
     // Ground planes on each side of the road
-    if (t.scenery !== "city") {
+    if (t.scenery !== "city" && t.scenery !== "durham") {
       const groundMat = new THREE.MeshStandardMaterial({
         color: t.side,
         emissive: t.sideEmissive,
@@ -111,13 +111,14 @@ export class Track {
     this._propCount = 28;
     this._propSlots = [];
 
-    if (this.theme.scenery === "city") {
-      this._cityProps();
-    } else if (this.theme.scenery === "forest") {
-      this._forestProps();
-    } else if (this.theme.scenery === "desert") {
-      this._desertProps();
-    }
+    const s = this.theme.scenery;
+    if (s === "city" || s === "durham") this._cityProps();
+    else if (s === "forest") this._forestProps();
+    else if (s === "desert") this._desertProps();
+    else if (s === "swamp") this._swampProps();
+    else if (s === "snow") this._snowProps();
+    else if (s === "water") this._waterProps();
+    else if (s === "coast") this._coastProps();
 
     // Total wrap range for props
     this._propTotalRange = this._propSpacing * this._propCount;
@@ -244,6 +245,278 @@ export class Track {
           );
           rock.position.set(x, rh * 0.3, Math.random() * 3);
           rock.scale.set(1, rh / rw, 1);
+          slot.add(rock);
+        }
+      }
+    }
+  }
+
+  _swampProps() {
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: 0x3a2a1a, roughness: 0.95, metalness: 0.05,
+    });
+    const mossLeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3a6630, roughness: 0.85, metalness: 0.05,
+      emissive: 0x0a1a0a, emissiveIntensity: 0.15,
+    });
+    const lillyMat = new THREE.MeshStandardMaterial({
+      color: 0x2a5530, roughness: 0.9, metalness: 0.05,
+    });
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x2a4a30, roughness: 0.6, metalness: 0.2,
+      transparent: true, opacity: 0.5,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      const slot = new THREE.Group();
+      slot.position.z = z;
+      this.propsGroup.add(slot);
+      this._propSlots.push(slot);
+
+      for (const side of [-1, 1]) {
+        const x = side * (8 + Math.random() * 5);
+        const trunkH = 2.5 + Math.random() * 2;
+        const trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.3, trunkH, 6), trunkMat
+        );
+        trunk.position.set(x, trunkH / 2, Math.random() * 3);
+        trunk.rotation.z = (Math.random() - 0.5) * 0.3;
+        slot.add(trunk);
+
+        const crownR = 1.5 + Math.random() * 1;
+        const crown = new THREE.Mesh(
+          new THREE.SphereGeometry(crownR, 6, 5), mossLeafMat
+        );
+        crown.position.set(x, trunkH + crownR * 0.3, trunk.position.z);
+        slot.add(crown);
+
+        // hanging moss
+        for (let m = 0; m < 3; m++) {
+          const vine = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.8 + Math.random() * 0.6, 4),
+            mossLeafMat
+          );
+          vine.position.set(
+            x + (Math.random() - 0.5) * crownR,
+            trunkH - 0.2 - Math.random() * 0.4,
+            trunk.position.z + (Math.random() - 0.5) * crownR
+          );
+          slot.add(vine);
+        }
+
+        // water puddles
+        if (Math.random() < 0.5) {
+          const puddle = new THREE.Mesh(
+            new THREE.CylinderGeometry(1 + Math.random(), 1 + Math.random(), 0.05, 8), waterMat
+          );
+          puddle.position.set(side * (12 + Math.random() * 4), 0.02, Math.random() * 4);
+          slot.add(puddle);
+          // lilly pad
+          const pad = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.04, 8), lillyMat
+          );
+          pad.position.set(puddle.position.x + 0.5, 0.05, puddle.position.z);
+          slot.add(pad);
+        }
+      }
+    }
+  }
+
+  _snowProps() {
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4a3a2a, roughness: 0.9, metalness: 0.05,
+    });
+    const pineMat = new THREE.MeshStandardMaterial({
+      color: 0x1a4a2a, roughness: 0.85, metalness: 0.05,
+      emissive: 0x0a1a08, emissiveIntensity: 0.15,
+    });
+    const snowCapMat = new THREE.MeshStandardMaterial({
+      color: 0xeef4ff, roughness: 0.6, metalness: 0.1,
+      emissive: 0x445566, emissiveIntensity: 0.1,
+    });
+    const snowPileMat = new THREE.MeshStandardMaterial({
+      color: 0xdde8f0, roughness: 0.7, metalness: 0.05,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      const slot = new THREE.Group();
+      slot.position.z = z;
+      this.propsGroup.add(slot);
+      this._propSlots.push(slot);
+
+      for (const side of [-1, 1]) {
+        const x = side * (8 + Math.random() * 5);
+        const treeH = 3 + Math.random() * 3;
+
+        // pine tree: trunk + stacked cones
+        const trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.25, treeH * 0.4, 6), trunkMat
+        );
+        trunk.position.set(x, treeH * 0.2, Math.random() * 3);
+        slot.add(trunk);
+
+        for (let tier = 0; tier < 3; tier++) {
+          const coneR = (1.6 - tier * 0.4) + Math.random() * 0.3;
+          const coneH = treeH * 0.35;
+          const cone = new THREE.Mesh(
+            new THREE.ConeGeometry(coneR, coneH, 6), pineMat
+          );
+          cone.position.set(x, treeH * 0.3 + tier * coneH * 0.5, trunk.position.z);
+          slot.add(cone);
+        }
+
+        // snow cap on top
+        const cap = new THREE.Mesh(
+          new THREE.ConeGeometry(0.5, 0.6, 6), snowCapMat
+        );
+        cap.position.set(x, treeH * 0.3 + 1.5 * (treeH * 0.35) * 0.5 + 0.3, trunk.position.z);
+        slot.add(cap);
+
+        // snow piles
+        if (Math.random() < 0.4) {
+          const pile = new THREE.Mesh(
+            new THREE.SphereGeometry(0.6 + Math.random() * 0.5, 6, 4), snowPileMat
+          );
+          pile.position.set(side * (13 + Math.random() * 3), 0.2, Math.random() * 4);
+          pile.scale.y = 0.4;
+          slot.add(pile);
+        }
+      }
+    }
+  }
+
+  _waterProps() {
+    const buoyMat = new THREE.MeshStandardMaterial({
+      color: 0xff4422, roughness: 0.6, metalness: 0.2,
+      emissive: 0x661100, emissiveIntensity: 0.3,
+    });
+    const waveMat = new THREE.MeshStandardMaterial({
+      color: 0x2266aa, roughness: 0.4, metalness: 0.3,
+      transparent: true, opacity: 0.6,
+      emissive: 0x0a1844, emissiveIntensity: 0.2,
+    });
+    const poleMat = new THREE.MeshStandardMaterial({
+      color: 0x5a5a6a, roughness: 0.7, metalness: 0.4,
+    });
+    const ropeMat = new THREE.MeshStandardMaterial({
+      color: 0x887744, roughness: 0.9, metalness: 0.05,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      const slot = new THREE.Group();
+      slot.position.z = z;
+      this.propsGroup.add(slot);
+      this._propSlots.push(slot);
+
+      for (const side of [-1, 1]) {
+        const x = side * (9 + Math.random() * 4);
+        // wave ridges
+        const wave = new THREE.Mesh(
+          new THREE.TorusGeometry(1.5 + Math.random(), 0.15, 6, 12, Math.PI), waveMat
+        );
+        wave.rotation.x = -Math.PI / 2;
+        wave.position.set(x, 0.08, Math.random() * 4);
+        slot.add(wave);
+
+        // buoys or posts
+        if (Math.random() < 0.5) {
+          const buoy = new THREE.Mesh(
+            new THREE.SphereGeometry(0.35, 8, 6), buoyMat
+          );
+          buoy.position.set(side * (8 + Math.random() * 2), 0.35, Math.random() * 3);
+          slot.add(buoy);
+          const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6), poleMat
+          );
+          pole.position.set(buoy.position.x, 0.7, buoy.position.z);
+          slot.add(pole);
+        } else {
+          // dock post with rope
+          const post = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.15, 1.5, 6), poleMat
+          );
+          post.position.set(side * (7.5 + Math.random() * 1.5), 0.75, Math.random() * 3);
+          slot.add(post);
+          const rope = new THREE.Mesh(
+            new THREE.TorusGeometry(0.2, 0.03, 4, 8), ropeMat
+          );
+          rope.position.set(post.position.x, 1.2, post.position.z);
+          rope.rotation.x = Math.PI / 3;
+          slot.add(rope);
+        }
+      }
+    }
+  }
+
+  _coastProps() {
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x7a7a6a, roughness: 0.92, metalness: 0.05, flatShading: true,
+    });
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0x888888, roughness: 0.7, metalness: 0.4,
+    });
+    const shrubMat = new THREE.MeshStandardMaterial({
+      color: 0x5a8a4a, roughness: 0.85, metalness: 0.05,
+    });
+    const waveMat = new THREE.MeshStandardMaterial({
+      color: 0x3388bb, roughness: 0.4, metalness: 0.2,
+      transparent: true, opacity: 0.55,
+    });
+    for (let i = 0; i < this._propCount; i++) {
+      const z = -200 + i * this._propSpacing;
+      const slot = new THREE.Group();
+      slot.position.z = z;
+      this.propsGroup.add(slot);
+      this._propSlots.push(slot);
+
+      // left side: cliff edge with guardrail
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.8, this._propSpacing), railMat
+      );
+      rail.position.set(-7.5, 0.4, 0);
+      slot.add(rail);
+      // rail posts
+      for (let p = 0; p < 3; p++) {
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6), railMat
+        );
+        post.position.set(-7.5, 0.45, -4 + p * 4);
+        slot.add(post);
+      }
+      // ocean waves below cliff
+      const wave = new THREE.Mesh(
+        new THREE.TorusGeometry(2 + Math.random(), 0.12, 6, 12, Math.PI), waveMat
+      );
+      wave.rotation.x = -Math.PI / 2;
+      wave.position.set(-14, -0.5, Math.random() * 4);
+      slot.add(wave);
+
+      // rocks on cliff edge
+      if (Math.random() < 0.6) {
+        const rock = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.8, 0), rockMat
+        );
+        rock.position.set(-9 - Math.random() * 3, 0.3, Math.random() * 5);
+        rock.scale.y = 0.5 + Math.random() * 0.3;
+        slot.add(rock);
+      }
+
+      // right side: hillside with shrubs and rocks
+      for (const _ of [0, 1]) {
+        const x = 8 + Math.random() * 8;
+        if (Math.random() < 0.6) {
+          const shrub = new THREE.Mesh(
+            new THREE.SphereGeometry(0.6 + Math.random() * 0.5, 6, 5), shrubMat
+          );
+          shrub.position.set(x, 0.4, Math.random() * 5);
+          shrub.scale.y = 0.7;
+          slot.add(shrub);
+        } else {
+          const rock = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.6, 0), rockMat
+          );
+          rock.position.set(x, 0.3, Math.random() * 5);
+          rock.scale.y = 0.5;
           slot.add(rock);
         }
       }
@@ -394,13 +667,15 @@ export class Track {
     skylineGroup.position.set(0, 0, -120);
     this.group.add(skylineGroup);
 
-    if (this.theme.scenery === "city") {
-      this._citySkyline(skylineGroup);
-    } else if (this.theme.scenery === "forest") {
-      this._mountainSkyline(skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
-    } else if (this.theme.scenery === "desert") {
-      this._mountainSkyline(skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
-    }
+    const s = this.theme.scenery;
+    if (s === "city") this._citySkyline(skylineGroup);
+    else if (s === "durham") this._durhamSkyline(skylineGroup);
+    else if (s === "forest") this._mountainSkyline(skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
+    else if (s === "desert") this._mountainSkyline(skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
+    else if (s === "swamp") this._swampSkyline(skylineGroup);
+    else if (s === "snow") this._mountainSkyline(skylineGroup, 0x6a7a8a, 0x8a9aaa, 0xaabbcc, 0xffffff);
+    else if (s === "water") this._waterSkyline(skylineGroup);
+    else if (s === "coast") this._coastSkyline(skylineGroup);
   }
 
   _citySkyline(skylineGroup) {
@@ -580,15 +855,341 @@ export class Track {
     }
   }
 
+  _swampSkyline(skylineGroup) {
+    const treeMat = new THREE.MeshStandardMaterial({
+      color: 0x1a2a18, roughness: 0.9, metalness: 0.05, flatShading: true,
+    });
+    const mistMat = new THREE.MeshStandardMaterial({
+      color: 0x4a5a3a, transparent: true, opacity: 0.35,
+      roughness: 0.95, metalness: 0.0,
+    });
+    // dead tree silhouettes
+    const positions = [-55, -38, -22, -8, 8, 25, 40, 55, 68];
+    for (const x of positions) {
+      const h = 12 + Math.random() * 18;
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.4, 0.8, h, 5), treeMat
+      );
+      trunk.position.set(x, h / 2, 0);
+      trunk.rotation.z = (Math.random() - 0.5) * 0.15;
+      skylineGroup.add(trunk);
+
+      // bare branches
+      for (let b = 0; b < 3; b++) {
+        const bLen = 3 + Math.random() * 4;
+        const branch = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.2, bLen, 4), treeMat
+        );
+        branch.position.set(x + (Math.random() - 0.5) * 2, h * (0.5 + b * 0.15), 0);
+        branch.rotation.z = (Math.random() - 0.5) * 1.2;
+        skylineGroup.add(branch);
+      }
+    }
+    // mist layer
+    const mist = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 15), mistMat
+    );
+    mist.position.set(0, 6, 5);
+    skylineGroup.add(mist);
+  }
+
+  _waterSkyline(skylineGroup) {
+    const waveMat = new THREE.MeshStandardMaterial({
+      color: 0x2266aa, roughness: 0.5, metalness: 0.2, flatShading: true,
+      transparent: true, opacity: 0.7,
+    });
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xccddee, roughness: 0.9, metalness: 0.0, flatShading: true,
+      transparent: true, opacity: 0.6,
+    });
+    // rolling ocean waves
+    for (let w = 0; w < 6; w++) {
+      const waveW = 60 + Math.random() * 40;
+      const waveH = 3 + Math.random() * 4;
+      const wave = new THREE.Mesh(
+        new THREE.CylinderGeometry(waveW / 2, waveW / 2, waveH, 8, 1, false, 0, Math.PI),
+        waveMat
+      );
+      wave.rotation.z = Math.PI / 2;
+      wave.rotation.y = Math.PI / 2;
+      wave.position.set(-40 + w * 25, waveH * 0.3, -w * 5);
+      wave.scale.set(1, 0.3, 1);
+      skylineGroup.add(wave);
+    }
+    // clouds
+    for (let c = 0; c < 5; c++) {
+      const cloud = new THREE.Mesh(
+        new THREE.SphereGeometry(6 + Math.random() * 5, 6, 5), cloudMat
+      );
+      cloud.position.set(-50 + c * 28, 25 + Math.random() * 10, -5);
+      cloud.scale.set(2, 0.6, 1);
+      skylineGroup.add(cloud);
+    }
+  }
+
+  _coastSkyline(skylineGroup) {
+    // left: ocean horizon
+    const oceanMat = new THREE.MeshStandardMaterial({
+      color: 0x2277aa, roughness: 0.5, metalness: 0.2, flatShading: true,
+    });
+    const ocean = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 30), oceanMat
+    );
+    ocean.position.set(-60, 8, 0);
+    ocean.rotation.y = 0.1;
+    skylineGroup.add(ocean);
+
+    // right: coastal hills
+    const hillMat = new THREE.MeshStandardMaterial({
+      color: 0x6a8a5a, roughness: 0.9, metalness: 0.05, flatShading: true,
+    });
+    const hillPositions = [
+      { x: 15, h: 20, r: 14 },
+      { x: 35, h: 28, r: 18 },
+      { x: 55, h: 22, r: 16 },
+      { x: 72, h: 18, r: 12 },
+    ];
+    for (const hp of hillPositions) {
+      const hill = new THREE.Mesh(
+        new THREE.ConeGeometry(hp.r, hp.h, 6), hillMat
+      );
+      hill.position.set(hp.x, hp.h / 2, 0);
+      skylineGroup.add(hill);
+    }
+
+    // clouds
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xddeeff, roughness: 0.9, metalness: 0.0, flatShading: true,
+      transparent: true, opacity: 0.5,
+    });
+    for (let c = 0; c < 4; c++) {
+      const cloud = new THREE.Mesh(
+        new THREE.SphereGeometry(5 + Math.random() * 4, 6, 5), cloudMat
+      );
+      cloud.position.set(-30 + c * 30, 30 + Math.random() * 8, -3);
+      cloud.scale.set(2.5, 0.5, 1);
+      skylineGroup.add(cloud);
+    }
+  }
+
+  _durhamSkyline(skylineGroup) {
+    const bldgMat = (color, emissive = 0x000000) =>
+      new THREE.MeshStandardMaterial({
+        color, emissive, emissiveIntensity: 0.7,
+        metalness: 0.1, roughness: 0.85, flatShading: true,
+      });
+
+    const buildings = [
+      { x: -50, w: 9, h: 13, d: 7, color: 0x2a3048 },
+      { x: -38, w: 7, h: 16, d: 6, color: 0x343a55 },
+      { x: -26, w: 10, h: 10, d: 8, color: 0x282e44 },
+      { x: -14, w: 6, h: 14, d: 5, color: 0x303650 },
+      { x: 38, w: 9, h: 12, d: 7, color: 0x282e44 },
+      { x: 50, w: 7, h: 15, d: 6, color: 0x343a55 },
+      { x: 62, w: 10, h: 11, d: 7, color: 0x2a3048 },
+    ];
+
+    const winMat = new THREE.MeshBasicMaterial({
+      color: 0x5588bb, transparent: true, opacity: 0.8,
+    });
+
+    for (const b of buildings) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(b.w, b.h, b.d), bldgMat(b.color, 0x141830)
+      );
+      mesh.position.set(b.x, b.h / 2, 0);
+      skylineGroup.add(mesh);
+
+      const rows = Math.floor(b.h / 2.5);
+      const cols = Math.floor(b.w / 2.2);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (Math.random() < 0.35) continue;
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.6), winMat);
+          win.position.set(
+            b.x - (b.w / 2) + 1.2 + c * 2.2,
+            1.5 + r * 2.5,
+            b.d / 2 + 0.05
+          );
+          skylineGroup.add(win);
+        }
+      }
+    }
+
+    // --- Ansible Tower (main skyscraper with Ansible "A" on top) ---
+    const towerX = 5, towerW = 12, towerH = 30, towerD = 9;
+    const towerMat = bldgMat(0x4a5a6a, 0x1a2535);
+    const tower = new THREE.Mesh(
+      new THREE.BoxGeometry(towerW, towerH, towerD), towerMat
+    );
+    tower.position.set(towerX, towerH / 2, 0);
+    skylineGroup.add(tower);
+
+    const tRows = Math.floor(towerH / 2.2);
+    const tCols = Math.floor(towerW / 1.8);
+    for (let r = 0; r < tRows; r++) {
+      for (let c = 0; c < tCols; c++) {
+        if (Math.random() < 0.2) continue;
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.7), winMat);
+        win.position.set(
+          towerX - (towerW / 2) + 1 + c * 1.8,
+          1.8 + r * 2.2,
+          towerD / 2 + 0.06
+        );
+        skylineGroup.add(win);
+      }
+    }
+
+    // Ansible "A" logo on top
+    const aMat = new THREE.MeshStandardMaterial({
+      color: 0xee1100, emissive: 0xee1100, emissiveIntensity: 0.9,
+      metalness: 0.05, roughness: 0.5,
+    });
+    const pixelSize = 0.5;
+    const ansibleA = [
+      [2,0],[1,1],[3,1],[0,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[4,4],[0,5],[4,5]
+    ];
+    const aW = 5 * pixelSize;
+    for (const [dx, dy] of ansibleA) {
+      const px = new THREE.Mesh(
+        new THREE.BoxGeometry(pixelSize * 0.85, pixelSize * 0.85, 0.15), aMat
+      );
+      px.position.set(
+        towerX - aW / 2 + dx * pixelSize + pixelSize / 2,
+        towerH + 1.5 - dy * pixelSize,
+        towerD / 2 + 0.2
+      );
+      skylineGroup.add(px);
+    }
+
+    // --- Durham Water Tower (Lucky Strike style) ---
+    const wtX = -5, wtBaseH = 14, wtTankR = 3, wtTankH = 5;
+    const wtPoleMat = bldgMat(0x6a6a6a, 0x222222);
+    // support legs (4 angled legs)
+    for (const [lx, lz] of [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]]) {
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.35, wtBaseH, 6), wtPoleMat
+      );
+      leg.position.set(wtX + lx * 0.8, wtBaseH / 2, lz * 0.8);
+      const angleX = lz > 0 ? -0.08 : 0.08;
+      const angleZ = lx > 0 ? -0.08 : 0.08;
+      leg.rotation.set(angleX, 0, angleZ);
+      skylineGroup.add(leg);
+    }
+    // tank
+    const tankMat = bldgMat(0xccccbb, 0x222211);
+    const tank = new THREE.Mesh(
+      new THREE.CylinderGeometry(wtTankR, wtTankR, wtTankH, 12), tankMat
+    );
+    tank.position.set(wtX, wtBaseH + wtTankH / 2, 0);
+    skylineGroup.add(tank);
+    // conical roof
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(wtTankR + 0.3, 2, 12), tankMat
+    );
+    roof.position.set(wtX, wtBaseH + wtTankH + 1, 0);
+    skylineGroup.add(roof);
+    // red stripe around the tank
+    const stripeMat = new THREE.MeshStandardMaterial({
+      color: 0xcc2200, emissive: 0xcc2200, emissiveIntensity: 0.5,
+      metalness: 0.1, roughness: 0.5,
+    });
+    const stripe = new THREE.Mesh(
+      new THREE.CylinderGeometry(wtTankR + 0.05, wtTankR + 0.05, 1.2, 12), stripeMat
+    );
+    stripe.position.set(wtX, wtBaseH + wtTankH / 2 + 0.5, 0);
+    skylineGroup.add(stripe);
+
+    // --- Smokestack ---
+    const ssX = 22, ssH = 22;
+    const ssMat = bldgMat(0x884422, 0x331100);
+    const stack = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.2, 1.8, ssH, 8), ssMat
+    );
+    stack.position.set(ssX, ssH / 2, 0);
+    skylineGroup.add(stack);
+    // top rim
+    const rimMat = bldgMat(0x553311, 0x221100);
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.4, 0.3, 6, 12), rimMat
+    );
+    rim.position.set(ssX, ssH, 0);
+    rim.rotation.x = Math.PI / 2;
+    skylineGroup.add(rim);
+    // smoke puffs
+    const smokeMat = new THREE.MeshStandardMaterial({
+      color: 0x888888, transparent: true, opacity: 0.3,
+      roughness: 0.95, metalness: 0.0,
+    });
+    for (let p = 0; p < 4; p++) {
+      const puff = new THREE.Mesh(
+        new THREE.SphereGeometry(1 + Math.random() * 1.5, 6, 5), smokeMat
+      );
+      puff.position.set(ssX + (Math.random() - 0.5) * 2, ssH + 2 + p * 2, 0);
+      puff.scale.set(1.5, 0.8, 1);
+      skylineGroup.add(puff);
+    }
+
+    // --- Baseball Stadium (Durham Bulls style) ---
+    const stadX = -30, stadW = 18, stadH = 8, stadD = 12;
+    const stadMat = bldgMat(0x3a4858, 0x141830);
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(stadW, stadH, stadD), stadMat
+    );
+    base.position.set(stadX, stadH / 2, 0);
+    skylineGroup.add(base);
+    // curved seating (half-cylinder)
+    const seatMat = bldgMat(0x2a3a48, 0x0a1020);
+    const seats = new THREE.Mesh(
+      new THREE.CylinderGeometry(stadW / 2, stadW / 2, stadD, 12, 1, false, 0, Math.PI),
+      seatMat
+    );
+    seats.rotation.z = Math.PI / 2;
+    seats.rotation.y = Math.PI / 2;
+    seats.position.set(stadX, stadH + 1, 0);
+    seats.scale.set(1, 0.4, 1);
+    skylineGroup.add(seats);
+    // light towers at stadium
+    const lightPoleMat = bldgMat(0x5a5a5a, 0x111111);
+    for (const dx of [-stadW / 2 - 1, stadW / 2 + 1]) {
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.25, stadH + 6, 6), lightPoleMat
+      );
+      pole.position.set(stadX + dx, (stadH + 6) / 2, stadD / 2 + 1);
+      skylineGroup.add(pole);
+      // light fixture
+      const lightMat = new THREE.MeshStandardMaterial({
+        color: 0xffee88, emissive: 0xffee88, emissiveIntensity: 0.8,
+      });
+      const light = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.5, 0.5), lightMat
+      );
+      light.position.set(stadX + dx, stadH + 6, stadD / 2 + 1);
+      skylineGroup.add(light);
+    }
+    // "BULLS" sign
+    const signMat = new THREE.MeshStandardMaterial({
+      color: 0x0044aa, emissive: 0x0044aa, emissiveIntensity: 0.6,
+    });
+    const sign = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 2, 0.3), signMat
+    );
+    sign.position.set(stadX, stadH + 0.5, stadD / 2 + 0.2);
+    skylineGroup.add(sign);
+  }
+
   _horizon() {
     const t = this.theme;
-    const isCity = t.scenery === "city";
+    const isCity = t.scenery === "city" || t.scenery === "durham";
 
-    const grid = new THREE.GridHelper(
-      400, 80,
-      isCity ? 0x336688 : (t.scenery === "forest" ? 0x447744 : 0x998855),
-      isCity ? 0x1a2840 : (t.scenery === "forest" ? 0x2a4a2a : 0x665530)
-    );
+    const gridColors = {
+      city: [0x336688, 0x1a2840], durham: [0x336688, 0x1a2840],
+      forest: [0x447744, 0x2a4a2a], desert: [0x998855, 0x665530],
+      swamp: [0x3a5530, 0x1a2a14], snow: [0x7788aa, 0x445566],
+      water: [0x2255aa, 0x0a1840], coast: [0x557755, 0x2a3a2a],
+    };
+    const [gc1, gc2] = gridColors[t.scenery] || [0x888888, 0x444444];
+    const grid = new THREE.GridHelper(400, 80, gc1, gc2);
     grid.position.y = 0.01;
     grid.position.z = -120;
     grid.scale.set(1.2, 1, 1.5);
@@ -605,7 +1206,7 @@ export class Track {
   }
 
   _lights() {
-    const isCity = this.theme.scenery === "city";
+    const isCity = this.theme.scenery === "city" || this.theme.scenery === "durham";
 
     const amb = new THREE.AmbientLight(
       isCity ? 0xb8c8e0 : 0xdde8f0,

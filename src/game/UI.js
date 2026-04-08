@@ -525,8 +525,7 @@ export class UI {
       card.classList.toggle("active", card.dataset.level === levelId);
     });
     if (this.el.hudLevelName) {
-      const names = { A: "Level A", B: "Level B", C: "Level C" };
-      this.el.hudLevelName.textContent = names[levelId] || levelId;
+      this.el.hudLevelName.textContent = `Level ${levelId}`;
     }
   }
 
@@ -552,97 +551,155 @@ export class UI {
   _drawLevelPreviews() {
     const previews = document.querySelectorAll(".level-card");
     const themes = [
-      { bg: "#0a0e18", road: "#121520", edge: "#220044", lane: "#00ffcc", side: "#0a0e18", sky: "#050510", scenery: "city" },
-      { bg: "#7799aa", road: "#555960", edge: "#446633", lane: "#ffffff", side: "#2a5520", sky: "#6699bb", scenery: "forest" },
-      { bg: "#c4a870", road: "#8b7355", edge: "#c4a84a", lane: "#ffeecc", side: "#d4b85a", sky: "#ccaa77", scenery: "desert" },
+      { road: "#121520", edge: "#220044", lane: "#00ffcc", side: "#0a0e18", sky: "#050510", scenery: "city" },
+      { road: "#555960", edge: "#446633", lane: "#ffffff", side: "#2a5520", sky: "#6699bb", scenery: "forest" },
+      { road: "#8b7355", edge: "#c4a84a", lane: "#ffeecc", side: "#d4b85a", sky: "#ccaa77", scenery: "desert" },
+      { road: "#3a3828", edge: "#4a5530", lane: "#88cc66", side: "#2a3a1a", sky: "#556644", scenery: "swamp" },
+      { road: "#667788", edge: "#8899aa", lane: "#ccddff", side: "#dde8f0", sky: "#aabbcc", scenery: "snow" },
+      { road: "#445566", edge: "#3388aa", lane: "#ffffff", side: "#2266aa", sky: "#4488bb", scenery: "water" },
+      { road: "#555555", edge: "#cc8844", lane: "#ffdd44", side: "#8a9a5a", sky: "#6699cc", scenery: "coast" },
+      { road: "#2a2a30", edge: "#1a1a2e", lane: "#ffcc00", side: "#1a2218", sky: "#182840", scenery: "durham" },
     ];
+
+    const W = 148, H = 100;
+    const midY = Math.round(H * 0.42);
 
     previews.forEach((card, i) => {
       const canvas = card.querySelector("canvas");
-      if (!canvas) return;
+      if (!canvas || !themes[i]) return;
+      canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
       const t = themes[i];
 
-      // Sky
       ctx.fillStyle = t.sky;
-      ctx.fillRect(0, 0, 180, 50);
+      ctx.fillRect(0, 0, W, midY);
 
-      // Ground / sides
       ctx.fillStyle = t.side;
-      ctx.fillRect(0, 50, 180, 70);
+      ctx.fillRect(0, midY, W, H - midY);
 
-      // Road (center strip)
+      const rL = W * 0.28, rR = W * 0.72;
+      const bL = W * 0.36, bR = W * 0.64;
       ctx.fillStyle = t.road;
       ctx.beginPath();
-      ctx.moveTo(50, 50);
-      ctx.lineTo(130, 50);
-      ctx.lineTo(115, 120);
-      ctx.lineTo(65, 120);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(rL, midY); ctx.lineTo(rR, midY);
+      ctx.lineTo(bR, H); ctx.lineTo(bL, H);
+      ctx.closePath(); ctx.fill();
 
-      // Edge glow
-      ctx.strokeStyle = t.edge;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(50, 50); ctx.lineTo(65, 120);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(130, 50); ctx.lineTo(115, 120);
-      ctx.stroke();
+      ctx.strokeStyle = t.edge; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(rL, midY); ctx.lineTo(bL, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(rR, midY); ctx.lineTo(bR, H); ctx.stroke();
 
-      // Lane markers
-      ctx.strokeStyle = t.lane;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 6]);
-      ctx.beginPath();
-      ctx.moveTo(80, 52); ctx.lineTo(82, 120);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(100, 52); ctx.lineTo(98, 120);
-      ctx.stroke();
+      ctx.strokeStyle = t.lane; ctx.lineWidth = 1;
+      ctx.setLineDash([3, 5]);
+      const m1 = rL + (rR - rL) * 0.37, m1b = bL + (bR - bL) * 0.37;
+      const m2 = rL + (rR - rL) * 0.63, m2b = bL + (bR - bL) * 0.63;
+      ctx.beginPath(); ctx.moveTo(m1, midY + 2); ctx.lineTo(m1b, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(m2, midY + 2); ctx.lineTo(m2b, H); ctx.stroke();
       ctx.setLineDash([]);
 
-      // Scenery hints
-      if (t.scenery === "city") {
-        ctx.fillStyle = "#2a3048";
-        ctx.fillRect(5, 20, 15, 30);
-        ctx.fillRect(25, 15, 12, 35);
-        ctx.fillRect(143, 10, 18, 40);
-        ctx.fillRect(165, 22, 12, 28);
-        // Red Hat building
-        ctx.fillStyle = "#7a8a9a";
-        ctx.fillRect(135, 5, 10, 45);
-        ctx.fillStyle = "#cc0000";
-        ctx.fillRect(136, 5, 8, 4);
-      } else if (t.scenery === "forest") {
-        ctx.fillStyle = "#5c3a1a";
-        for (const x of [15, 35, 140, 160]) {
-          ctx.fillRect(x, 30, 3, 20);
-        }
-        ctx.fillStyle = "#2d6b30";
-        for (const x of [12, 32, 137, 157]) {
-          ctx.beginPath();
-          ctx.arc(x + 3, 28, 7, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Mountains
-        ctx.fillStyle = "#3a5a4a";
-        ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(30, 10); ctx.lineTo(60, 50); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(120, 50); ctx.lineTo(155, 5); ctx.lineTo(180, 50); ctx.fill();
-      } else if (t.scenery === "desert") {
-        // Cacti
-        ctx.fillStyle = "#3a7a3a";
-        for (const x of [20, 155]) {
-          ctx.fillRect(x, 40, 3, 18);
-          ctx.fillRect(x - 3, 45, 3, 6);
-          ctx.fillRect(x + 3, 42, 3, 6);
-        }
-        // Sand mountains
-        ctx.fillStyle = "#a08050";
-        ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(35, 15); ctx.lineTo(70, 50); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(110, 50); ctx.lineTo(150, 8); ctx.lineTo(180, 50); ctx.fill();
-      }
+      this._drawSceneryHints(ctx, t, W, H, midY);
     });
+  }
+
+  _drawSceneryHints(ctx, t, W, H, midY) {
+    const s = t.scenery;
+    if (s === "city") {
+      ctx.fillStyle = "#2a3048";
+      ctx.fillRect(4, 14, 12, 28); ctx.fillRect(20, 10, 10, 32);
+      ctx.fillRect(W - 30, 8, 14, 34); ctx.fillRect(W - 14, 16, 10, 26);
+      ctx.fillStyle = "#7a8a9a";
+      ctx.fillRect(W - 42, 4, 8, 38);
+      ctx.fillStyle = "#cc0000";
+      ctx.fillRect(W - 41, 4, 6, 3);
+    } else if (s === "forest") {
+      ctx.fillStyle = "#5c3a1a";
+      for (const x of [12, 30, W - 28, W - 12]) ctx.fillRect(x, midY - 16, 2, 16);
+      ctx.fillStyle = "#2d6b30";
+      for (const x of [10, 28, W - 30, W - 14]) { ctx.beginPath(); ctx.arc(x + 3, midY - 18, 6, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#3a5a4a";
+      ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(24, 6); ctx.lineTo(48, midY); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W - 48, midY); ctx.lineTo(W - 20, 3); ctx.lineTo(W, midY); ctx.fill();
+    } else if (s === "desert") {
+      ctx.fillStyle = "#3a7a3a";
+      for (const x of [16, W - 20]) { ctx.fillRect(x, midY - 12, 2, 14); ctx.fillRect(x - 3, midY - 7, 2, 5); ctx.fillRect(x + 3, midY - 9, 2, 5); }
+      ctx.fillStyle = "#a08050";
+      ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(28, 10); ctx.lineTo(56, midY); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W - 56, midY); ctx.lineTo(W - 24, 6); ctx.lineTo(W, midY); ctx.fill();
+    } else if (s === "swamp") {
+      ctx.fillStyle = "#3a2a1a";
+      for (const x of [10, 28, W - 26, W - 10]) { ctx.fillRect(x, midY - 20, 2, 20); ctx.fillRect(x - 2, midY - 14, 2, 6); }
+      ctx.fillStyle = "#3a6630";
+      for (const x of [8, 26, W - 28, W - 12]) { ctx.beginPath(); ctx.arc(x + 3, midY - 22, 5, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "rgba(60,80,50,0.35)";
+      ctx.fillRect(0, midY + 4, W, 8);
+      ctx.fillStyle = "#2a4a30";
+      ctx.beginPath(); ctx.arc(20, midY + 10, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W - 20, midY + 12, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (s === "snow") {
+      ctx.fillStyle = "#1a4a2a";
+      for (const x of [14, 32, W - 30, W - 14]) {
+        ctx.beginPath(); ctx.moveTo(x, midY); ctx.lineTo(x + 4, midY - 16); ctx.lineTo(x + 8, midY); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 1, midY - 6); ctx.lineTo(x + 4, midY - 20); ctx.lineTo(x + 7, midY - 6); ctx.fill();
+      }
+      ctx.fillStyle = "#eef4ff";
+      for (const x of [14, 32, W - 30, W - 14]) { ctx.beginPath(); ctx.moveTo(x + 2, midY - 14); ctx.lineTo(x + 4, midY - 22); ctx.lineTo(x + 6, midY - 14); ctx.fill(); }
+      ctx.fillStyle = "#6a7a8a";
+      ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(30, 4); ctx.lineTo(60, midY); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W - 60, midY); ctx.lineTo(W - 22, 2); ctx.lineTo(W, midY); ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.moveTo(22, 8); ctx.lineTo(30, 2); ctx.lineTo(38, 8); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W - 38, 6); ctx.lineTo(W - 24, 1); ctx.lineTo(W - 14, 6); ctx.fill();
+    } else if (s === "water") {
+      ctx.fillStyle = "rgba(34,102,170,0.5)";
+      for (let y = midY + 4; y < H; y += 10) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.bezierCurveTo(W * 0.25, y - 3, W * 0.75, y + 3, W, y); ctx.lineTo(W, y + 3); ctx.bezierCurveTo(W * 0.75, y + 6, W * 0.25, y, 0, y + 3); ctx.fill();
+      }
+      ctx.fillStyle = "#ff4422";
+      ctx.beginPath(); ctx.arc(18, midY + 18, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W - 18, midY + 14, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ccddee";
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.ellipse(W * 0.3, 14, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(W * 0.7, 10, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (s === "coast") {
+      ctx.fillStyle = "#2277aa";
+      ctx.fillRect(0, midY - 6, W * 0.28, midY + 6);
+      ctx.fillStyle = "#888888";
+      ctx.fillRect(W * 0.26, midY - 2, 2, H - midY + 2);
+      ctx.fillStyle = "#6a8a5a";
+      ctx.beginPath(); ctx.moveTo(W - 50, midY); ctx.lineTo(W - 30, 6); ctx.lineTo(W - 10, midY); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W - 30, midY); ctx.lineTo(W - 14, 12); ctx.lineTo(W, midY); ctx.fill();
+      ctx.fillStyle = "#ccddee";
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath(); ctx.ellipse(W * 0.4, 10, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (s === "durham") {
+      ctx.fillStyle = "#2a3048";
+      ctx.fillRect(4, 16, 10, 26); ctx.fillRect(18, 12, 8, 30);
+      ctx.fillRect(W - 24, 14, 12, 28); ctx.fillRect(W - 10, 18, 8, 24);
+      // Ansible tower
+      ctx.fillStyle = "#4a5a6a";
+      ctx.fillRect(W * 0.42, 4, 10, 38);
+      ctx.fillStyle = "#ee1100";
+      ctx.fillRect(W * 0.43, 2, 8, 3);
+      // Water tower
+      ctx.fillStyle = "#6a6a6a";
+      ctx.fillRect(W * 0.28, 14, 1, 16); ctx.fillRect(W * 0.34, 14, 1, 16);
+      ctx.fillStyle = "#ccccbb";
+      ctx.fillRect(W * 0.26, 8, 12, 7);
+      ctx.fillStyle = "#cc2200";
+      ctx.fillRect(W * 0.27, 10, 10, 2);
+      // Smokestack
+      ctx.fillStyle = "#884422";
+      ctx.fillRect(W - 36, 8, 4, 34);
+      ctx.fillStyle = "rgba(136,136,136,0.3)";
+      ctx.beginPath(); ctx.arc(W - 34, 6, 4, 0, Math.PI * 2); ctx.fill();
+      // Stadium
+      ctx.fillStyle = "#3a4858";
+      ctx.fillRect(W * 0.6, 22, 14, 10);
+      ctx.fillStyle = "#0044aa";
+      ctx.fillRect(W * 0.61, 20, 12, 3);
+    }
   }
 }

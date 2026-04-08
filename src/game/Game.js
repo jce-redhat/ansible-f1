@@ -393,7 +393,7 @@ export class Game {
   }
 
   switchLevel(levelId, returnTo = "main_menu") {
-    if (!["A", "B", "C"].includes(levelId)) return;
+    if (!LEVELS[levelId]) return;
     this.currentLevel = levelId;
 
     this.track.dispose();

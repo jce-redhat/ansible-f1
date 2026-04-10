@@ -1184,6 +1184,24 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.quiz-result-timer {
+  margin-top: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.quiz-result-timer.hidden {
+  display: none;
+}
+
+.quiz-result-timer #quiz-result-countdown {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffcc00;
+}
+
 /* Touch-only pause button */
 .touch-pause {
   display: none;

@@ -157,6 +157,14 @@ export class Game {
         return;
       }
 
+      if (this.state === "quiz" && this._quizPhase === "result") {
+        if (e.code === "Escape") {
+          this._dismissResult(this._lastAnswerCorrect);
+          e.preventDefault();
+        }
+        return;
+      }
+
       if (this.state === "quiz") return;
 
       if (e.code === "Escape" || e.code === "Space") {
@@ -484,6 +492,7 @@ export class Game {
     this.ui.stopQuizCountdown();
     const q = this.currentQuestion;
     const ok = this.quiz.isCorrect(q, optionIndex);
+    this._lastAnswerCorrect = ok;
 
     if (ok) play(SFX.CORRECT, 0.8);
     else play(SFX.WRONG, 0.8);
@@ -498,12 +507,12 @@ export class Game {
     this.ui.showQuizResult(ok, title, lines, q.explanation);
 
     const displayMs = ok ? CONFIG.QUIZ_RESULT_DISPLAY_MS : 3000;
+    if (!ok) {
+      this.ui.startResultCountdown(3);
+    }
     clearTimeout(this._quizResultTimer);
     this._quizResultTimer = setTimeout(() => {
-      this._finishQuiz(ok);
-      this._quizBusy = false;
-      this._quizPhase = "question";
-      clearTimeout(this._quizSafetyTimer);
+      this._dismissResult(ok);
     }, displayMs);
   }
 
@@ -560,6 +569,15 @@ export class Game {
     }
 
     return { title: ok ? "CORRECT!" : "WRONG", lines };
+  }
+
+  _dismissResult(ok) {
+    clearTimeout(this._quizResultTimer);
+    this.ui.stopResultCountdown();
+    this._finishQuiz(ok);
+    this._quizBusy = false;
+    this._quizPhase = "question";
+    clearTimeout(this._quizSafetyTimer);
   }
 
   _finishQuiz(correct) {
@@ -748,6 +766,7 @@ export class Game {
     this._quizPhase = "question";
     clearTimeout(this._quizResultTimer);
     clearTimeout(this._quizSafetyTimer);
+    this.ui.stopResultCountdown();
   }
 
   _startQuizSafetyTimer() {

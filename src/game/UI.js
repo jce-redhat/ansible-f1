@@ -50,6 +50,8 @@ export class UI {
       quizResultTitle: document.getElementById("quiz-result-title"),
       quizResultLines: document.getElementById("quiz-result-lines"),
       quizResultExplain: document.getElementById("quiz-result-explain"),
+      quizResultTimer: document.getElementById("quiz-result-timer"),
+      quizResultCountdown: document.getElementById("quiz-result-countdown"),
 
       billboardOverlay: document.getElementById("billboard-overlay"),
       billboardLabel: document.getElementById("billboard-label"),
@@ -282,6 +284,32 @@ export class UI {
     }
 
     void r.offsetWidth;
+  }
+
+  startResultCountdown(seconds) {
+    this.stopResultCountdown();
+    const el = this.el.quizResultTimer;
+    const cd = this.el.quizResultCountdown;
+    if (!el || !cd) return;
+    let remaining = seconds;
+    cd.textContent = String(remaining);
+    el.classList.remove("hidden");
+    this._resultCountdownId = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        this.stopResultCountdown();
+        return;
+      }
+      cd.textContent = String(remaining);
+    }, 1000);
+  }
+
+  stopResultCountdown() {
+    clearInterval(this._resultCountdownId);
+    this._resultCountdownId = null;
+    if (this.el.quizResultTimer) {
+      this.el.quizResultTimer.classList.add("hidden");
+    }
   }
 
   /**

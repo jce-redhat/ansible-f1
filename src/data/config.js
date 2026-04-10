@@ -110,7 +110,7 @@ export const DRIVERS = {
   },
   nuno: {
     id: "nuno",
-    name: "Nuno do Carmo",
+    name: "Nuno Martins",
     car: "truck",
     photo: "./assets/nuno_tron.png",
     origin: "Johannesburg, South Africa",

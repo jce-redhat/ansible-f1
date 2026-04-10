@@ -938,6 +938,13 @@ export class Game {
 
   _updateRun(effDt, now, rawDt, spawnScale) {
     this.runTime += effDt;
+
+    if (this.runTime >= 300) {
+      this.ui.setStatus("Time's up! 5 minutes on the clock.", 3000);
+      this._gameOver();
+      return;
+    }
+
     this.track.update(effDt, this.worldSpeed);
 
     const ramp = Math.min(
@@ -1220,14 +1227,20 @@ export class Game {
         this.ui.setStatus(`Pickup: Certified Collection — +${pts} score`, CONFIG.STATUS_HIT_MS);
       }
     } else if (t === "POLICY_SHIELD") {
-      this.shield = true;
-      this.player.setShieldActive(true);
-      play(SFX.SHIELD_ON, 0.75);
-      this.ui.showPickupPopup("Shield Active!");
-      this.ui.setStatus(
-        "Pickup: Policy Shield — next obstacle hit won’t cost health",
-        CONFIG.STATUS_HIT_MS
-      );
+      if (this._isSemiTruck()) {
+        this.score += 50;
+        this.ui.showPickupPopup("+50");
+        this.ui.setStatus("Shield? You ARE the shield. +50 score", CONFIG.STATUS_HIT_MS);
+      } else {
+        this.shield = true;
+        this.player.setShieldActive(true);
+        play(SFX.SHIELD_ON, 0.75);
+        this.ui.showPickupPopup("Shield Active!");
+        this.ui.setStatus(
+          "Pickup: Policy Shield — next obstacle hit won’t cost health",
+          CONFIG.STATUS_HIT_MS
+        );
+      }
     } else if (t === "BOOST_TOKEN") {
       if (this.quizEnabled) {
         this._openBoostQuiz();

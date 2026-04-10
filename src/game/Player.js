@@ -591,19 +591,19 @@ export class Player {
     const g = new THREE.Group();
 
     const steel = new THREE.MeshStandardMaterial({
-      color: 0xb8b8c0, metalness: 0.85, roughness: 0.18,
-      emissive: 0x111115, emissiveIntensity: 0.1,
+      color: 0xc0c0c8, metalness: 0.9, roughness: 0.14,
+      emissive: 0x181820, emissiveIntensity: 0.12,
     });
     const darkSteel = new THREE.MeshStandardMaterial({
-      color: 0x707078, metalness: 0.8, roughness: 0.22,
-      emissive: 0x080808, emissiveIntensity: 0.1,
+      color: 0x808088, metalness: 0.85, roughness: 0.2,
+      emissive: 0x0a0a0a, emissiveIntensity: 0.1,
     });
     const black = new THREE.MeshStandardMaterial({
-      color: 0x0a0a0e, metalness: 0.5, roughness: 0.4,
+      color: 0x080810, metalness: 0.5, roughness: 0.45,
     });
     const glass = new THREE.MeshStandardMaterial({
-      color: 0x88bbdd, metalness: 0.5, roughness: 0.12,
-      transparent: true, opacity: 0.55,
+      color: 0x88bbdd, metalness: 0.5, roughness: 0.1,
+      transparent: true, opacity: 0.45,
     });
     const fluxBlue = new THREE.MeshStandardMaterial({
       color: 0x44ccff, emissive: 0x44ccff, emissiveIntensity: 0.9,
@@ -613,166 +613,226 @@ export class Player {
       color: 0x0d0d0d, metalness: 0.15, roughness: 0.92,
     });
     const chrome = new THREE.MeshStandardMaterial({
-      color: 0xccddee, metalness: 0.9, roughness: 0.12,
+      color: 0xddddee, metalness: 0.92, roughness: 0.1,
     });
     const tailRed = new THREE.MeshStandardMaterial({
       color: 0xff2200, emissive: 0xff2200, emissiveIntensity: 0.6,
       metalness: 0.3, roughness: 0.3,
     });
 
-    // Hover offset — whole car floats up
-    const hoverY = 0.35;
+    const H = 0.3;
 
-    // ── Main body (wedge-shaped DeLorean profile) ──
-    const bodyMain = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.35, 2.8), steel.clone());
-    bodyMain.position.set(0, 0.45 + hoverY, 0);
-    g.add(bodyMain);
+    // ── Lower body / chassis (long, wide, low slab) ──
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.1, 3.4), darkSteel.clone());
+    chassis.position.set(0, 0.2 + H, 0);
+    g.add(chassis);
 
-    // Lower body taper
-    const bodyLower = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.12, 2.6), darkSteel.clone());
-    bodyLower.position.set(0, 0.26 + hoverY, 0);
-    g.add(bodyLower);
+    // ── Main body — wedge profile, low front rising to rear ──
+    // Front section (very low, flat hood)
+    const hoodFront = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 0.7), steel.clone());
+    hoodFront.position.set(0, 0.3 + H, -1.2);
+    g.add(hoodFront);
 
-    // ── Hood (sloped front) ──
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.9), steel.clone());
-    hood.position.set(0, 0.58 + hoverY, -0.85);
-    hood.rotation.x = 0.12;
-    g.add(hood);
+    // Hood mid (slightly higher)
+    const hoodMid = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 0.55), steel.clone());
+    hoodMid.position.set(0, 0.33 + H, -0.72);
+    g.add(hoodMid);
 
-    // Front bumper
-    const fBumper = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.14, 0.12), darkSteel.clone());
-    fBumper.position.set(0, 0.36 + hoverY, -1.38);
-    g.add(fBumper);
-
-    // Front grille / lower intake
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 0.06), black.clone());
-    grille.position.set(0, 0.32 + hoverY, -1.42);
-    g.add(grille);
-
-    // ── Headlights ──
-    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
-    for (const side of [-0.55, 0.55]) {
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.06), hlMat);
-      hl.position.set(side, 0.42 + hoverY, -1.42);
-      g.add(hl);
+    // Hood crease lines
+    for (const side of [-0.35, 0.35]) {
+      const crease = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 1.2), darkSteel.clone());
+      crease.position.set(side, 0.35 + H, -0.95);
+      g.add(crease);
     }
 
-    // ── Windshield (angled) ──
-    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.5, 0.06), glass.clone());
-    windshield.position.set(0, 0.75 + hoverY, -0.38);
-    windshield.rotation.x = -0.35;
+    // Front fascia (low, wide, angular)
+    const frontFascia = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 0.08), darkSteel.clone());
+    frontFascia.position.set(0, 0.24 + H, -1.58);
+    g.add(frontFascia);
+
+    // DMC grille (narrow black slit)
+    const grilleBar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.03, 0.06), black.clone());
+    grilleBar.position.set(0, 0.28 + H, -1.59);
+    g.add(grilleBar);
+
+    // Headlights (rectangular, recessed)
+    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+    for (const side of [-0.6, 0.6]) {
+      const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.1, 0.08), black.clone());
+      hlHousing.position.set(side, 0.3 + H, -1.59);
+      g.add(hlHousing);
+      const hlLens = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.04), hlMat);
+      hlLens.position.set(side, 0.3 + H, -1.62);
+      g.add(hlLens);
+    }
+
+    // Front bumper (thin chrome strip)
+    const fBump = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.06, 0.05), chrome.clone());
+    fBump.position.set(0, 0.17 + H, -1.6);
+    g.add(fBump);
+
+    // ── Cabin / greenhouse (set back, compact) ──
+    // A-pillars + windshield frame
+    const wsFrame = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.45, 0.06), steel.clone());
+    wsFrame.position.set(0, 0.56 + H, -0.42);
+    wsFrame.rotation.x = -0.4;
+    g.add(wsFrame);
+
+    // Windshield glass
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.38, 0.04), glass.clone());
+    windshield.position.set(0, 0.56 + H, -0.41);
+    windshield.rotation.x = -0.4;
     g.add(windshield);
 
-    // ── Roof ──
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.8), darkSteel.clone());
-    roof.position.set(0, 0.92 + hoverY, 0.05);
+    // Roof panel (narrow, between gull-wing doors)
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.75), steel.clone());
+    roof.position.set(0, 0.72 + H, 0.0);
     g.add(roof);
 
-    // Side windows
+    // Roof rails (where gull-wing doors hinge)
     for (const side of [-1, 1]) {
-      const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.32, 0.7), glass.clone());
-      sideWin.position.set(side * 0.72, 0.74 + hoverY, 0.0);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.8), darkSteel.clone());
+      rail.position.set(side * 0.35, 0.72 + H, 0.0);
+      g.add(rail);
+    }
+
+    // Side windows (triangular feel via two angled pieces)
+    for (const side of [-1, 1]) {
+      const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.65), glass.clone());
+      sideWin.position.set(side * 0.78, 0.55 + H, -0.05);
       g.add(sideWin);
     }
 
-    // Rear window
-    const rearWin = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 0.05), glass.clone());
-    rearWin.position.set(0, 0.78 + hoverY, 0.42);
-    rearWin.rotation.x = 0.25;
+    // B-pillar / rear quarter
+    for (const side of [-1, 1]) {
+      const bPillar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.06), steel.clone());
+      bPillar.position.set(side * 0.78, 0.55 + H, 0.28);
+      g.add(bPillar);
+    }
+
+    // Rear window (angled, with louver overlay)
+    const rearWin = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.28, 0.04), glass.clone());
+    rearWin.position.set(0, 0.58 + H, 0.36);
+    rearWin.rotation.x = 0.35;
     g.add(rearWin);
 
-    // ── Rear deck / trunk ──
-    const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.65), steel.clone());
-    trunk.position.set(0, 0.58 + hoverY, 0.95);
-    trunk.rotation.x = -0.06;
-    g.add(trunk);
+    // Rear louvers (iconic DMC-12 feature)
+    for (let i = 0; i < 6; i++) {
+      const louver = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.015, 0.04), darkSteel.clone());
+      louver.position.set(0, 0.48 + H + i * 0.04, 0.38 + i * 0.02);
+      louver.rotation.x = 0.3;
+      g.add(louver);
+    }
+
+    // ── Rear body / trunk area ──
+    const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.12, 0.8), steel.clone());
+    rearDeck.position.set(0, 0.32 + H, 0.85);
+    g.add(rearDeck);
+
+    // Body sides (full length, giving the car its shape)
+    for (const side of [-1, 1]) {
+      const bodySide = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 3.2), steel.clone());
+      bodySide.position.set(side * 0.85, 0.28 + H, 0);
+      g.add(bodySide);
+
+      // Lower rocker panel
+      const rocker = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.08, 3.0), darkSteel.clone());
+      rocker.position.set(side * 0.87, 0.17 + H, 0);
+      g.add(rocker);
+
+      // Gull-wing door seam line
+      const doorSeam = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.35, 0.9), darkSteel.clone());
+      doorSeam.position.set(side * 0.86, 0.45 + H, -0.05);
+      g.add(doorSeam);
+    }
+
+    // Rear fascia
+    const rearFascia = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.18, 0.06), darkSteel.clone());
+    rearFascia.position.set(0, 0.26 + H, 1.26);
+    g.add(rearFascia);
 
     // Rear bumper
-    const rBumper = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.14, 0.1), darkSteel.clone());
-    rBumper.position.set(0, 0.36 + hoverY, 1.38);
-    g.add(rBumper);
+    const rBump = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.06, 0.05), chrome.clone());
+    rBump.position.set(0, 0.17 + H, 1.28);
+    g.add(rBump);
 
-    // ── Taillights ──
-    for (const side of [-0.55, 0.55]) {
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.06), tailRed);
-      tl.position.set(side, 0.42 + hoverY, 1.4);
+    // Taillights (wide horizontal bar, classic DeLorean)
+    for (const side of [-0.5, 0.5]) {
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.05), tailRed);
+      tl.position.set(side, 0.3 + H, 1.28);
       g.add(tl);
     }
 
-    // ── Gull-wing door lines (raised panel detail) ──
-    for (const side of [-1, 1]) {
-      const doorLine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.28, 1.0), darkSteel.clone());
-      doorLine.position.set(side * 0.83, 0.55 + hoverY, -0.05);
-      g.add(doorLine);
-      const doorTop = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 1.0), chrome.clone());
-      doorTop.position.set(side * 0.83, 0.7 + hoverY, -0.05);
-      g.add(doorTop);
+    // ── Mr. Fusion (on rear deck) ──
+    const fusionBase = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.18, 0.2), darkSteel.clone());
+    fusionBase.position.set(0, 0.46 + H, 0.9);
+    g.add(fusionBase);
+    const fusionCan = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.12, 0.14, 8), chrome.clone()
+    );
+    fusionCan.position.set(0, 0.58 + H, 0.9);
+    g.add(fusionCan);
+
+    // ── Flux band around body (glowing blue stripe) ──
+    const fluxBand = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.02, 0.04), fluxBlue.clone());
+    fluxBand.position.set(0, 0.22 + H, -0.3);
+    g.add(fluxBand);
+    // Rear flux band
+    const fluxBandR = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.02, 0.04), fluxBlue.clone());
+    fluxBandR.position.set(0, 0.22 + H, 0.6);
+    g.add(fluxBandR);
+
+    // ── Flux capacitor Y glow (inside cabin) ──
+    const fluxV = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.14, 0.03), fluxBlue.clone());
+    fluxV.position.set(0, 0.52 + H, 0.15);
+    g.add(fluxV);
+    for (const side of [-0.06, 0.06]) {
+      const fluxArm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.1, 0.03), fluxBlue.clone());
+      fluxArm.position.set(side, 0.46 + H, 0.15);
+      fluxArm.rotation.z = side > 0 ? -0.5 : 0.5;
+      g.add(fluxArm);
     }
 
-    // ── Mr. Fusion on rear (boxy device on trunk) ──
-    const fusion = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.25), darkSteel.clone());
-    fusion.position.set(0, 0.72 + hoverY, 1.05);
-    g.add(fusion);
-    const fusionTop = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.14, 0.08, 8), chrome.clone()
-    );
-    fusionTop.position.set(0, 0.86 + hoverY, 1.05);
-    g.add(fusionTop);
-
-    // ── Flux capacitor glow (visible through rear window) ──
-    const flux = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.04), fluxBlue.clone());
-    flux.position.set(0, 0.68 + hoverY, 0.2);
-    g.add(flux);
-    const fluxH = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.16), fluxBlue.clone());
-    fluxH.position.set(0, 0.68 + hoverY, 0.2);
-    g.add(fluxH);
-
-    // ── Hover thrusters (wheels folded down, glowing) ──
-    const addHoverWheel = (x, z) => {
-      // Wheel (folded down, angled 90 degrees - pointing down)
+    // ── Hover system — wheels folded flat under body ──
+    const addHoverUnit = (x, z) => {
+      // Folded wheel (flat, tucked under body)
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.2, 0.12, 14), rubber.clone()
+        new THREE.CylinderGeometry(0.18, 0.18, 0.12, 14), rubber.clone()
       );
-      tire.position.set(x, 0.12, z);
+      tire.position.set(x, 0.08, z);
       g.add(tire);
 
-      // Thruster glow ring around wheel
+      // Thruster ring
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.2, 0.02, 6, 18), fluxBlue.clone()
+        new THREE.TorusGeometry(0.18, 0.015, 6, 20), fluxBlue.clone()
       );
-      ring.position.set(x, 0.12, z);
+      ring.position.set(x, 0.08, z);
       g.add(ring);
 
-      // Hover jet (glow disc beneath)
+      // Hover jet glow disc
       const jet = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.14, 0.18, 0.04, 12),
+        new THREE.CylinderGeometry(0.12, 0.16, 0.03, 12),
         new THREE.MeshStandardMaterial({
           color: 0x44ccff, emissive: 0x44ccff, emissiveIntensity: 1.2,
-          transparent: true, opacity: 0.6,
+          transparent: true, opacity: 0.5,
         })
       );
-      jet.position.set(x, 0.02, z);
+      jet.position.set(x, 0.01, z);
       g.add(jet);
-
-      // Strut connecting wheel to body
-      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.2, 0.06), darkSteel.clone());
-      strut.position.set(x, 0.22 + hoverY / 2, z);
-      g.add(strut);
     };
 
-    addHoverWheel(-0.7, -0.9);
-    addHoverWheel(0.7, -0.9);
-    addHoverWheel(-0.7, 0.95);
-    addHoverWheel(0.7, 0.95);
+    addHoverUnit(-0.72, -1.05);
+    addHoverUnit(0.72, -1.05);
+    addHoverUnit(-0.72, 0.9);
+    addHoverUnit(0.72, 0.9);
 
-    // ── Hover glow underneath body ──
-    const hoverGlow = new THREE.PointLight(0x44ccff, 0.8, 6);
-    hoverGlow.position.set(0, 0.15, 0);
+    // ── Underglow ──
+    const hoverGlow = new THREE.PointLight(0x44ccff, 0.7, 5);
+    hoverGlow.position.set(0, 0.05, 0);
     g.add(hoverGlow);
 
-    // Secondary warm glow from Mr. Fusion
-    const fusionGlow = new THREE.PointLight(0xffaa44, 0.3, 4);
-    fusionGlow.position.set(0, 0.85 + hoverY, 1.05);
+    const fusionGlow = new THREE.PointLight(0xffaa44, 0.25, 3);
+    fusionGlow.position.set(0, 0.6 + H, 0.9);
     g.add(fusionGlow);
 
     this.pointLight = hoverGlow;

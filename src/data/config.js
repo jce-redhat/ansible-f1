@@ -154,6 +154,15 @@ export const DRIVERS = {
     origin: "Ottawa, Canada",
     bio: "Born in Beirut, forged in Ottawa, fueled by pure maple syrup. Hicham drinks a pint of the dark stuff every morning — Grade A, straight from the can, no pancakes required. Played three hours of hockey daily for twenty years straight and has the missing teeth to prove it. Basically invented the private cloud before anyone knew what a cloud was — spent a decade at VMware virtualizing things that weren't supposed to be virtualizable, including, allegedly, his own consciousness. His two sons think their dad is a superhero. His French Canadian wife knows he is one. Once migrated 40,000 virtual machines across three datacenters during a Canadiens playoff game without missing a single goal. Races motorcycles on weekends because four wheels are for people who need stability. His lightcycle leaves a trail of pure neon. If you see the glow in your mirror, it's already too late. They call him 'The Architect of Clouds.' The grid is his home ice.",
   },
+  roger: {
+    id: "roger",
+    name: "Roger Lopez",
+    car: "delorean",
+    country: "US",
+    photo: "./assets/roger_tron.png",
+    origin: "Austin, Texas",
+    bio: "Son of Cuban immigrants who taught him two things: never give up and always season the rice properly. Roger containerized his first application at age fourteen — in 2005, before Docker existed — using a hand-rolled chroot jail he built on a Pentium 4 in his parents' garage. By twenty he was orchestrating Kubernetes clusters so large they had their own weather patterns. Holds the unofficial record for most pods running on a single OpenShift cluster: 847,000, deployed via an Ansible playbook he wrote during a brisket smoke at Franklin BBQ. Speaking of brisket, Roger has a standing reservation at every smokehouse on South Congress and once slow-cooked a 14-pound prime brisket for exactly 16 hours — timed to the minute his Helm chart rollout completed. Races his hover-converted DeLorean through the streets of Austin at 2 AM because the traffic is finally reasonable. His wife says he loves Kubernetes more than her. He has not denied it. His three kids can recite pod lifecycle phases before the alphabet. Wrote a custom CRI runtime that runs containers inside containers inside containers — inception-style — just to prove a point at KubeCon. Red Hat gave him a lifetime OpenShift license after he automated an entire Fortune 500 migration in a single weekend using nothing but Ansible, espresso, and sheer willpower. When 1.21 gigawatts isn't enough, Roger adds more replicas. They call him 'El Orquestador.' Where he's going, he doesn't need roads.",
+  },
 };
 
 export const PICKUP_TYPES = [

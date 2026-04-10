@@ -779,6 +779,7 @@ export class UI {
   _carLabel(carType) {
     if (carType === "truck") return "Pickup Truck";
     if (carType === "lightcycle") return "Lightcycle";
+    if (carType === "delorean") return "DeLorean";
     return "F1 Racer";
   }
 

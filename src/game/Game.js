@@ -1047,7 +1047,21 @@ export class Game {
     });
   }
 
+  _isSemiTruck() {
+    const d = DRIVERS[this.currentDriver];
+    return d && d.car === "semi_truck";
+  }
+
   _onHitObstacle(e) {
+    if (this._isSemiTruck()) {
+      this.spawner.explodeObstacle(e);
+      play(SFX.OBSTACLE_HIT, 0.6);
+      this.ui.shake();
+      this.shakeUntil = performance.now() + 100;
+      this.shakeAmp = 0.15;
+      this.ui.setStatus("Smashed right through it!", 1200);
+      return;
+    }
     const isGator = e.subtype === "GATOR";
     if (this.shield) {
       this.spawner.explodeObstacle(e);
@@ -1094,6 +1108,15 @@ export class Game {
   }
 
   _onHitRival(e) {
+    if (this._isSemiTruck()) {
+      this.spawner.explodeRival(e);
+      play(SFX.OBSTACLE_HIT, 0.6);
+      this.ui.shake();
+      this.shakeUntil = performance.now() + 100;
+      this.shakeAmp = 0.15;
+      this.ui.setStatus("Plowed right through!", 1200);
+      return;
+    }
     const isBus = e.subtype === "SCHOOL_BUS";
     this.spawner.explodeRival(e);
     if (this.shield) {

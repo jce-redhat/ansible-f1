@@ -13,6 +13,9 @@ export class Track {
     this.levelId = levelId;
     this.theme = LEVELS[levelId] || LEVELS.A;
 
+    this._curve = this.theme.curve || null;
+    this._scrollDist = 0;
+
     /** @type {Object<string, THREE.Group>} */
     this.billboards = {};
 
@@ -25,58 +28,78 @@ export class Track {
     this._lights();
   }
 
+  getCurveX(worldZ) {
+    if (!this._curve) return 0;
+    return this._curve.amplitude *
+      Math.sin((worldZ + this._scrollDist) * this._curve.frequency);
+  }
+
   _road() {
     const t = this.theme;
-    const road = new THREE.Mesh(
-      new THREE.PlaneGeometry(22, 400),
-      new THREE.MeshStandardMaterial({
-        color: t.road,
-        metalness: 0.15,
-        roughness: 0.88,
-        emissive: t.roadEmissive,
-        emissiveIntensity: 0.12,
-      })
-    );
-    road.rotation.x = -Math.PI / 2;
-    road.position.y = 0;
-    road.receiveShadow = true;
-    this.group.add(road);
+    const roadMat = new THREE.MeshStandardMaterial({
+      color: t.road, metalness: 0.15, roughness: 0.88,
+      emissive: t.roadEmissive, emissiveIntensity: 0.12,
+    });
+
+    if (this._curve) {
+      this._roadSegGroup = new THREE.Group();
+      this.group.add(this._roadSegGroup);
+      this._roadSegSpacing = 4;
+      this._roadSegCount = 100;
+      for (let i = 0; i < this._roadSegCount; i++) {
+        const seg = new THREE.Mesh(
+          new THREE.PlaneGeometry(24, this._roadSegSpacing + 0.6), roadMat
+        );
+        seg.rotation.x = -Math.PI / 2;
+        seg.position.set(0, 0, -200 + i * this._roadSegSpacing);
+        seg.receiveShadow = true;
+        this._roadSegGroup.add(seg);
+      }
+    } else {
+      const road = new THREE.Mesh(
+        new THREE.PlaneGeometry(22, 400), roadMat
+      );
+      road.rotation.x = -Math.PI / 2;
+      road.position.y = 0;
+      road.receiveShadow = true;
+      this.group.add(road);
+    }
 
     this.edgeGroup = new THREE.Group();
     this.group.add(this.edgeGroup);
-    this._edgeSpacing = 20;
-    this._edgeCount = 24;
+    this._edgeSpacing = this._curve ? 5 : 20;
+    this._edgeCount = this._curve ? 80 : 24;
     const edgeMat = new THREE.MeshStandardMaterial({
-      color: t.edge,
-      emissive: t.edgeEmissive,
-      emissiveIntensity: 0.6,
+      color: t.edge, emissive: t.edgeEmissive, emissiveIntensity: 0.6,
     });
+    this._edgeMeshes = [];
     for (let i = 0; i < this._edgeCount; i++) {
       const z = -200 + i * this._edgeSpacing;
       const el = new THREE.Mesh(
-        new THREE.BoxGeometry(0.35, 0.08, this._edgeSpacing),
-        edgeMat
+        new THREE.BoxGeometry(0.35, 0.08, this._edgeSpacing), edgeMat
       );
       el.position.set(-5.8, 0.05, z);
+      el.userData.baseX = -5.8;
       this.edgeGroup.add(el);
       const er = el.clone();
       er.position.x = 5.8;
+      er.userData.baseX = 5.8;
       this.edgeGroup.add(er);
+      this._edgeMeshes.push(el, er);
     }
 
     // Ground planes on each side of the road
     if (t.scenery !== "city" && t.scenery !== "durham") {
       const groundMat = new THREE.MeshStandardMaterial({
-        color: t.side,
-        emissive: t.sideEmissive,
-        emissiveIntensity: 0.15,
-        roughness: 0.95,
+        color: t.side, emissive: t.sideEmissive,
+        emissiveIntensity: 0.15, roughness: 0.95,
       });
-      const groundL = new THREE.Mesh(new THREE.PlaneGeometry(80, 400), groundMat);
+      const gw = this._curve ? 100 : 80;
+      const groundL = new THREE.Mesh(new THREE.PlaneGeometry(gw, 400), groundMat);
       groundL.rotation.x = -Math.PI / 2;
       groundL.position.set(-51, -0.02, 0);
       this.group.add(groundL);
-      const groundR = new THREE.Mesh(new THREE.PlaneGeometry(80, 400), groundMat.clone());
+      const groundR = new THREE.Mesh(new THREE.PlaneGeometry(gw, 400), groundMat.clone());
       groundR.rotation.x = -Math.PI / 2;
       groundR.position.set(51, -0.02, 0);
       this.group.add(groundR);
@@ -89,17 +112,21 @@ export class Track {
 
     const mat = new THREE.MeshBasicMaterial({
       color: this.theme.laneMarker,
-      transparent: true,
-      opacity: 0.85,
+      transparent: true, opacity: 0.85,
     });
-    this._markerSpacing = 8;
-    this._markerCount = 40;
+    this._markerSpacing = this._curve ? 4 : 8;
+    this._markerCount = this._curve ? 100 : 40;
+    this._markerMeshes = [];
     for (let i = 0; i < this._markerCount; i++) {
       const z = -200 + i * this._markerSpacing;
       for (const x of [-1.6, 1.6]) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 3.2), mat);
+        const m = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.02, this._markerSpacing * 0.4), mat
+        );
         m.position.set(x, 0.03, z);
+        m.userData.baseX = x;
         this.markerGroup.add(m);
+        this._markerMeshes.push(m);
       }
     }
   }
@@ -386,20 +413,15 @@ export class Track {
   }
 
   _waterProps() {
-    const buoyMat = new THREE.MeshStandardMaterial({
-      color: 0xff4422, roughness: 0.6, metalness: 0.2,
-      emissive: 0x661100, emissiveIntensity: 0.3,
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: 0x8a6a3a, roughness: 0.9, metalness: 0.05,
     });
-    const waveMat = new THREE.MeshStandardMaterial({
-      color: 0x2266aa, roughness: 0.4, metalness: 0.3,
-      transparent: true, opacity: 0.6,
-      emissive: 0x0a1844, emissiveIntensity: 0.2,
+    const leafMat = new THREE.MeshStandardMaterial({
+      color: 0x2a8a3a, roughness: 0.75, metalness: 0.05,
+      emissive: 0x0a2a0a, emissiveIntensity: 0.15,
     });
-    const poleMat = new THREE.MeshStandardMaterial({
-      color: 0x5a5a6a, roughness: 0.7, metalness: 0.4,
-    });
-    const ropeMat = new THREE.MeshStandardMaterial({
-      color: 0x887744, roughness: 0.9, metalness: 0.05,
+    const sandMat = new THREE.MeshStandardMaterial({
+      color: 0xd4c090, roughness: 0.92, metalness: 0.05,
     });
     for (let i = 0; i < this._propCount; i++) {
       const z = -200 + i * this._propSpacing;
@@ -409,59 +431,96 @@ export class Track {
       this._propSlots.push(slot);
 
       for (const side of [-1, 1]) {
-        const x = side * (9 + Math.random() * 4);
-        // wave ridges
-        const wave = new THREE.Mesh(
-          new THREE.TorusGeometry(1.5 + Math.random(), 0.15, 6, 12, Math.PI), waveMat
-        );
-        wave.rotation.x = -Math.PI / 2;
-        wave.position.set(x, 0.08, Math.random() * 4);
-        slot.add(wave);
+        const x = side * (8 + Math.random() * 5);
+        const trunkH = 4 + Math.random() * 3;
 
-        // buoys or posts
+        // curved palm trunk (slightly leaning)
+        const trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.25, trunkH, 6), trunkMat
+        );
+        trunk.position.set(x, trunkH / 2, Math.random() * 3);
+        trunk.rotation.z = side * (0.1 + Math.random() * 0.15);
+        trunk.rotation.x = (Math.random() - 0.5) * 0.1;
+        slot.add(trunk);
+
+        // palm fronds (elongated flat leaves radiating from top)
+        const topX = x + side * trunkH * Math.sin(trunk.rotation.z) * 0.3;
+        const topY = trunkH * 0.95;
+        for (let f = 0; f < 6; f++) {
+          const angle = (f / 6) * Math.PI * 2;
+          const frondLen = 1.5 + Math.random() * 1;
+          const frond = new THREE.Mesh(
+            new THREE.BoxGeometry(0.4, 0.06, frondLen), leafMat
+          );
+          frond.position.set(
+            topX + Math.cos(angle) * frondLen * 0.4,
+            topY - 0.2 - Math.abs(Math.cos(angle)) * 0.5,
+            trunk.position.z + Math.sin(angle) * frondLen * 0.4
+          );
+          frond.rotation.y = angle;
+          frond.rotation.x = 0.4 + Math.random() * 0.3;
+          slot.add(frond);
+        }
+
+        // sand patch at base
         if (Math.random() < 0.5) {
-          const buoy = new THREE.Mesh(
-            new THREE.SphereGeometry(0.35, 8, 6), buoyMat
+          const sand = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.8 + Math.random() * 0.5, 1 + Math.random() * 0.5, 0.06, 8),
+            sandMat
           );
-          buoy.position.set(side * (8 + Math.random() * 2), 0.35, Math.random() * 3);
-          slot.add(buoy);
-          const pole = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6), poleMat
+          sand.position.set(x, 0.02, trunk.position.z);
+          slot.add(sand);
+        }
+
+        // extra palm in back row
+        if (Math.random() < 0.35) {
+          const x2 = side * (14 + Math.random() * 4);
+          const h2 = 3 + Math.random() * 2;
+          const t2 = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.2, h2, 6), trunkMat
           );
-          pole.position.set(buoy.position.x, 0.7, buoy.position.z);
-          slot.add(pole);
-        } else {
-          // dock post with rope
-          const post = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.15, 1.5, 6), poleMat
-          );
-          post.position.set(side * (7.5 + Math.random() * 1.5), 0.75, Math.random() * 3);
-          slot.add(post);
-          const rope = new THREE.Mesh(
-            new THREE.TorusGeometry(0.2, 0.03, 4, 8), ropeMat
-          );
-          rope.position.set(post.position.x, 1.2, post.position.z);
-          rope.rotation.x = Math.PI / 3;
-          slot.add(rope);
+          t2.position.set(x2, h2 / 2, 2);
+          t2.rotation.z = side * 0.12;
+          slot.add(t2);
+          for (let f = 0; f < 5; f++) {
+            const angle = (f / 5) * Math.PI * 2;
+            const frond = new THREE.Mesh(
+              new THREE.BoxGeometry(0.3, 0.05, 1.2), leafMat
+            );
+            frond.position.set(
+              x2 + Math.cos(angle) * 0.5,
+              h2 - 0.3,
+              2 + Math.sin(angle) * 0.5
+            );
+            frond.rotation.y = angle;
+            frond.rotation.x = 0.5;
+            slot.add(frond);
+          }
         }
       }
     }
   }
 
   _coastProps() {
-    const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x7a7a6a, roughness: 0.92, metalness: 0.05, flatShading: true,
+    const cliffMat = new THREE.MeshStandardMaterial({
+      color: 0x8a7a60, roughness: 0.95, metalness: 0.05, flatShading: true,
+    });
+    const cliffDarkMat = new THREE.MeshStandardMaterial({
+      color: 0x6a5a45, roughness: 0.95, metalness: 0.05, flatShading: true,
     });
     const railMat = new THREE.MeshStandardMaterial({
-      color: 0x888888, roughness: 0.7, metalness: 0.4,
+      color: 0xaaaaaa, roughness: 0.6, metalness: 0.5,
     });
     const shrubMat = new THREE.MeshStandardMaterial({
       color: 0x5a8a4a, roughness: 0.85, metalness: 0.05,
     });
-    const waveMat = new THREE.MeshStandardMaterial({
-      color: 0x3388bb, roughness: 0.4, metalness: 0.2,
-      transparent: true, opacity: 0.55,
+    const dirtMat = new THREE.MeshStandardMaterial({
+      color: 0x9a7a50, roughness: 0.92, metalness: 0.05,
     });
+    const hillMat = new THREE.MeshStandardMaterial({
+      color: 0x6a9a4a, roughness: 0.88, metalness: 0.05, flatShading: true,
+    });
+
     for (let i = 0; i < this._propCount; i++) {
       const z = -200 + i * this._propSpacing;
       const slot = new THREE.Group();
@@ -469,55 +528,63 @@ export class Track {
       this.propsGroup.add(slot);
       this._propSlots.push(slot);
 
-      // left side: cliff edge with guardrail
-      const rail = new THREE.Mesh(
-        new THREE.BoxGeometry(0.1, 0.8, this._propSpacing), railMat
+      // left: cliff face dropping down (visible wall below road level)
+      const cliffH = 6 + Math.random() * 3;
+      const cliff = new THREE.Mesh(
+        new THREE.BoxGeometry(12, cliffH, this._propSpacing + 0.5),
+        Math.random() < 0.5 ? cliffMat : cliffDarkMat
       );
-      rail.position.set(-7.5, 0.4, 0);
-      slot.add(rail);
-      // rail posts
-      for (let p = 0; p < 3; p++) {
-        const post = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6), railMat
+      cliff.position.set(-13, -cliffH / 2 + 0.1, 0);
+      slot.add(cliff);
+
+      // rocky ledge along cliff top
+      if (Math.random() < 0.7) {
+        const ledge = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.6, 0), cliffMat
         );
-        post.position.set(-7.5, 0.45, -4 + p * 4);
+        ledge.position.set(-7.5 - Math.random() * 2, 0.15, Math.random() * 6 - 3);
+        ledge.scale.set(1.5, 0.4, 1);
+        slot.add(ledge);
+      }
+
+      // guardrail on cliff edge
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.7, this._propSpacing), railMat
+      );
+      rail.position.set(-7.2, 0.35, 0);
+      slot.add(rail);
+      for (let p = 0; p < 4; p++) {
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6), railMat
+        );
+        post.position.set(-7.2, 0.4, -5 + p * 3.5);
         slot.add(post);
       }
-      // ocean waves below cliff
-      const wave = new THREE.Mesh(
-        new THREE.TorusGeometry(2 + Math.random(), 0.12, 6, 12, Math.PI), waveMat
+
+      // right: hillside rising up with dirt, shrubs, and slope
+      const slopeH = 3 + Math.random() * 4;
+      const slope = new THREE.Mesh(
+        new THREE.BoxGeometry(14, slopeH, this._propSpacing + 0.5), hillMat
       );
-      wave.rotation.x = -Math.PI / 2;
-      wave.position.set(-14, -0.5, Math.random() * 4);
-      slot.add(wave);
+      slope.position.set(16, slopeH / 2 - 0.5, 0);
+      slot.add(slope);
 
-      // rocks on cliff edge
-      if (Math.random() < 0.6) {
-        const rock = new THREE.Mesh(
-          new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.8, 0), rockMat
-        );
-        rock.position.set(-9 - Math.random() * 3, 0.3, Math.random() * 5);
-        rock.scale.y = 0.5 + Math.random() * 0.3;
-        slot.add(rock);
-      }
+      // dirt shoulder
+      const dirt = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 0.15, this._propSpacing), dirtMat
+      );
+      dirt.position.set(8, 0.02, 0);
+      slot.add(dirt);
 
-      // right side: hillside with shrubs and rocks
-      for (const _ of [0, 1]) {
-        const x = 8 + Math.random() * 8;
+      // shrubs on hillside
+      for (let s = 0; s < 2; s++) {
         if (Math.random() < 0.6) {
           const shrub = new THREE.Mesh(
-            new THREE.SphereGeometry(0.6 + Math.random() * 0.5, 6, 5), shrubMat
+            new THREE.SphereGeometry(0.5 + Math.random() * 0.5, 6, 5), shrubMat
           );
-          shrub.position.set(x, 0.4, Math.random() * 5);
+          shrub.position.set(10 + Math.random() * 6, 0.4 + Math.random() * slopeH * 0.3, Math.random() * 6 - 3);
           shrub.scale.y = 0.7;
           slot.add(shrub);
-        } else {
-          const rock = new THREE.Mesh(
-            new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.6, 0), rockMat
-          );
-          rock.position.set(x, 0.3, Math.random() * 5);
-          rock.scale.y = 0.5;
-          slot.add(rock);
         }
       }
     }
@@ -673,7 +740,7 @@ export class Track {
     else if (s === "forest") this._mountainSkyline(skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
     else if (s === "desert") this._mountainSkyline(skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
     else if (s === "swamp") this._swampSkyline(skylineGroup);
-    else if (s === "snow") this._mountainSkyline(skylineGroup, 0x6a7a8a, 0x8a9aaa, 0xaabbcc, 0xffffff);
+    else if (s === "snow") this._snowMountainSkyline(skylineGroup);
     else if (s === "water") this._waterSkyline(skylineGroup);
     else if (s === "coast") this._coastSkyline(skylineGroup);
   }
@@ -855,6 +922,88 @@ export class Track {
     }
   }
 
+  _snowMountainSkyline(skylineGroup) {
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x6a7a8a, roughness: 0.9, metalness: 0.05, flatShading: true,
+    });
+    const midMat = new THREE.MeshStandardMaterial({
+      color: 0x8090a0, roughness: 0.85, metalness: 0.05, flatShading: true,
+    });
+    const snowMat = new THREE.MeshStandardMaterial({
+      color: 0xeef4ff, roughness: 0.6, metalness: 0.1, flatShading: true,
+    });
+    const snowBrightMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, roughness: 0.5, metalness: 0.15,
+      emissive: 0x667788, emissiveIntensity: 0.15,
+    });
+
+    const peaks = [
+      { x: -60, h: 28, w: 22 },
+      { x: -35, h: 40, w: 28 },
+      { x: -12, h: 32, w: 24 },
+      { x: 10,  h: 45, w: 30 },
+      { x: 35,  h: 36, w: 26 },
+      { x: 58,  h: 30, w: 22 },
+      { x: 78,  h: 38, w: 28 },
+    ];
+
+    for (const p of peaks) {
+      // Wide base using a squashed sphere for a rounded mountain shape
+      const base = new THREE.Mesh(
+        new THREE.SphereGeometry(p.w / 2, 7, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+        rockMat
+      );
+      base.scale.set(1, p.h / (p.w / 2), 1);
+      base.position.set(p.x, 0, 0);
+      skylineGroup.add(base);
+
+      // Mid-section ridge
+      const mid = new THREE.Mesh(
+        new THREE.SphereGeometry(p.w * 0.35, 6, 5, 0, Math.PI * 2, 0, Math.PI / 2),
+        midMat
+      );
+      mid.scale.set(1, (p.h * 0.7) / (p.w * 0.35), 1);
+      mid.position.set(p.x, 0, 0);
+      skylineGroup.add(mid);
+
+      // Snow cap covering upper portion
+      const capR = p.w * 0.3;
+      const capH = p.h * 0.35;
+      const cap = new THREE.Mesh(
+        new THREE.SphereGeometry(capR, 6, 5, 0, Math.PI * 2, 0, Math.PI / 2),
+        p.h > 35 ? snowBrightMat : snowMat
+      );
+      cap.scale.set(1.2, capH / capR, 1.2);
+      cap.position.set(p.x, p.h * 0.55, 0);
+      skylineGroup.add(cap);
+
+      // Extra bright peak on tallest mountains
+      if (p.h > 35) {
+        const tip = new THREE.Mesh(
+          new THREE.SphereGeometry(capR * 0.4, 5, 4, 0, Math.PI * 2, 0, Math.PI / 2),
+          snowBrightMat
+        );
+        tip.scale.set(1, capH * 0.6 / (capR * 0.4), 1);
+        tip.position.set(p.x, p.h * 0.75, 0);
+        skylineGroup.add(tip);
+      }
+    }
+
+    // Cloud wisps around peaks
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xdde8f0, transparent: true, opacity: 0.35,
+      roughness: 0.95, metalness: 0.0,
+    });
+    for (let c = 0; c < 5; c++) {
+      const cloud = new THREE.Mesh(
+        new THREE.SphereGeometry(4 + Math.random() * 4, 6, 5), cloudMat
+      );
+      cloud.position.set(-45 + c * 25, 20 + Math.random() * 12, 2);
+      cloud.scale.set(2.5, 0.4, 1);
+      skylineGroup.add(cloud);
+    }
+  }
+
   _swampSkyline(skylineGroup) {
     const treeMat = new THREE.MeshStandardMaterial({
       color: 0x1a2a18, roughness: 0.9, metalness: 0.05, flatShading: true,
@@ -928,51 +1077,70 @@ export class Track {
   }
 
   _coastSkyline(skylineGroup) {
-    // Ocean surface — flat plane to the left, extending to the horizon
+    // Ocean far below the cliff on the left — flat plane at negative Y
     const oceanMat = new THREE.MeshStandardMaterial({
-      color: 0x1a6699, roughness: 0.35, metalness: 0.25, flatShading: true,
-      transparent: true, opacity: 0.85,
+      color: 0x1477aa, roughness: 0.3, metalness: 0.3, flatShading: true,
     });
     const ocean = new THREE.Mesh(
-      new THREE.PlaneGeometry(160, 120), oceanMat
+      new THREE.PlaneGeometry(200, 200), oceanMat
     );
     ocean.rotation.x = -Math.PI / 2;
-    ocean.position.set(-80, 0.5, -30);
+    ocean.position.set(-70, -8, -60);
     skylineGroup.add(ocean);
 
-    // Horizon band (vertical strip at back edge so ocean meets the sky)
-    const horizonMat = new THREE.MeshStandardMaterial({
-      color: 0x2288bb, roughness: 0.5, metalness: 0.15,
+    // Deeper ocean layer for depth
+    const deepMat = new THREE.MeshStandardMaterial({
+      color: 0x0a5588, roughness: 0.4, metalness: 0.25,
     });
-    const horizon = new THREE.Mesh(
-      new THREE.PlaneGeometry(160, 10), horizonMat
+    const deep = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 80), deepMat
     );
-    horizon.position.set(-80, 5, -90);
-    skylineGroup.add(horizon);
+    deep.position.set(-70, -2, -140);
+    skylineGroup.add(deep);
 
-    // Whitecap wave lines along the shore
+    // Foam/surf at base of cliff
     const foamMat = new THREE.MeshStandardMaterial({
-      color: 0xddeeff, roughness: 0.8, metalness: 0.0,
-      transparent: true, opacity: 0.5,
+      color: 0xcceeFF, roughness: 0.7, metalness: 0.0,
+      transparent: true, opacity: 0.6,
     });
-    for (let w = 0; w < 4; w++) {
+    for (let f = 0; f < 6; f++) {
       const foam = new THREE.Mesh(
-        new THREE.BoxGeometry(40 + Math.random() * 30, 0.15, 0.8), foamMat
+        new THREE.BoxGeometry(8 + Math.random() * 12, 0.2, 1.5), foamMat
       );
-      foam.position.set(-50 - Math.random() * 20, 0.55, -15 + w * -18);
-      foam.rotation.y = (Math.random() - 0.5) * 0.1;
+      foam.position.set(-22 - Math.random() * 30, -7.5, -20 + f * -14);
+      foam.rotation.y = (Math.random() - 0.5) * 0.15;
       skylineGroup.add(foam);
     }
 
-    // Right: coastal hills / cliffs
+    // Distant cliff face on far left (visible rocky wall)
+    const farCliffMat = new THREE.MeshStandardMaterial({
+      color: 0x7a6a50, roughness: 0.95, metalness: 0.05, flatShading: true,
+    });
+    const farCliff = new THREE.Mesh(
+      new THREE.BoxGeometry(30, 25, 80), farCliffMat
+    );
+    farCliff.position.set(-55, 2, -50);
+    skylineGroup.add(farCliff);
+
+    // Green vegetation on top of far cliff
+    const vegMat = new THREE.MeshStandardMaterial({
+      color: 0x5a8a3a, roughness: 0.85, metalness: 0.05, flatShading: true,
+    });
+    const veg = new THREE.Mesh(
+      new THREE.BoxGeometry(32, 3, 82), vegMat
+    );
+    veg.position.set(-55, 15, -50);
+    skylineGroup.add(veg);
+
+    // Right: green coastal mountains rising behind the hill
     const hillMat = new THREE.MeshStandardMaterial({
-      color: 0x6a8a5a, roughness: 0.9, metalness: 0.05, flatShading: true,
+      color: 0x4a7a3a, roughness: 0.9, metalness: 0.05, flatShading: true,
     });
     const hillPositions = [
-      { x: 20, h: 22, r: 15 },
-      { x: 40, h: 30, r: 20 },
-      { x: 60, h: 24, r: 17 },
-      { x: 78, h: 18, r: 13 },
+      { x: 30, h: 30, r: 18 },
+      { x: 50, h: 40, r: 24 },
+      { x: 70, h: 32, r: 20 },
+      { x: 88, h: 25, r: 16 },
     ];
     for (const hp of hillPositions) {
       const hill = new THREE.Mesh(
@@ -984,14 +1152,14 @@ export class Track {
 
     // Clouds
     const cloudMat = new THREE.MeshStandardMaterial({
-      color: 0xddeeff, roughness: 0.9, metalness: 0.0, flatShading: true,
+      color: 0xeef5ff, roughness: 0.9, metalness: 0.0, flatShading: true,
       transparent: true, opacity: 0.5,
     });
-    for (let c = 0; c < 4; c++) {
+    for (let c = 0; c < 5; c++) {
       const cloud = new THREE.Mesh(
-        new THREE.SphereGeometry(5 + Math.random() * 4, 6, 5), cloudMat
+        new THREE.SphereGeometry(5 + Math.random() * 5, 6, 5), cloudMat
       );
-      cloud.position.set(-30 + c * 30, 30 + Math.random() * 8, -3);
+      cloud.position.set(-40 + c * 28, 32 + Math.random() * 10, -5);
       cloud.scale.set(2.5, 0.5, 1);
       skylineGroup.add(cloud);
     }
@@ -1090,15 +1258,22 @@ export class Track {
     // --- Durham Water Tower (Lucky Strike style) ---
     const wtX = -5, wtBaseH = 14, wtTankR = 3, wtTankH = 5;
     const wtPoleMat = bldgMat(0x6a6a6a, 0x222222);
-    // support legs (4 angled legs)
-    for (const [lx, lz] of [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]]) {
+    // support legs — splay outward (wider at base than at tank)
+    for (const [lx, lz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const topSpread = 1.4;
+      const botSpread = 3.2;
+      const midX = wtX + lx * (topSpread + botSpread) / 2;
+      const midZ = lz * (topSpread + botSpread) / 2;
+      const dx = lx * (botSpread - topSpread);
+      const dz = lz * (botSpread - topSpread);
+      const legLen = Math.sqrt(dx * dx + dz * dz + wtBaseH * wtBaseH);
       const leg = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.25, 0.35, wtBaseH, 6), wtPoleMat
+        new THREE.CylinderGeometry(0.2, 0.32, legLen, 6), wtPoleMat
       );
-      leg.position.set(wtX + lx * 0.8, wtBaseH / 2, lz * 0.8);
-      const angleX = lz > 0 ? -0.08 : 0.08;
-      const angleZ = lx > 0 ? -0.08 : 0.08;
-      leg.rotation.set(angleX, 0, angleZ);
+      leg.position.set(midX, wtBaseH / 2, midZ);
+      // Angle outward: tilt in X for front/back, Z for left/right
+      leg.rotation.x = lz * 0.12;
+      leg.rotation.z = -lx * 0.12;
       skylineGroup.add(leg);
     }
     // tank
@@ -1281,6 +1456,22 @@ export class Track {
   update(dt, worldSpeed) {
     const dz = worldSpeed * dt;
 
+    if (this._curve) {
+      this._scrollDist += worldSpeed * dt;
+    }
+
+    // Road segments (curved levels only)
+    if (this._roadSegGroup) {
+      this._roadSegGroup.position.z += dz;
+      if (this._roadSegGroup.position.z > this._roadSegSpacing) {
+        this._roadSegGroup.position.z -= this._roadSegSpacing;
+      }
+      for (const seg of this._roadSegGroup.children) {
+        const wz = this._roadSegGroup.position.z + seg.position.z;
+        seg.position.x = this.getCurveX(wz);
+      }
+    }
+
     if (this.markerGroup) {
       this.markerGroup.position.z += dz;
       if (this.markerGroup.position.z > this._markerSpacing) {
@@ -1288,10 +1479,28 @@ export class Track {
       }
     }
 
+    // Apply curve offsets to lane markers
+    if (this._curve && this._markerMeshes) {
+      const gz = this.markerGroup.position.z;
+      for (const m of this._markerMeshes) {
+        const wz = gz + m.position.z;
+        m.position.x = m.userData.baseX + this.getCurveX(wz);
+      }
+    }
+
     if (this.edgeGroup) {
       this.edgeGroup.position.z += dz;
       if (this.edgeGroup.position.z > this._edgeSpacing) {
         this.edgeGroup.position.z -= this._edgeSpacing;
+      }
+    }
+
+    // Apply curve offsets to edge strips
+    if (this._curve && this._edgeMeshes) {
+      const gz = this.edgeGroup.position.z;
+      for (const e of this._edgeMeshes) {
+        const wz = gz + e.position.z;
+        e.position.x = e.userData.baseX + this.getCurveX(wz);
       }
     }
 
@@ -1304,6 +1513,10 @@ export class Track {
         slot.position.z += dz;
         if (slot.position.z > despawn) {
           slot.position.z -= range;
+        }
+        // Curve offset for prop slots
+        if (this._curve) {
+          slot.position.x = this.getCurveX(slot.position.z);
         }
       }
     } else if (this.propsGroup) {

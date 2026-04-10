@@ -363,6 +363,8 @@ export class Game {
     this.player.targetLaneIndex = 1;
     this.player.laneIndex = 1;
     this.player.mesh.position.x = CONFIG.LANES[1];
+    this.player.mesh.visible = true;
+    this.player._curveX = 0;
   }
 
   resume() {
@@ -581,6 +583,7 @@ export class Game {
     this.recoveryPrompt = false;
     this.ui.showRecovery(false, false);
     this.player.setAutomationFlowActive(false);
+    this.player.explode();
     stopLoop();
     play(SFX.GAME_OVER, 0.8);
     setBestScoreIfHigher(this.score);
@@ -649,6 +652,7 @@ export class Game {
 
   skipQuiz() {
     if (this.state !== "quiz" || this._quizPhase !== "question") return;
+    play(SFX.WRONG, 0.8);
     this.ui.stopQuizCountdown();
     this.ui.showQuiz(false);
     this.state = "running";
@@ -766,6 +770,9 @@ export class Game {
       (CONFIG.SCORE_PER_SECOND * fm + CONFIG.SCORE_PER_UNIT_DISTANCE * ws * fm) *
       effDt;
 
+    // Strip curve offsets before game logic so collision uses straight positions
+    this._stripCurve();
+
     if (flowActive) {
       this.spawner.applyMagnet(
         this.player.mesh.position.x,
@@ -792,6 +799,9 @@ export class Game {
     } else if (pickupHits.length && !this.recoveryPrompt) {
       this._onPickup(pickupHits[0].entity);
     }
+
+    // Re-apply curve offsets for rendering
+    this._applyCurve();
 
     this.ui.updateHud({
       health: this.health,
@@ -895,7 +905,8 @@ export class Game {
       this.score += pts;
       this.playbookCount += 1;
       this.playbookPts += pts;
-      if (this.playbookCount % 5 === 0) {
+      this.ui.showPickupPopup(`Playbook +${pts}`);
+      if (this.playbookCount % 3 === 0) {
         this._applyPickupSpeedUp("Playbook", this.playbookCount);
       } else {
         this.ui.setStatus(`Pickup: Playbook — +${pts} score`, CONFIG.STATUS_HIT_MS);
@@ -905,7 +916,8 @@ export class Game {
       this.score += pts;
       this.collectionCount += 1;
       this.collectionPts += pts;
-      if (this.collectionCount % 5 === 0) {
+      this.ui.showPickupPopup(`Collection +${pts}`);
+      if (this.collectionCount % 3 === 0) {
         this._applyPickupSpeedUp("Collection", this.collectionCount);
       } else {
         this.ui.setStatus(`Pickup: Certified Collection — +${pts} score`, CONFIG.STATUS_HIT_MS);
@@ -914,6 +926,7 @@ export class Game {
       this.shield = true;
       this.player.setShieldActive(true);
       play(SFX.SHIELD_ON, 0.75);
+      this.ui.showPickupPopup("Shield Active!");
       this.ui.setStatus(
         "Pickup: Policy Shield — next obstacle hit won’t cost health",
         CONFIG.STATUS_HIT_MS
@@ -927,7 +940,7 @@ export class Game {
     this.pickupSpeedMult += 0.15;
     const pct = Math.round((this.pickupSpeedMult - 1) * 100);
     this.ui.setStatus(
-      `${count} ${type}s collected! Speed +10% (total +${pct}%)`,
+      `${count} ${type}s collected! Speed +15% (total +${pct}%)`,
       CONFIG.STATUS_HIT_MS
     );
   }
@@ -954,10 +967,36 @@ export class Game {
     }
   }
 
+  _stripCurve() {
+    if (!this.track._curve) return;
+    const p = this.player;
+    p.mesh.position.x -= p._curveX || 0;
+    p._curveX = 0;
+    for (const e of this.spawner.getAllCollidable()) {
+      e.mesh.position.x -= e._curveX || 0;
+      e._curveX = 0;
+    }
+  }
+
+  _applyCurve() {
+    if (!this.track._curve) return;
+    const p = this.player;
+    const pcx = this.track.getCurveX(p.mesh.position.z);
+    p._curveX = pcx;
+    p.mesh.position.x += pcx;
+
+    for (const e of this.spawner.getAllCollidable()) {
+      const ecx = this.track.getCurveX(e.mesh.position.z);
+      e._curveX = ecx;
+      e.mesh.position.x += ecx;
+    }
+  }
+
   _updateCamera(dt, now) {
     const px = this.player.mesh.position.x;
+    const camCurve = this.track.getCurveX(this.cameraBase.z);
     const target = new THREE.Vector3(
-      px * 0.35,
+      px * 0.35 + camCurve * 0.6,
       this.cameraBase.y,
       this.cameraBase.z
     );

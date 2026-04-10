@@ -60,6 +60,7 @@ export class UI {
 
       quizCountdown: document.getElementById("quiz-countdown"),
       damagePopup: document.getElementById("damage-popup"),
+      pickupPopup: document.getElementById("pickup-popup"),
     };
 
     this._statusTimer = null;
@@ -165,7 +166,7 @@ export class UI {
 
   startQuizCountdown(onExpire) {
     this.stopQuizCountdown();
-    let remaining = 5;
+    let remaining = 10;
     const cd = this.el.quizCountdown;
     if (cd) {
       cd.textContent = String(remaining);
@@ -175,7 +176,7 @@ export class UI {
       remaining--;
       if (cd) {
         cd.textContent = String(Math.max(0, remaining));
-        cd.classList.toggle("urgent", remaining <= 2);
+        cd.classList.toggle("urgent", remaining <= 3);
       }
       if (remaining <= 0) {
         this.stopQuizCountdown();
@@ -200,6 +201,16 @@ export class UI {
     void el.offsetWidth;
     el.classList.add("show");
     setTimeout(() => el.classList.remove("show"), 1500);
+  }
+
+  showPickupPopup(text) {
+    const el = this.el.pickupPopup;
+    if (!el) return;
+    el.classList.remove("show");
+    el.textContent = text;
+    void el.offsetWidth;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 1700);
   }
 
   /**
@@ -264,7 +275,7 @@ export class UI {
   _startRecoveryCountdown(onAutoNo) {
     const cd = this.el.recoveryCountdown;
     if (!cd) return;
-    let remaining = 5;
+    let remaining = 10;
     cd.textContent = String(remaining);
     cd.classList.remove("hidden", "urgent");
 
@@ -275,7 +286,7 @@ export class UI {
         return;
       }
       cd.textContent = String(remaining);
-      if (remaining <= 2) {
+      if (remaining <= 3) {
         cd.classList.add("urgent");
       }
     }, 1000);

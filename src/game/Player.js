@@ -320,6 +320,73 @@ export class Player {
     return target;
   }
 
+  explode() {
+    const pos = this.mesh.position.clone();
+    const parts = [];
+    this.mesh.traverse((c) => { if (c.isMesh) parts.push(c); });
+
+    const debris = new THREE.Group();
+    debris.position.copy(pos);
+    this.scene.add(debris);
+
+    for (const part of parts) {
+      const p = part.clone();
+      if (p.material && !Array.isArray(p.material)) {
+        p.material = p.material.clone();
+        p.material.transparent = true;
+      }
+      p.position.set(
+        (Math.random() - 0.5) * 0.4,
+        Math.random() * 0.2,
+        (Math.random() - 0.5) * 0.4
+      );
+      debris.add(p);
+    }
+
+    const vels = debris.children.map(() => new THREE.Vector3(
+      (Math.random() - 0.5) * 14,
+      4 + Math.random() * 10,
+      (Math.random() - 0.5) * 12
+    ));
+
+    this.mesh.visible = false;
+
+    let elapsed = 0;
+    const animate = () => {
+      elapsed += 0.016;
+      if (elapsed > 1.5) {
+        this.scene.remove(debris);
+        debris.traverse((c) => {
+          if (c.geometry) c.geometry.dispose();
+          if (c.material) {
+            if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+            else c.material.dispose();
+          }
+        });
+        return;
+      }
+      for (let i = 0; i < debris.children.length; i++) {
+        const v = vels[i];
+        if (!v) continue;
+        debris.children[i].position.x += v.x * 0.016;
+        debris.children[i].position.y += v.y * 0.016;
+        debris.children[i].position.z += v.z * 0.016;
+        v.y -= 16 * 0.016;
+        debris.children[i].rotation.x += 6 * 0.016;
+        debris.children[i].rotation.z += 4 * 0.016;
+      }
+      const fade = 1 - elapsed / 1.5;
+      debris.traverse((c) => {
+        if (c.isMesh && c.material) {
+          c.material.transparent = true;
+          c.material.opacity = fade;
+        }
+      });
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }
+
   dispose() {
     this.scene.remove(this.mesh);
     this.mesh.traverse((c) => {

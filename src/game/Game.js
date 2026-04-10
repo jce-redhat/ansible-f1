@@ -1034,18 +1034,19 @@ export class Game {
   }
 
   _onHitObstacle(e) {
+    const isGator = e.subtype === "GATOR";
     if (this.shield) {
       this.spawner.explodeObstacle(e);
       this.shield = false;
       this.player.setShieldActive(false);
       play(SFX.SHIELD_HIT, 0.7);
       this.ui.setStatus(
-        "Obstacle hit — shield blocked it! (Shield used up)",
+        isGator ? "Gator smashed -- shield blocked it!" : "Obstacle hit -- shield blocked it! (Shield used up)",
         CONFIG.STATUS_HIT_MS
       );
       return;
     }
-    this.spawner.removeEntity(e);
+    this.spawner.explodeObstacle(e);
 
     const dmg = CONFIG.OBSTACLE_DAMAGE;
     this.health -= dmg;
@@ -1054,10 +1055,12 @@ export class Game {
     this.ui.flashDamage();
     this.ui.showDamagePopup(dmg);
     this.ui.shake();
-    this.shakeUntil = performance.now() + 200;
-    this.shakeAmp = 0.35;
+    this.shakeUntil = performance.now() + (isGator ? 300 : 200);
+    this.shakeAmp = isGator ? 0.45 : 0.35;
     this.ui.setStatus(
-      `Obstacle hit! −${dmg} health (Outage). You’re at ${Math.max(0, Math.floor(this.health))}.`,
+      isGator
+        ? `Gator attack! -${dmg} health. You're at ${Math.max(0, Math.floor(this.health))}.`
+        : `Obstacle hit! -${dmg} health (Outage). You're at ${Math.max(0, Math.floor(this.health))}.`,
       CONFIG.STATUS_HIT_MS
     );
 

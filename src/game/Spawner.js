@@ -36,6 +36,7 @@ export class Spawner {
     this.pickupTimer = 1.2;
     this.rivalTimer = 0;
     this.busTimer = 0;
+    this.gatorTimer = 0;
     this._nextRivalColorIdx = 0;
     this.levelId = "A";
   }
@@ -51,6 +52,7 @@ export class Spawner {
     this.pickupTimer = 1.2;
     this.rivalTimer = 0;
     this.busTimer = 0;
+    this.gatorTimer = 0;
   }
 
   _removeEntity(e) {
@@ -129,6 +131,16 @@ export class Spawner {
       if (!hasBus && this.busTimer > 12 && elapsedRunSeconds > 6) {
         this.busTimer = 0;
         this._spawnBus();
+      }
+    }
+
+    // Alligator: Level D (Bayou Swamp) only
+    if (this.levelId === "D") {
+      this.gatorTimer += dt * timeScale;
+      const hasGator = this.obstacles.some((o) => o.subtype === "GATOR");
+      if (!hasGator && this.gatorTimer > 15 && elapsedRunSeconds > 8) {
+        this.gatorTimer = 0;
+        this._spawnGator();
       }
     }
 
@@ -830,6 +842,202 @@ export class Spawner {
     glow.position.set(0, 0.42, 0.72); g.add(glow);
 
     livery.dispose(); carbon.dispose(); accent.dispose(); rubber.dispose(); rim.dispose();
+    return g;
+  }
+
+  // ─── Alligator (Level D) ───
+
+  _spawnGator() {
+    const pair = Math.random() < 0.5 ? [0, 1] : [1, 2];
+    const cx = (CONFIG.LANES[pair[0]] + CONFIG.LANES[pair[1]]) / 2;
+    const z = CONFIG.SPAWN_Z - Math.random() * 6;
+    const mesh = this._makeGatorMesh();
+    mesh.position.set(cx, 0, z);
+    this.scene.add(mesh);
+    const e = {
+      id: nextId(),
+      kind: "obstacle",
+      subtype: "GATOR",
+      lane: pair[0],
+      lanes: pair,
+      mesh,
+      z,
+      active: true,
+      worldBox: new THREE.Box3(),
+      hit: { w: 2.8, h: 0.6, d: 2.5 },
+      flashT: 0,
+    };
+    this._syncBox(e);
+    this.obstacles.push(e);
+  }
+
+  _makeGatorMesh() {
+    const g = new THREE.Group();
+
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0x3a5a2a, roughness: 0.85, metalness: 0.05,
+      emissive: 0x1a2a0a, emissiveIntensity: 0.2,
+    });
+    const bellyMat = new THREE.MeshStandardMaterial({
+      color: 0x6a7a4a, roughness: 0.8, metalness: 0.05,
+      emissive: 0x2a3a1a, emissiveIntensity: 0.15,
+    });
+    const darkMat = new THREE.MeshStandardMaterial({
+      color: 0x2a3a1a, roughness: 0.9, metalness: 0.05,
+      emissive: 0x0a1a04, emissiveIntensity: 0.2,
+    });
+
+    // Main body — long low oval
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 0.9, 4.5, 8, 1), skinMat
+    );
+    body.rotation.z = Math.PI / 2;
+    body.rotation.y = Math.PI / 2;
+    body.position.set(0, 0.45, 0);
+    body.scale.set(1, 0.45, 1);
+    g.add(body);
+
+    // Belly
+    const belly = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.6, 0.8, 4.0, 8, 1), bellyMat
+    );
+    belly.rotation.z = Math.PI / 2;
+    belly.rotation.y = Math.PI / 2;
+    belly.position.set(0, 0.25, 0);
+    belly.scale.set(1, 0.3, 1);
+    g.add(belly);
+
+    // Head — wider wedge at front
+    const head = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.4, 1.8), skinMat.clone()
+    );
+    head.position.set(0, 0.35, -2.8);
+    g.add(head);
+
+    // Upper jaw
+    const upperJaw = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.2, 1.2), skinMat.clone()
+    );
+    upperJaw.position.set(0, 0.42, -3.8);
+    g.add(upperJaw);
+
+    // Snout tip
+    const snout = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.15, 0.5), skinMat.clone()
+    );
+    snout.position.set(0, 0.38, -4.5);
+    g.add(snout);
+
+    // Lower jaw (slightly open)
+    const lowerJaw = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.12, 1.0), bellyMat.clone()
+    );
+    lowerJaw.position.set(0, 0.18, -3.7);
+    lowerJaw.rotation.x = 0.08;
+    g.add(lowerJaw);
+
+    // Teeth (jagged white bits along jaw edges)
+    const toothMat = new THREE.MeshStandardMaterial({
+      color: 0xeeeedd, roughness: 0.5, metalness: 0.1,
+    });
+    for (let i = 0; i < 8; i++) {
+      const side = i < 4 ? -1 : 1;
+      const idx = i % 4;
+      const tz = -3.2 - idx * 0.35;
+      const tooth = new THREE.Mesh(
+        new THREE.ConeGeometry(0.05, 0.12, 4), toothMat
+      );
+      tooth.position.set(side * 0.55, 0.28, tz);
+      tooth.rotation.x = Math.PI;
+      g.add(tooth);
+    }
+
+    // Eyes — bulging on top of head
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0xddcc22, emissive: 0x886600, emissiveIntensity: 0.6,
+      roughness: 0.3, metalness: 0.2,
+    });
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111100 });
+    for (const side of [-0.5, 0.5]) {
+      const eyeBump = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 8, 6), skinMat.clone()
+      );
+      eyeBump.position.set(side, 0.62, -2.5);
+      g.add(eyeBump);
+      const eye = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 8, 6), eyeMat
+      );
+      eye.position.set(side, 0.68, -2.5);
+      g.add(eye);
+      const pupil = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 6, 4), pupilMat
+      );
+      pupil.position.set(side, 0.7, -2.62);
+      g.add(pupil);
+    }
+
+    // Nostrils
+    const nostrilMat = new THREE.MeshBasicMaterial({ color: 0x1a1a0a });
+    for (const side of [-0.2, 0.2]) {
+      const nostril = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 5, 4), nostrilMat
+      );
+      nostril.position.set(side, 0.44, -4.7);
+      g.add(nostril);
+    }
+
+    // Spine ridges
+    for (let i = 0; i < 12; i++) {
+      const sz = -1.5 + i * 0.4;
+      const ridge = new THREE.Mesh(
+        new THREE.ConeGeometry(0.08, 0.15 + Math.random() * 0.08, 4), darkMat
+      );
+      ridge.position.set(0, 0.7 + Math.random() * 0.04, sz);
+      g.add(ridge);
+    }
+
+    // Tail — tapers backward
+    const tailSegs = [
+      { w: 0.5, h: 0.3, d: 1.2, z: 2.8, y: 0.3 },
+      { w: 0.3, h: 0.2, d: 1.0, z: 3.7, y: 0.25 },
+      { w: 0.15, h: 0.1, d: 0.8, z: 4.4, y: 0.2 },
+    ];
+    for (const ts of tailSegs) {
+      const seg = new THREE.Mesh(
+        new THREE.BoxGeometry(ts.w, ts.h, ts.d), skinMat.clone()
+      );
+      seg.position.set(0, ts.y, ts.z);
+      g.add(seg);
+    }
+
+    // Legs (stubby, splayed out)
+    const legMat = darkMat.clone();
+    const legPositions = [
+      { x: -0.8, z: -1.2 }, { x: 0.8, z: -1.2 },
+      { x: -0.9, z: 1.0 }, { x: 0.9, z: 1.0 },
+    ];
+    for (const lp of legPositions) {
+      const leg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35, 0.2, 0.5), legMat
+      );
+      leg.position.set(lp.x, 0.12, lp.z);
+      g.add(leg);
+      // Claws
+      for (let c = 0; c < 3; c++) {
+        const claw = new THREE.Mesh(
+          new THREE.ConeGeometry(0.03, 0.1, 3), darkMat
+        );
+        claw.position.set(
+          lp.x + (c - 1) * 0.1,
+          0.05,
+          lp.z + (lp.z < 0 ? -0.3 : 0.3)
+        );
+        claw.rotation.x = lp.z < 0 ? -Math.PI / 2 : Math.PI / 2;
+        g.add(claw);
+      }
+    }
+
+    skinMat.dispose(); bellyMat.dispose(); darkMat.dispose();
     return g;
   }
 

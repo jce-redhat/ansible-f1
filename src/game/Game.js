@@ -897,8 +897,8 @@ export class Game {
   }
 
   _onHitObstacle(e) {
-    this.spawner.removeEntity(e);
     if (this.shield) {
+      this.spawner.explodeObstacle(e);
       this.shield = false;
       this.player.setShieldActive(false);
       play(SFX.SHIELD_HIT, 0.7);
@@ -908,6 +908,7 @@ export class Game {
       );
       return;
     }
+    this.spawner.removeEntity(e);
 
     const dmg = CONFIG.OBSTACLE_DAMAGE;
     this.health -= dmg;

@@ -641,6 +641,82 @@ export class Spawner {
     this._removeEntity(e);
   }
 
+  explodeObstacle(e) {
+    if (!e || !e.mesh) return;
+    const pos = e.mesh.position.clone();
+    const parts = [];
+    e.mesh.traverse((c) => {
+      if (c.isMesh) parts.push(c);
+    });
+
+    const debrisGroup = new THREE.Group();
+    debrisGroup.position.copy(pos);
+    this.scene.add(debrisGroup);
+
+    for (const part of parts) {
+      const p = part.clone();
+      if (p.material) {
+        p.material = p.material.clone();
+        p.material.transparent = true;
+      }
+      p.position.set(
+        (Math.random() - 0.5) * 0.8,
+        Math.random() * 0.4,
+        (Math.random() - 0.5) * 0.8
+      );
+      debrisGroup.add(p);
+    }
+
+    const velocities = [];
+    for (let i = 0; i < debrisGroup.children.length; i++) {
+      velocities.push(new THREE.Vector3(
+        (Math.random() - 0.5) * 14,
+        2 + Math.random() * 7,
+        (Math.random() - 0.5) * 12
+      ));
+    }
+
+    let elapsed = 0;
+    const animate = () => {
+      elapsed += 0.016;
+      if (elapsed > 1.0) {
+        this.scene.remove(debrisGroup);
+        debrisGroup.traverse((c) => {
+          if (c.geometry) c.geometry.dispose();
+          if (c.material) {
+            if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+            else c.material.dispose();
+          }
+        });
+        return;
+      }
+      const children = debrisGroup.children;
+      for (let i = 0; i < children.length; i++) {
+        const v = velocities[i];
+        if (!v) continue;
+        children[i].position.x += v.x * 0.016;
+        children[i].position.y += v.y * 0.016;
+        children[i].position.z += v.z * 0.016;
+        v.y -= 18 * 0.016;
+        children[i].rotation.x += 6 * 0.016;
+        children[i].rotation.z += 4 * 0.016;
+      }
+      const fade = 1 - elapsed / 1.0;
+      debrisGroup.traverse((c) => {
+        if (c.isMesh && c.material) {
+          c.material.opacity = fade;
+        }
+      });
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+
+    e.active = false;
+    const oi = this.obstacles.indexOf(e);
+    if (oi >= 0) this.obstacles.splice(oi, 1);
+    this._removeEntity(e);
+  }
+
   _makeRivalMesh(colors) {
     const g = new THREE.Group();
 

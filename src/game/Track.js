@@ -1256,46 +1256,79 @@ export class Track {
     }
 
     // --- Durham Water Tower (Lucky Strike style) ---
-    const wtX = -5, wtBaseH = 14, wtTankR = 3, wtTankH = 5;
-    const wtPoleMat = bldgMat(0x6a6a6a, 0x222222);
-    // support legs — splay outward (wider at base than at tank)
-    for (const [lx, lz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      const topSpread = 1.4;
-      const botSpread = 3.2;
-      const midX = wtX + lx * (topSpread + botSpread) / 2;
-      const midZ = lz * (topSpread + botSpread) / 2;
-      const dx = lx * (botSpread - topSpread);
-      const dz = lz * (botSpread - topSpread);
+    const wtX = -5, wtBaseH = 14, wtTankR = 3.2, wtTankH = 5;
+    const wtPoleMat = bldgMat(0x7a7a7a, 0x2a2a2a);
+    const topR = 1.6;
+    const botR = 4.8;
+    const legPositions = [
+      [-1, -1], [1, -1], [-1, 1], [1, 1]
+    ];
+    for (const [lx, lz] of legPositions) {
+      const topX = wtX + lx * topR;
+      const topZ = lz * topR;
+      const botX = wtX + lx * botR;
+      const botZ = lz * botR;
+      const dx = botX - topX;
+      const dz = botZ - topZ;
       const legLen = Math.sqrt(dx * dx + dz * dz + wtBaseH * wtBaseH);
       const leg = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.32, legLen, 6), wtPoleMat
+        new THREE.CylinderGeometry(0.35, 0.5, legLen, 6), wtPoleMat
       );
-      leg.position.set(midX, wtBaseH / 2, midZ);
-      // Angle outward: tilt in X for front/back, Z for left/right
-      leg.rotation.x = lz * 0.12;
-      leg.rotation.z = -lx * 0.12;
+      leg.position.set((topX + botX) / 2, wtBaseH / 2, (topZ + botZ) / 2);
+      const angleZ = -Math.atan2(dx, wtBaseH);
+      const angleX = Math.atan2(dz, wtBaseH);
+      leg.rotation.set(angleX, 0, angleZ);
       skylineGroup.add(leg);
     }
-    // tank
+
+    const braceMat = bldgMat(0x666666, 0x1a1a1a);
+    for (const braceFrac of [0.3, 0.6]) {
+      const r = topR + (botR - topR) * (1 - braceFrac);
+      const y = wtBaseH * braceFrac;
+      for (let i = 0; i < 4; i++) {
+        const a1 = (Math.PI / 4) + (i * Math.PI / 2);
+        const a2 = a1 + Math.PI / 2;
+        const x1 = wtX + Math.cos(a1) * r;
+        const z1 = Math.sin(a1) * r;
+        const x2 = wtX + Math.cos(a2) * r;
+        const z2 = Math.sin(a2) * r;
+        const bx = (x1 + x2) / 2;
+        const bz = (z1 + z2) / 2;
+        const bLen = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+        const brace = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.15, bLen, 4), braceMat
+        );
+        brace.position.set(bx, y, bz);
+        brace.rotation.y = Math.atan2(z2 - z1, x2 - x1);
+        brace.rotation.z = Math.PI / 2;
+        skylineGroup.add(brace);
+      }
+    }
+
     const tankMat = bldgMat(0xccccbb, 0x222211);
     const tank = new THREE.Mesh(
-      new THREE.CylinderGeometry(wtTankR, wtTankR, wtTankH, 12), tankMat
+      new THREE.CylinderGeometry(wtTankR, wtTankR, wtTankH, 16), tankMat
     );
     tank.position.set(wtX, wtBaseH + wtTankH / 2, 0);
     skylineGroup.add(tank);
-    // conical roof
+
+    const bowlGeo = new THREE.CylinderGeometry(wtTankR, topR + 0.2, 2, 16);
+    const bowl = new THREE.Mesh(bowlGeo, tankMat);
+    bowl.position.set(wtX, wtBaseH - 0.5, 0);
+    skylineGroup.add(bowl);
+
     const roof = new THREE.Mesh(
-      new THREE.ConeGeometry(wtTankR + 0.3, 2, 12), tankMat
+      new THREE.ConeGeometry(wtTankR + 0.3, 2.5, 16), tankMat
     );
-    roof.position.set(wtX, wtBaseH + wtTankH + 1, 0);
+    roof.position.set(wtX, wtBaseH + wtTankH + 1.25, 0);
     skylineGroup.add(roof);
-    // red stripe around the tank
+
     const stripeMat = new THREE.MeshStandardMaterial({
       color: 0xcc2200, emissive: 0xcc2200, emissiveIntensity: 0.5,
       metalness: 0.1, roughness: 0.5,
     });
     const stripe = new THREE.Mesh(
-      new THREE.CylinderGeometry(wtTankR + 0.05, wtTankR + 0.05, 1.2, 12), stripeMat
+      new THREE.CylinderGeometry(wtTankR + 0.08, wtTankR + 0.08, 1.4, 16), stripeMat
     );
     stripe.position.set(wtX, wtBaseH + wtTankH / 2 + 0.5, 0);
     skylineGroup.add(stripe);

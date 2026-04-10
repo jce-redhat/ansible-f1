@@ -795,23 +795,25 @@ export class Player {
 
     // ── Hover system — wheels folded flat under body ──
     const addHoverUnit = (x, z) => {
-      // Folded wheel (flat, tucked under body)
+      // Wheel turned perpendicular — like a fan pointing down
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.18, 0.12, 14), rubber.clone()
+        new THREE.CylinderGeometry(0.18, 0.18, 0.06, 14), rubber.clone()
       );
-      tire.position.set(x, 0.08, z);
+      tire.rotation.x = Math.PI / 2;
+      tire.position.set(x, 0.1, z);
       g.add(tire);
 
-      // Thruster ring
+      // Thruster ring (horizontal, around the fan wheel)
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.18, 0.015, 6, 20), fluxBlue.clone()
       );
-      ring.position.set(x, 0.08, z);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(x, 0.1, z);
       g.add(ring);
 
-      // Hover jet glow disc
+      // Hover jet glow disc beneath
       const jet = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.16, 0.03, 12),
+        new THREE.CylinderGeometry(0.14, 0.18, 0.03, 12),
         new THREE.MeshStandardMaterial({
           color: 0x44ccff, emissive: 0x44ccff, emissiveIntensity: 1.2,
           transparent: true, opacity: 0.5,

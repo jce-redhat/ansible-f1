@@ -1,6 +1,8 @@
 import { getLeaderboard, loadAchievements, ACHIEVEMENT_DEFS } from "../utils/storage.js";
 import { fetchGlobalLeaderboard } from "../utils/firebase.js";
+import * as THREE from "three";
 import { LEVELS, DRIVERS } from "../data/config.js";
+import { Player } from "./Player.js";
 
 /**
  * DOM overlays + HUD updates (Built to Automate)
@@ -768,8 +770,14 @@ export class UI {
   }
 
   _hideDriverSelect() {
+    this._stopCarPreview();
     if (this.el.driverSelect) this.el.driverSelect.classList.add("hidden");
     this.el.mainMenu.classList.remove("hidden");
+  }
+
+  _carLabel(carType) {
+    const labels = { f1: "F1 Racer", truck: "Pickup Truck", f1_yellow: "F1 Racer", f1_pink: "F1 Racer" };
+    return labels[carType] || "F1 Racer";
   }
 
   _renderDriverCards() {
@@ -777,13 +785,14 @@ export class UI {
     if (!container) return;
     container.innerHTML = "";
     for (const d of Object.values(DRIVERS)) {
+      const flag = d.country ? this._countryFlag(d.country) : "";
       const card = document.createElement("div");
       card.className = "driver-card" + (d.id === this._selectedDriver ? " active" : "");
       card.innerHTML = `
         <img class="driver-card-photo" src="${d.photo}" alt="${d.name}" />
-        <p class="driver-card-name">${d.name}</p>
+        <p class="driver-card-name">${flag ? `<span class="driver-card-flag">${flag}</span> ` : ""}${d.name}</p>
         <p class="driver-card-origin">${d.origin}</p>
-        <span class="driver-card-tag">${d.car === "f1" ? "F1 Racer" : "Pickup Truck"}</span>
+        <span class="driver-card-tag">${this._carLabel(d.car)}</span>
       `;
       card.addEventListener("click", () => this._showDriverDetail(d.id));
       container.appendChild(card);
@@ -797,7 +806,8 @@ export class UI {
     this.el.driverDetail.classList.remove("hidden");
     this.el.driverDetailPhoto.src = d.photo;
     this.el.driverDetailPhoto.alt = d.name;
-    this.el.driverDetailName.textContent = d.name;
+    const flag = d.country ? this._countryFlag(d.country) : "";
+    this.el.driverDetailName.textContent = `${flag} ${d.name}`;
     this.el.driverDetailOrigin.textContent = d.origin;
     this.el.driverDetailBio.textContent = d.bio;
 
@@ -806,6 +816,66 @@ export class UI {
     const keys = Object.keys(DRIVERS);
     const idx = keys.indexOf(driverId);
     if (idx >= 0 && cards[idx]) cards[idx].classList.add("active");
+
+    this._startCarPreview(d.car);
+  }
+
+  _startCarPreview(carType) {
+    this._stopCarPreview();
+
+    const container = document.getElementById("driver-car-preview");
+    if (!container) return;
+
+    const w = 200, h = 200;
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.innerHTML = "";
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 50);
+    camera.position.set(3.5, 2.5, 3.5);
+    camera.lookAt(0, 0.3, 0);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+    dir.position.set(4, 6, 3);
+    scene.add(dir);
+    const fill = new THREE.DirectionalLight(0x8888ff, 0.3);
+    fill.position.set(-3, 2, -2);
+    scene.add(fill);
+
+    const tempPlayer = new Player(scene, carType);
+    const car = tempPlayer.mesh;
+    car.position.set(0, 0, 0);
+
+    const pivot = new THREE.Group();
+    pivot.add(car);
+    scene.add(pivot);
+
+    let running = true;
+    const animate = () => {
+      if (!running) return;
+      requestAnimationFrame(animate);
+      pivot.rotation.y += 0.008;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    this._carPreview = { renderer, scene, tempPlayer, pivot, running: true, stop() {
+      running = false;
+      tempPlayer.dispose();
+      renderer.dispose();
+      container.innerHTML = "";
+    }};
+  }
+
+  _stopCarPreview() {
+    if (this._carPreview) {
+      this._carPreview.stop();
+      this._carPreview = null;
+    }
   }
 
   _confirmDriver() {
@@ -816,6 +886,7 @@ export class UI {
   }
 
   showDriverSelect(visible) {
+    if (!visible) this._stopCarPreview();
     if (this.el.driverSelect) {
       this.el.driverSelect.classList.toggle("hidden", !visible);
     }

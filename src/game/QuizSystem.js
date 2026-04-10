@@ -11,23 +11,29 @@ function shuffle(arr) {
 export class QuizSystem {
   constructor() {
     this._pool = [];
-    this._used = [];
+    this._askedIds = new Set();
   }
 
   resetPool() {
-    this._pool = shuffle([...getQuestions()]);
-    this._used = [];
+    const all = getQuestions();
+    const unseen = all.filter((q) => !this._askedIds.has(q.id));
+
+    if (unseen.length >= 4) {
+      this._pool = shuffle([...unseen]);
+    } else {
+      this._askedIds.clear();
+      this._pool = shuffle([...all]);
+    }
   }
 
   nextQuestion() {
     if (this._pool.length === 0) {
+      this._askedIds.clear();
       this._pool = shuffle([...getQuestions()]);
-      this._used = [];
     }
     const raw = this._pool.pop();
-    this._used.push(raw.id);
+    this._askedIds.add(raw.id);
 
-    // Shuffle answer order so the correct answer isn't always in the same slot
     const indices = [0, 1, 2, 3];
     shuffle(indices);
     const shuffledOptions = indices.map((i) => raw.options[i]);

@@ -853,6 +853,7 @@ export class Spawner {
     const cx = (CONFIG.LANES[pair[0]] + CONFIG.LANES[pair[1]]) / 2;
     const z = CONFIG.SPAWN_Z - Math.random() * 6;
     const mesh = this._makeGatorMesh();
+    mesh.scale.set(1, 1, 0.75);
     mesh.rotation.y = Math.PI / 2;
     mesh.position.set(cx, 0, z);
     this.scene.add(mesh);
@@ -866,7 +867,7 @@ export class Spawner {
       z,
       active: true,
       worldBox: new THREE.Box3(),
-      hit: { w: 3.2, h: 0.6, d: 1.4 },
+      hit: { w: 2.5, h: 0.6, d: 0.9 },
       flashT: 0,
     };
     this._syncBox(e);
@@ -886,170 +887,122 @@ export class Spawner {
   _makeGatorMesh() {
     const g = new THREE.Group();
 
-    const skinMat = new THREE.MeshStandardMaterial({
+    const skin = new THREE.MeshStandardMaterial({
       color: 0x3a5a2a, roughness: 0.85, metalness: 0.05,
-      emissive: 0x1a2a0a, emissiveIntensity: 0.2,
+      emissive: 0x1a2a0a, emissiveIntensity: 0.25,
     });
-    const bellyMat = new THREE.MeshStandardMaterial({
-      color: 0x6a7a4a, roughness: 0.8, metalness: 0.05,
+    const belly = new THREE.MeshStandardMaterial({
+      color: 0x5a6a3a, roughness: 0.8, metalness: 0.05,
       emissive: 0x2a3a1a, emissiveIntensity: 0.15,
     });
-    const darkMat = new THREE.MeshStandardMaterial({
+    const dark = new THREE.MeshStandardMaterial({
       color: 0x2a3a1a, roughness: 0.9, metalness: 0.05,
       emissive: 0x0a1a04, emissiveIntensity: 0.2,
     });
 
-    // Main body — long low oval
-    const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.7, 0.9, 4.5, 8, 1), skinMat
-    );
-    body.rotation.z = Math.PI / 2;
-    body.rotation.y = Math.PI / 2;
-    body.position.set(0, 0.45, 0);
-    body.scale.set(1, 0.45, 1);
-    g.add(body);
+    // Torso — wide flattened box, the solid core
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 3.0), skin);
+    torso.position.set(0, 0.3, 0);
+    g.add(torso);
 
-    // Belly
-    const belly = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.6, 0.8, 4.0, 8, 1), bellyMat
-    );
-    belly.rotation.z = Math.PI / 2;
-    belly.rotation.y = Math.PI / 2;
-    belly.position.set(0, 0.25, 0);
-    belly.scale.set(1, 0.3, 1);
-    g.add(belly);
+    // Belly slab underneath
+    const bellyM = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 2.8), belly);
+    bellyM.position.set(0, 0.1, 0);
+    g.add(bellyM);
 
-    // Head — wider wedge at front
-    const head = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 0.4, 1.8), skinMat.clone()
-    );
-    head.position.set(0, 0.35, -2.8);
+    // Head block — overlaps torso front
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.4, 1.2), skin.clone());
+    head.position.set(0, 0.3, -1.9);
     g.add(head);
 
-    // Upper jaw
-    const upperJaw = new THREE.Mesh(
-      new THREE.BoxGeometry(1.4, 0.2, 1.2), skinMat.clone()
-    );
-    upperJaw.position.set(0, 0.42, -3.8);
-    g.add(upperJaw);
-
-    // Snout tip
-    const snout = new THREE.Mesh(
-      new THREE.BoxGeometry(1.0, 0.15, 0.5), skinMat.clone()
-    );
-    snout.position.set(0, 0.38, -4.5);
+    // Snout — tapers forward from head
+    const snout = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.25, 0.9), skin.clone());
+    snout.position.set(0, 0.28, -2.7);
     g.add(snout);
 
-    // Lower jaw (slightly open)
-    const lowerJaw = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 0.12, 1.0), bellyMat.clone()
-    );
-    lowerJaw.position.set(0, 0.18, -3.7);
-    lowerJaw.rotation.x = 0.08;
-    g.add(lowerJaw);
+    // Snout tip
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.18, 0.4), skin.clone());
+    tip.position.set(0, 0.26, -3.25);
+    g.add(tip);
 
-    // Teeth (jagged white bits along jaw edges)
-    const toothMat = new THREE.MeshStandardMaterial({
-      color: 0xeeeedd, roughness: 0.5, metalness: 0.1,
-    });
-    for (let i = 0; i < 8; i++) {
-      const side = i < 4 ? -1 : 1;
-      const idx = i % 4;
-      const tz = -3.2 - idx * 0.35;
-      const tooth = new THREE.Mesh(
-        new THREE.ConeGeometry(0.05, 0.12, 4), toothMat
-      );
-      tooth.position.set(side * 0.55, 0.28, tz);
+    // Lower jaw (slightly dropped)
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.8), belly.clone());
+    jaw.position.set(0, 0.12, -2.65);
+    jaw.rotation.x = 0.06;
+    g.add(jaw);
+
+    // Teeth
+    const toothMat = new THREE.MeshStandardMaterial({ color: 0xeeeedd, roughness: 0.5, metalness: 0.1 });
+    for (let i = 0; i < 6; i++) {
+      const side = i < 3 ? -1 : 1;
+      const tz = -2.3 - (i % 3) * 0.3;
+      const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 4), toothMat);
+      tooth.position.set(side * 0.4, 0.18, tz);
       tooth.rotation.x = Math.PI;
       g.add(tooth);
     }
 
-    // Eyes — bulging on top of head
+    // Eyes on top of head
     const eyeMat = new THREE.MeshStandardMaterial({
       color: 0xddcc22, emissive: 0x886600, emissiveIntensity: 0.6,
       roughness: 0.3, metalness: 0.2,
     });
-    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111100 });
-    for (const side of [-0.5, 0.5]) {
-      const eyeBump = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 8, 6), skinMat.clone()
-      );
-      eyeBump.position.set(side, 0.62, -2.5);
-      g.add(eyeBump);
-      const eye = new THREE.Mesh(
-        new THREE.SphereGeometry(0.12, 8, 6), eyeMat
-      );
-      eye.position.set(side, 0.68, -2.5);
+    for (const side of [-0.35, 0.35]) {
+      const bump = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), skin.clone());
+      bump.position.set(side, 0.55, -1.7);
+      g.add(bump);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), eyeMat);
+      eye.position.set(side, 0.62, -1.7);
       g.add(eye);
-      const pupil = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 6, 4), pupilMat
-      );
-      pupil.position.set(side, 0.7, -2.62);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 4),
+        new THREE.MeshBasicMaterial({ color: 0x111100 }));
+      pupil.position.set(side, 0.64, -1.82);
       g.add(pupil);
     }
 
     // Nostrils
-    const nostrilMat = new THREE.MeshBasicMaterial({ color: 0x1a1a0a });
-    for (const side of [-0.2, 0.2]) {
-      const nostril = new THREE.Mesh(
-        new THREE.SphereGeometry(0.06, 5, 4), nostrilMat
-      );
-      nostril.position.set(side, 0.44, -4.7);
-      g.add(nostril);
+    for (const side of [-0.15, 0.15]) {
+      const n = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4),
+        new THREE.MeshBasicMaterial({ color: 0x1a1a0a }));
+      n.position.set(side, 0.34, -3.4);
+      g.add(n);
     }
 
-    // Spine ridges
-    for (let i = 0; i < 12; i++) {
-      const sz = -1.5 + i * 0.4;
+    // Spine ridges along torso
+    for (let i = 0; i < 8; i++) {
+      const sz = -1.0 + i * 0.35;
       const ridge = new THREE.Mesh(
-        new THREE.ConeGeometry(0.08, 0.15 + Math.random() * 0.08, 4), darkMat
+        new THREE.ConeGeometry(0.06, 0.12 + Math.random() * 0.06, 4), dark
       );
-      ridge.position.set(0, 0.7 + Math.random() * 0.04, sz);
+      ridge.position.set(0, 0.58, sz);
       g.add(ridge);
     }
 
-    // Tail — tapers backward
-    const tailSegs = [
-      { w: 0.5, h: 0.3, d: 1.2, z: 2.8, y: 0.3 },
-      { w: 0.3, h: 0.2, d: 1.0, z: 3.7, y: 0.25 },
-      { w: 0.15, h: 0.1, d: 0.8, z: 4.4, y: 0.2 },
+    // Tail — overlapping segments tapering from torso rear
+    const tailParts = [
+      { w: 0.8, h: 0.35, d: 1.0, z: 1.9, y: 0.28 },
+      { w: 0.5, h: 0.25, d: 0.8, z: 2.7, y: 0.24 },
+      { w: 0.25, h: 0.15, d: 0.7, z: 3.3, y: 0.2 },
+      { w: 0.1, h: 0.08, d: 0.5, z: 3.8, y: 0.16 },
     ];
-    for (const ts of tailSegs) {
-      const seg = new THREE.Mesh(
-        new THREE.BoxGeometry(ts.w, ts.h, ts.d), skinMat.clone()
-      );
-      seg.position.set(0, ts.y, ts.z);
+    for (const tp of tailParts) {
+      const seg = new THREE.Mesh(new THREE.BoxGeometry(tp.w, tp.h, tp.d), skin.clone());
+      seg.position.set(0, tp.y, tp.z);
       g.add(seg);
     }
 
-    // Legs (stubby, splayed out)
-    const legMat = darkMat.clone();
+    // Legs — short, splayed
     const legPositions = [
-      { x: -0.8, z: -1.2 }, { x: 0.8, z: -1.2 },
-      { x: -0.9, z: 1.0 }, { x: 0.9, z: 1.0 },
+      { x: -0.75, z: -0.8 }, { x: 0.75, z: -0.8 },
+      { x: -0.8, z: 0.7 }, { x: 0.8, z: 0.7 },
     ];
     for (const lp of legPositions) {
-      const leg = new THREE.Mesh(
-        new THREE.BoxGeometry(0.35, 0.2, 0.5), legMat
-      );
-      leg.position.set(lp.x, 0.12, lp.z);
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.4), dark);
+      leg.position.set(lp.x, 0.08, lp.z);
       g.add(leg);
-      // Claws
-      for (let c = 0; c < 3; c++) {
-        const claw = new THREE.Mesh(
-          new THREE.ConeGeometry(0.03, 0.1, 3), darkMat
-        );
-        claw.position.set(
-          lp.x + (c - 1) * 0.1,
-          0.05,
-          lp.z + (lp.z < 0 ? -0.3 : 0.3)
-        );
-        claw.rotation.x = lp.z < 0 ? -Math.PI / 2 : Math.PI / 2;
-        g.add(claw);
-      }
     }
 
-    skinMat.dispose(); bellyMat.dispose(); darkMat.dispose();
+    skin.dispose(); belly.dispose(); dark.dispose();
     return g;
   }
 

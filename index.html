@@ -14,7 +14,9 @@
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js"
         }
       }
     </script>
@@ -122,6 +124,10 @@
         <div class="hud-right">
           <div id="hud-shield">Shield: —</div>
           <div id="hud-flow">Flow: —</div>
+          <div id="hud-remediations" class="hud-remediations">
+            <span class="rem-label">Fixes</span>
+            <span class="rem-icons" id="rem-icons"></span>
+          </div>
           <div id="hud-manual-boost" class="hud-manual-boost ready">
             <span class="mb-label">Boost [W/↑]</span>
             <div class="mb-bar"><div id="mb-fill" class="mb-fill"></div></div>
@@ -138,7 +144,7 @@
       </div>
 
       <div id="attract-scores" class="attract-scores hidden">
-        <h2 class="attract-scores-title">Top Scores</h2>
+        <h2 class="attract-scores-title">Global Top Scores</h2>
         <div class="attract-scores-list" id="attract-scores-list"></div>
         <p class="attract-insert">Press START to play!</p>
       </div>
@@ -152,7 +158,7 @@
         </div>
         <button type="button" id="btn-start" class="btn primary">Start Run</button>
         <button type="button" id="btn-choose-level-menu" class="btn">Choose Level</button>
-        <button type="button" id="btn-highscores" class="btn">High Scores</button>
+        <button type="button" id="btn-highscores" class="btn">Global Scores</button>
         <button type="button" id="btn-achievements" class="btn">Achievements</button>
 
         <div id="menu-achievements" class="menu-achievements hidden">
@@ -162,7 +168,7 @@
         </div>
 
         <div id="menu-leaderboard" class="go-leaderboard hidden">
-          <h3 class="lb-title">Leaderboard</h3>
+          <h3 class="lb-title">Global Leaderboard</h3>
           <div class="lb-scroll" id="menu-lb-scroll">
             <table class="lb-table">
               <thead>
@@ -213,7 +219,7 @@
         </div>
 
         <div id="go-leaderboard" class="go-leaderboard hidden">
-          <h3 class="lb-title">Leaderboard</h3>
+          <h3 class="lb-title">Global Leaderboard</h3>
           <div class="lb-scroll" id="lb-scroll">
             <table class="lb-table">
               <thead>

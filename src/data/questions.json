@@ -1154,14 +1154,6 @@
     "explanation": "SCM (Source Control Management) projects pull playbooks directly from Git repositories."
   },
   {
-    "id": 145,
-    "category": "ai",
-    "prompt": "What large language model family powers the Automation code assistant in VS Code?",
-    "options": ["GPT-4", "IBM watsonx Code Assistant", "LLaMA", "PaLM"],
-    "answer": 1,
-    "explanation": "The Automation code assistant is powered by IBM watsonx Code Assistant, trained on Ansible data."
-  },
-  {
     "id": 146,
     "category": "ai",
     "prompt": "What do you type in VS Code to trigger an Automation code assistant suggestion?",

@@ -1,4 +1,5 @@
 import { getLeaderboard, loadAchievements, ACHIEVEMENT_DEFS } from "../utils/storage.js";
+import { fetchGlobalLeaderboard } from "../utils/firebase.js";
 
 /**
  * DOM overlays + HUD updates (Built to Automate)
@@ -28,6 +29,7 @@ export class UI {
       collectionPts: document.getElementById("hud-collection-pts"),
       shield: document.getElementById("hud-shield"),
       flow: document.getElementById("hud-flow"),
+      remIcons: document.getElementById("rem-icons"),
       status: document.getElementById("hud-status"),
       boostBar: document.getElementById("boost-bar"),
       boostFill: document.getElementById("boost-fill"),
@@ -155,7 +157,7 @@ export class UI {
     this.el.mainMenu.classList.toggle("hidden", !visible);
   }
 
-  showAttractScores(visible) {
+  async showAttractScores(visible) {
     if (!this.el.attractScores) return;
     if (visible && !this._attractClickBound) {
       this._attractClickBound = true;
@@ -164,14 +166,19 @@ export class UI {
       });
     }
     if (visible) {
-      const board = getLeaderboard();
       const list = this.el.attractScoresList;
+      list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:1rem">Loading…</div>';
+      this.el.mainMenu.classList.add("hidden");
+      this.el.attractScores.classList.remove("hidden");
+
+      let board = await fetchGlobalLeaderboard(10).catch(() => []);
+      if (board.length === 0) board = getLeaderboard().slice(0, 10);
+
       list.innerHTML = "";
       if (board.length === 0) {
         list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:1rem">No scores yet — be the first!</div>';
       } else {
-        const top = board.slice(0, 10);
-        top.forEach((entry, i) => {
+        board.forEach((entry, i) => {
           const row = document.createElement("div");
           row.className = "attract-score-row";
           row.style.animationDelay = `${i * 0.08}s`;
@@ -179,11 +186,10 @@ export class UI {
           list.appendChild(row);
         });
       }
-      this.el.mainMenu.classList.add("hidden");
     } else {
       this.el.mainMenu.classList.remove("hidden");
+      this.el.attractScores.classList.add("hidden");
     }
-    this.el.attractScores.classList.toggle("hidden", !visible);
   }
 
   showPause(visible) {
@@ -508,6 +514,17 @@ export class UI {
       }
     }
 
+    if (this.el.remIcons && data.maxRemediations != null) {
+      const used = data.remediationsUsed || 0;
+      const max = data.maxRemediations;
+      let html = "";
+      for (let i = 0; i < max; i++) {
+        const cls = i < max - used ? "rem-pip available" : "rem-pip spent";
+        html += `<span class="${cls}">+</span>`;
+      }
+      this.el.remIcons.innerHTML = html;
+    }
+
     if (this.el.manualBoost && this.el.mbFill) {
       const { mbState, mbProgress } = data;
       this.el.manualBoost.classList.remove("ready", "active", "cooldown");
@@ -573,32 +590,25 @@ export class UI {
   }
 
   /** Switch from entry to leaderboard view and render the table. */
-  showLeaderboard(board, highlightRank) {
+  async showLeaderboard(board, highlightRank) {
     if (this.el.goEntry) this.el.goEntry.classList.add("hidden");
     const lb = this.el.goLeaderboard;
     if (lb) lb.classList.remove("hidden");
 
     const body = this.el.lbBody;
     if (!body) return;
-    body.innerHTML = "";
-    board.forEach((entry, i) => {
-      const tr = document.createElement("tr");
-      if (i === highlightRank) tr.classList.add("lb-current");
-      const tdRank = document.createElement("td");
-      tdRank.textContent = String(i + 1);
-      const tdName = document.createElement("td");
-      tdName.textContent = entry.name || "???";
-      const tdScore = document.createElement("td");
-      tdScore.textContent = String(entry.score);
-      tr.append(tdRank, tdName, tdScore);
-      body.appendChild(tr);
-    });
 
+    this._renderBoardInto(body, board);
     if (this.el.lbScroll && highlightRank >= 0) {
       const rows = body.querySelectorAll("tr");
       if (rows[highlightRank]) {
         setTimeout(() => rows[highlightRank].scrollIntoView({ block: "center" }), 100);
       }
+    }
+
+    const global = await fetchGlobalLeaderboard(50);
+    if (global.length > 0) {
+      this._renderBoardInto(body, global);
     }
   }
 
@@ -618,39 +628,48 @@ export class UI {
     this.el.canvasWrap.classList.add("shake");
   }
 
-  _showMenuLeaderboard() {
+  _renderBoardInto(body, board) {
+    body.innerHTML = "";
+    if (board.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 3;
+      td.textContent = "No scores yet — play a round!";
+      td.style.textAlign = "center";
+      td.style.color = "var(--muted)";
+      td.style.padding = "1.5rem 0.5rem";
+      tr.appendChild(td);
+      body.appendChild(tr);
+    } else {
+      board.forEach((entry, i) => {
+        const tr = document.createElement("tr");
+        const tdRank = document.createElement("td");
+        tdRank.textContent = String(i + 1);
+        const tdName = document.createElement("td");
+        tdName.textContent = entry.name || "???";
+        const tdScore = document.createElement("td");
+        tdScore.textContent = String(Math.floor(entry.score));
+        tr.append(tdRank, tdName, tdScore);
+        body.appendChild(tr);
+      });
+    }
+  }
+
+  async _fetchBoard() {
+    const global = await fetchGlobalLeaderboard(50);
+    return global.length > 0 ? global : getLeaderboard();
+  }
+
+  async _showMenuLeaderboard() {
     const lb = document.getElementById("menu-leaderboard");
     if (!lb) return;
-    const board = getLeaderboard();
-    const body = document.getElementById("menu-lb-body");
-    if (body) {
-      body.innerHTML = "";
-      if (board.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 3;
-        td.textContent = "No scores yet — play a round!";
-        td.style.textAlign = "center";
-        td.style.color = "var(--muted)";
-        td.style.padding = "1.5rem 0.5rem";
-        tr.appendChild(td);
-        body.appendChild(tr);
-      } else {
-        board.forEach((entry, i) => {
-          const tr = document.createElement("tr");
-          const tdRank = document.createElement("td");
-          tdRank.textContent = String(i + 1);
-          const tdName = document.createElement("td");
-          tdName.textContent = entry.name || "???";
-          const tdScore = document.createElement("td");
-          tdScore.textContent = String(entry.score);
-          tr.append(tdRank, tdName, tdScore);
-          body.appendChild(tr);
-        });
-      }
-    }
     lb.classList.remove("hidden");
     this._toggleMenuButtons(false);
+    const body = document.getElementById("menu-lb-body");
+    if (!body) return;
+    body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:1rem">Loading…</td></tr>';
+    const board = await this._fetchBoard();
+    this._renderBoardInto(body, board);
   }
 
   _hideMenuLeaderboard() {

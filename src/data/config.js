@@ -55,6 +55,8 @@ export const CONFIG = {
   REMEDIATION_CORRECT_STREAK: 1,
 
   // Boost token quiz (gameplay pauses while answering)
+  MAX_REMEDIATIONS: 3,
+
   BOOST_DURATION: 5,
   /** Seconds added to an active boost when collecting a playbook/collection */
   BOOST_EXTEND_ON_PICKUP: 2,

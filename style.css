@@ -473,6 +473,53 @@ body {
   animation: pulse 1.2s ease-in-out infinite;
 }
 
+.hud-remediations {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.rem-label {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+.rem-icons {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.rem-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.rem-pip.available {
+  background: rgba(0, 255, 140, 0.2);
+  border: 1.5px solid rgba(0, 255, 140, 0.6);
+  color: #00ff8c;
+  text-shadow: 0 0 6px rgba(0, 255, 140, 0.5);
+}
+
+.rem-pip.spent {
+  background: rgba(255, 50, 50, 0.15);
+  border: 1.5px solid rgba(255, 50, 50, 0.35);
+  color: rgba(255, 60, 60, 0.5);
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
 .hud-manual-boost {
   margin-top: 0.35rem;
   font-size: 0.78rem;

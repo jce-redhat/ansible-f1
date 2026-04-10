@@ -20,6 +20,7 @@ import {
   ACHIEVEMENT_DEFS,
 } from "../utils/storage.js";
 import { preload, play, startLoop, stopLoop, startBgm } from "../utils/audio.js";
+import { submitGlobalScore } from "../utils/firebase.js";
 
 const SFX = {
   SHIELD_HIT: "./assets/audio/shield-hit.wav",
@@ -91,6 +92,7 @@ export class Game {
     this.pickupSpeedMult = 1;
 
     this.recoveryPrompt = false;
+    this.remediationsUsed = 0;
     this.timeScale = 1;
 
     // Combo multiplier
@@ -431,6 +433,7 @@ export class Game {
     this.collectionPts = 0;
     this.pickupSpeedMult = 1;
     this.recoveryPrompt = false;
+    this.remediationsUsed = 0;
     this.timeScale = 1;
     this.comboCount = 0;
     this.comboTimer = 0;
@@ -645,6 +648,8 @@ export class Game {
         this.ui.setStatus("Wrong answer", CONFIG.STATUS_MESSAGE_MS);
       }
     } else if (mode === "recovery") {
+      this.remediationsUsed += 1;
+      const left = CONFIG.MAX_REMEDIATIONS - this.remediationsUsed;
       if (correct) {
         this.health = Math.min(
           CONFIG.STARTING_HEALTH,
@@ -653,12 +658,18 @@ export class Game {
         this.streak += CONFIG.REMEDIATION_CORRECT_STREAK;
         this.sessionCorrect += 1;
         addTotalCorrectAnswers(1);
-        this.ui.setStatus("Health restored", CONFIG.STATUS_MESSAGE_MS);
+        this.ui.setStatus(
+          `Health restored! (${left} remediation${left !== 1 ? "s" : ""} left)`,
+          CONFIG.STATUS_MESSAGE_MS
+        );
         this._checkStreakAutomation();
       } else {
         this.streak = 0;
         this.health -= CONFIG.REMEDIATION_WRONG_PENALTY;
-        this.ui.setStatus("Remediation failed", CONFIG.STATUS_MESSAGE_MS);
+        this.ui.setStatus(
+          `Remediation failed (${left} left)`,
+          CONFIG.STATUS_MESSAGE_MS
+        );
         if (this.health <= 0) {
           this._gameOver();
           return;
@@ -737,11 +748,12 @@ export class Game {
     }, 30000);
   }
 
-  saveScore() {
+  async saveScore() {
     const name = this.ui.getEnteredName() || "AAA";
     setLastName(name);
     const { rank, board } = addLeaderboardEntry(name, this.score);
     this.ui.showLeaderboard(board, rank);
+    await submitGlobalScore(name, this.score, this.currentLevel);
   }
 
   /** Recovery prompt */
@@ -764,11 +776,13 @@ export class Game {
   onRecoveryNo() {
     if (!this.recoveryPrompt) return;
     markRecoveryTipSeen();
+    this.remediationsUsed += 1;
     this.recoveryPrompt = false;
     this.ui.showRecovery(false, false);
     this.timeScale = 1;
+    const left = CONFIG.MAX_REMEDIATIONS - this.remediationsUsed;
     this.ui.setStatus(
-      "Skipped remediation — no extra penalty. Keep driving!",
+      `Skipped remediation (${left} remaining). Keep driving!`,
       CONFIG.STATUS_HIT_MS
     );
   }
@@ -892,6 +906,8 @@ export class Game {
       mbState,
       mbProgress,
       braking: this.braking,
+      remediationsUsed: this.remediationsUsed,
+      maxRemediations: CONFIG.MAX_REMEDIATIONS,
     });
   }
 
@@ -1005,6 +1021,8 @@ export class Game {
       braking: this.braking,
       comboCount: this.comboCount,
       comboTimer: this.comboTimer,
+      remediationsUsed: this.remediationsUsed,
+      maxRemediations: CONFIG.MAX_REMEDIATIONS,
     });
   }
 
@@ -1041,7 +1059,7 @@ export class Game {
       return;
     }
 
-    if (this.quizEnabled) {
+    if (this.quizEnabled && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
       this.recoveryPrompt = true;
       const showTip = !hasSeenRecoveryTip();
       this.ui.showRecovery(true, showTip, () => {
@@ -1083,7 +1101,7 @@ export class Game {
       return;
     }
 
-    if (this.quizEnabled) {
+    if (this.quizEnabled && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
       this.recoveryPrompt = true;
       const showTip = !hasSeenRecoveryTip();
       this.ui.showRecovery(true, showTip, () => {

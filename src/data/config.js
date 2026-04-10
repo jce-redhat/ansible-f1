@@ -145,6 +145,15 @@ export const DRIVERS = {
     origin: "Buenos Aires, Argentina",
     bio: "Leo wrote his first program at age five on a Commodore 64 he found in a dumpster behind a Buenos Aires electronics shop. By twelve he had accidentally penetrated the CIA's internal network, triggered a five-nation diplomatic incident, and been offered a job by three intelligence agencies before his voice had even broken. Refused all of them because the dress code forbade soccer cleats. Better at soccer than Messi — and Messi knows it. Once nutmegged an entire back line during a charity match while live-debugging a Kubernetes cluster on his phone. Despises broccoli with a fury that borders on religious conviction. Married his university sweetheart (she's a quantum physicist — he says she's the smart one). Father to a daughter who already types 90 WPM at age four. His purple car is painted the exact frequency of a black light because he believes racing should feel like a rave. Won't brake. Won't yield. Won't eat his vegetables. They call him 'El Rayo.' Lightning doesn't slow down for anyone.",
   },
+  hicham: {
+    id: "hicham",
+    name: "Hicham Mourad",
+    car: "lightcycle",
+    country: "CA",
+    photo: "./assets/hicham_tron.png",
+    origin: "Ottawa, Canada",
+    bio: "Born in Beirut, forged in Ottawa, fueled by pure maple syrup. Hicham drinks a pint of the dark stuff every morning — Grade A, straight from the can, no pancakes required. Played three hours of hockey daily for twenty years straight and has the missing teeth to prove it. Basically invented the private cloud before anyone knew what a cloud was — spent a decade at VMware virtualizing things that weren't supposed to be virtualizable, including, allegedly, his own consciousness. His two sons think their dad is a superhero. His French Canadian wife knows he is one. Once migrated 40,000 virtual machines across three datacenters during a Canadiens playoff game without missing a single goal. Races motorcycles on weekends because four wheels are for people who need stability. His lightcycle leaves a trail of pure neon. If you see the glow in your mirror, it's already too late. They call him 'The Architect of Clouds.' The grid is his home ice.",
+  },
 };
 
 export const PICKUP_TYPES = [

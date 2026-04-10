@@ -777,8 +777,9 @@ export class UI {
   }
 
   _carLabel(carType) {
-    const labels = { f1: "F1 Racer", truck: "Pickup Truck", f1_yellow: "F1 Racer", f1_pink: "F1 Racer" };
-    return labels[carType] || "F1 Racer";
+    if (carType === "truck") return "Pickup Truck";
+    if (carType === "lightcycle") return "Lightcycle";
+    return "F1 Racer";
   }
 
   _renderDriverCards() {

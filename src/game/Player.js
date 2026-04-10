@@ -42,6 +42,7 @@ export class Player {
 
   _buildCarForType(type) {
     if (type === "truck") return this._buildTruckMesh();
+    if (type === "lightcycle") return this._buildLightcycleMesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -91,15 +92,15 @@ export class Player {
       color: 0x667788, metalness: 0.7, roughness: 0.3,
     });
 
-    // ── Floor / plank (visible from below, defines width) ──
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.04, 3.0), carbon.clone());
-    floor.position.set(0, 0.06, -0.2);
+    // ── Floor / plank (thin strip under the body only) ──
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 2.2), carbon.clone());
+    floor.position.set(0, 0.08, -0.15);
     g.add(floor);
 
-    // Floor edge winglets
+    // Floor edge rails
     for (const side of [-1, 1]) {
-      const edge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 1.4), carbon.clone());
-      edge.position.set(side * 0.95, 0.1, 0.1);
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 1.2), carbon.clone());
+      edge.position.set(side * 0.38, 0.08, 0.1);
       g.add(edge);
     }
 
@@ -131,32 +132,38 @@ export class Player {
 
     // Nose pillar (connects front wing to monocoque)
     const nosePillar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.14, 0.12, 0.3), livery.clone()
+      new THREE.BoxGeometry(0.16, 0.1, 0.25), livery.clone()
     );
-    nosePillar.position.set(0, 0.14, -1.35);
+    nosePillar.position.set(0, 0.13, -1.35);
     g.add(nosePillar);
 
-    // ── Nose cone — long, tapered, elegant ──
-    const noseBody = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.22, 0.8, 12), livery.clone()
-    );
-    noseBody.rotation.x = Math.PI / 2;
-    noseBody.position.set(0, 0.2, -1.25);
-    g.add(noseBody);
+    // ── Nose — tapered box sections (no cones) ──
+    // Wide base transitioning from monocoque
+    const noseBase = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.16, 0.4), livery.clone());
+    noseBase.position.set(0, 0.2, -0.9);
+    g.add(noseBase);
 
+    // Mid-section taper
+    const noseMid = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.13, 0.4), livery.clone());
+    noseMid.position.set(0, 0.19, -1.2);
+    g.add(noseMid);
+
+    // Narrow front section
+    const noseFront = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.35), livery.clone());
+    noseFront.position.set(0, 0.18, -1.48);
+    g.add(noseFront);
+
+    // Nose tip (rounded, not pointy)
     const noseTip = new THREE.Mesh(
-      new THREE.ConeGeometry(0.06, 0.4, 8), livery.clone()
+      new THREE.SphereGeometry(0.07, 8, 6), livery.clone()
     );
-    noseTip.rotation.x = Math.PI / 2;
-    noseTip.position.set(0, 0.2, -1.85);
+    noseTip.scale.set(1, 0.8, 1.8);
+    noseTip.position.set(0, 0.18, -1.68);
     g.add(noseTip);
 
     // ── Monocoque / survival cell ──
-    const monoFront = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2, 0.3, 0.6, 8), livery.clone()
-    );
-    monoFront.rotation.x = Math.PI / 2;
-    monoFront.position.set(0, 0.28, -0.55);
+    const monoFront = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.24, 0.5), livery.clone());
+    monoFront.position.set(0, 0.28, -0.6);
     g.add(monoFront);
 
     // Cockpit tub
@@ -368,6 +375,212 @@ export class Player {
 
   _buildMesh() {
     return this._buildF1();
+  }
+
+  _buildLightcycleMesh() {
+    const g = new THREE.Group();
+
+    const body = new THREE.MeshStandardMaterial({
+      color: 0x0a0a12, metalness: 0.7, roughness: 0.25,
+      emissive: 0x000000,
+    });
+    const neon = new THREE.MeshStandardMaterial({
+      color: 0x00ffaa, metalness: 0.3, roughness: 0.2,
+      emissive: 0x00ffaa, emissiveIntensity: 0.9,
+    });
+    const rubber = new THREE.MeshStandardMaterial({
+      color: 0x0d0d0d, metalness: 0.15, roughness: 0.92,
+    });
+    const chrome = new THREE.MeshStandardMaterial({
+      color: 0x889999, metalness: 0.85, roughness: 0.15,
+    });
+    const visor = new THREE.MeshStandardMaterial({
+      color: 0x44ffcc, metalness: 0.6, roughness: 0.1,
+      emissive: 0x22aa88, emissiveIntensity: 0.4,
+      transparent: true, opacity: 0.7,
+    });
+
+    // ── Main chassis spine (long, low, sleek) ──
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 2.8), body.clone());
+    spine.position.set(0, 0.35, -0.1);
+    g.add(spine);
+
+    // Lower fairing (wider, hugs the ground)
+    const fairing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 2.4), body.clone());
+    fairing.position.set(0, 0.22, -0.1);
+    g.add(fairing);
+
+    // Front cowl (tapers forward)
+    const cowlFront = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.5), body.clone());
+    cowlFront.position.set(0, 0.32, -1.35);
+    g.add(cowlFront);
+
+    const cowlTip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.35), body.clone());
+    cowlTip.position.set(0, 0.3, -1.65);
+    g.add(cowlTip);
+
+    // Nose tip (rounded)
+    const noseTip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 6), body.clone()
+    );
+    noseTip.scale.set(1, 0.7, 2.0);
+    noseTip.position.set(0, 0.3, -1.85);
+    g.add(noseTip);
+
+    // Rear tail (tapers back and up)
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.5), body.clone());
+    tail.position.set(0, 0.4, 1.2);
+    tail.rotation.x = -0.15;
+    g.add(tail);
+
+    const tailFin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.3, 0.45), body.clone());
+    tailFin.position.set(0, 0.55, 1.15);
+    g.add(tailFin);
+
+    // ── Rider (crouched forward) ──
+    // Torso (leaned forward)
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.28, 0.45), body.clone());
+    torso.position.set(0, 0.58, -0.15);
+    torso.rotation.x = -0.3;
+    g.add(torso);
+
+    // Helmet
+    const helmet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 10, 8), body.clone()
+    );
+    helmet.position.set(0, 0.72, -0.42);
+    g.add(helmet);
+
+    // Visor
+    const visorMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.11, 8, 6, 0, Math.PI), visor
+    );
+    visorMesh.rotation.y = Math.PI;
+    visorMesh.position.set(0, 0.73, -0.48);
+    g.add(visorMesh);
+
+    // Arms (reaching to handlebars)
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.3), body.clone());
+      arm.position.set(side * 0.2, 0.52, -0.5);
+      arm.rotation.x = -0.4;
+      g.add(arm);
+    }
+
+    // Handlebars
+    const handlebar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.04), chrome.clone());
+    handlebar.position.set(0, 0.46, -0.68);
+    g.add(handlebar);
+
+    // ── Neon light strips (Tron signature) ──
+    // Spine top strip
+    const stripTop = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 2.6), neon.clone());
+    stripTop.position.set(0, 0.47, -0.1);
+    g.add(stripTop);
+
+    // Side strips (left + right)
+    for (const side of [-1, 1]) {
+      const stripSide = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 2.2), neon.clone());
+      stripSide.position.set(side * 0.28, 0.3, -0.1);
+      g.add(stripSide);
+
+      // Lower fairing accent
+      const stripLow = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 1.8), neon.clone());
+      stripLow.position.set(side * 0.26, 0.17, -0.1);
+      g.add(stripLow);
+    }
+
+    // Front fork neon accents
+    const stripNose = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.02), neon.clone());
+    stripNose.position.set(0, 0.3, -1.82);
+    g.add(stripNose);
+
+    // Tail light bar
+    const tailLight = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.03), neon.clone());
+    tailLight.position.set(0, 0.48, 1.42);
+    g.add(tailLight);
+
+    // Helmet visor neon rim
+    const visorRim = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.02), neon.clone());
+    visorRim.position.set(0, 0.72, -0.55);
+    g.add(visorRim);
+
+    // ── Wheels (large, enclosed, Tron-style) ──
+    // Front wheel
+    const fTire = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.28, 0.1, 20), rubber.clone()
+    );
+    fTire.rotation.z = Math.PI / 2;
+    fTire.position.set(0, 0.28, -1.15);
+    g.add(fTire);
+
+    // Front wheel neon ring
+    const fRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.28, 0.015, 6, 24), neon.clone()
+    );
+    fRing.rotation.y = Math.PI / 2;
+    fRing.position.set(0, 0.28, -1.15);
+    g.add(fRing);
+
+    // Front wheel hub
+    const fHub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.12, 8), chrome.clone()
+    );
+    fHub.rotation.z = Math.PI / 2;
+    fHub.position.set(0, 0.28, -1.15);
+    g.add(fHub);
+
+    // Front fork (two prongs)
+    for (const side of [-0.08, 0.08]) {
+      const fork = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.04), chrome.clone());
+      fork.position.set(side, 0.32, -1.15);
+      fork.rotation.x = 0.1;
+      g.add(fork);
+    }
+
+    // Rear wheel (bigger)
+    const rTire = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.32, 0.32, 0.14, 20), rubber.clone()
+    );
+    rTire.rotation.z = Math.PI / 2;
+    rTire.position.set(0, 0.32, 0.85);
+    g.add(rTire);
+
+    // Rear wheel neon ring
+    const rRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.32, 0.018, 6, 24), neon.clone()
+    );
+    rRing.rotation.y = Math.PI / 2;
+    rRing.position.set(0, 0.32, 0.85);
+    g.add(rRing);
+
+    // Rear wheel hub
+    const rHub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.16, 8), chrome.clone()
+    );
+    rHub.rotation.z = Math.PI / 2;
+    rHub.position.set(0, 0.32, 0.85);
+    g.add(rHub);
+
+    // Rear swingarm
+    for (const side of [-0.1, 0.1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.6), chrome.clone());
+      arm.position.set(side, 0.28, 0.65);
+      g.add(arm);
+    }
+
+    // ── Underglow ──
+    const glow = new THREE.PointLight(0x00ffaa, 0.7, 8);
+    glow.position.set(0, 0.1, 0);
+    g.add(glow);
+    this.pointLight = glow;
+
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+
+    body.dispose(); neon.dispose(); rubber.dispose();
+    chrome.dispose();
+
+    return g;
   }
 
   _buildTruckMesh() {

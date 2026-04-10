@@ -794,26 +794,34 @@ export class Player {
     }
 
     // ── Hover system — wheels folded flat under body ──
+    const podY = 0.14 + H;
     const addHoverUnit = (x, z) => {
-      // Wheel turned perpendicular — like a fan pointing down
+      // Pod housing (tucked against body)
+      const pod = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.16, 0.06, 12), darkSteel.clone()
+      );
+      pod.position.set(x, podY, z);
+      g.add(pod);
+
+      // Fan disc inside pod
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.18, 0.06, 14), rubber.clone()
+        new THREE.CylinderGeometry(0.13, 0.13, 0.03, 14), rubber.clone()
       );
       tire.rotation.x = Math.PI / 2;
-      tire.position.set(x, 0.1, z);
+      tire.position.set(x, podY - 0.04, z);
       g.add(tire);
 
-      // Thruster ring (horizontal, around the fan wheel)
+      // Thruster ring
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.18, 0.015, 6, 20), fluxBlue.clone()
+        new THREE.TorusGeometry(0.15, 0.012, 6, 20), fluxBlue.clone()
       );
       ring.rotation.x = Math.PI / 2;
-      ring.position.set(x, 0.1, z);
+      ring.position.set(x, podY - 0.04, z);
       g.add(ring);
 
-      // Hover jet glow disc beneath
+      // Hover jet glow beneath
       const jet = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.14, 0.18, 0.03, 12),
+        new THREE.CylinderGeometry(0.1, 0.14, 0.03, 12),
         new THREE.MeshStandardMaterial({
           color: 0x44ccff, emissive: 0x44ccff, emissiveIntensity: 1.2,
           transparent: true, opacity: 0.5,

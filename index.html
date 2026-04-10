@@ -44,6 +44,7 @@
     <div id="game-root">
       <canvas id="c"></canvas>
       <div id="screen-flash" aria-hidden="true"></div>
+      <div id="brake-vignette" class="brake-vignette" aria-hidden="true"></div>
       <div id="damage-popup" class="damage-popup" aria-hidden="true"></div>
       <div id="pickup-popup" class="pickup-popup" aria-hidden="true"></div>
 
@@ -114,6 +115,10 @@
         <div class="hud-right">
           <div id="hud-shield">Shield: —</div>
           <div id="hud-flow">Flow: —</div>
+          <div id="hud-manual-boost" class="hud-manual-boost ready">
+            <span class="mb-label">Boost [W/↑]</span>
+            <div class="mb-bar"><div id="mb-fill" class="mb-fill"></div></div>
+          </div>
         </div>
         <div id="boost-bar" class="boost-bar hidden">
           <span>Boost</span>

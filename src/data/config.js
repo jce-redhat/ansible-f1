@@ -59,6 +59,14 @@ export const CONFIG = {
   /** Speed multiplier during boost */
   BOOST_SPEED_MULT: 1.85,
 
+  // Manual boost (W / Up)
+  MANUAL_BOOST_DURATION: 2.5,
+  MANUAL_BOOST_MULT: 1.4,
+  MANUAL_BOOST_COOLDOWN: 8,
+
+  // Brake (S / Down)
+  BRAKE_SPEED_MULT: 0.45,
+
   // Crash recovery quiz (same — full pause)
 
   // Automation Flow (streak of 3 correct)

@@ -61,6 +61,10 @@ export class UI {
       quizCountdown: document.getElementById("quiz-countdown"),
       damagePopup: document.getElementById("damage-popup"),
       pickupPopup: document.getElementById("pickup-popup"),
+
+      manualBoost: document.getElementById("hud-manual-boost"),
+      mbFill: document.getElementById("mb-fill"),
+      brakeVignette: document.getElementById("brake-vignette"),
     };
 
     this._statusTimer = null;
@@ -237,6 +241,9 @@ export class UI {
       for (const line of lines) {
         const li = document.createElement("li");
         li.textContent = line;
+        if (line.startsWith("Correct answer:")) {
+          li.classList.add("correct-answer-reveal");
+        }
         this.el.quizResultLines.appendChild(li);
       }
     }
@@ -386,6 +393,16 @@ export class UI {
         const t = boostRemaining / boostTotal;
         this.el.boostFill.style.transform = `scaleX(${Math.max(0, Math.min(1, t))})`;
       }
+    }
+
+    if (this.el.manualBoost && this.el.mbFill) {
+      const { mbState, mbProgress } = data;
+      this.el.manualBoost.classList.remove("ready", "active", "cooldown");
+      this.el.manualBoost.classList.add(mbState || "ready");
+      this.el.mbFill.style.transform = `scaleX(${Math.max(0, Math.min(1, mbProgress ?? 1))})`;
+    }
+    if (this.el.brakeVignette) {
+      this.el.brakeVignette.classList.toggle("active", !!data.braking);
     }
   }
 

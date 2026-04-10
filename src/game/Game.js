@@ -72,6 +72,10 @@ export class Game {
     this.boostUntil = 0;
     this.automationFlowUntil = 0;
 
+    this.manualBoostUntil = 0;
+    this.manualBoostCooldownUntil = 0;
+    this.braking = false;
+
     this.obstaclesHit = 0;
     this.pickupsCollected = 0;
     this.sessionCorrect = 0;
@@ -167,6 +171,20 @@ export class Game {
       if (e.code === "KeyD" || e.code === "ArrowRight") {
         this.player.moveRight();
         e.preventDefault();
+      }
+      if (e.code === "KeyW" || e.code === "ArrowUp") {
+        this._activateManualBoost();
+        e.preventDefault();
+      }
+      if (e.code === "KeyS" || e.code === "ArrowDown") {
+        this.braking = true;
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "KeyS" || e.code === "ArrowDown") {
+        this.braking = false;
       }
     });
   }
@@ -350,6 +368,9 @@ export class Game {
     this.player.setShieldActive(false);
     this.boostUntil = 0;
     this.automationFlowUntil = 0;
+    this.manualBoostUntil = 0;
+    this.manualBoostCooldownUntil = 0;
+    this.braking = false;
     this.obstaclesHit = 0;
     this.pickupsCollected = 0;
     this.sessionCorrect = 0;
@@ -449,15 +470,22 @@ export class Game {
     else play(SFX.WRONG, 0.8);
 
     const { title, lines } = this._quizResultCopy(ok);
+
+    if (!ok) {
+      const correctText = q.options[q.answer];
+      lines.push(`Correct answer: ${correctText}`);
+    }
+
     this.ui.showQuizResult(ok, title, lines, q.explanation);
 
+    const displayMs = ok ? CONFIG.QUIZ_RESULT_DISPLAY_MS : 3000;
     clearTimeout(this._quizResultTimer);
     this._quizResultTimer = setTimeout(() => {
       this._finishQuiz(ok);
       this._quizBusy = false;
       this._quizPhase = "question";
       clearTimeout(this._quizSafetyTimer);
-    }, CONFIG.QUIZ_RESULT_DISPLAY_MS);
+    }, displayMs);
   }
 
   /**
@@ -575,6 +603,17 @@ export class Game {
     const flow =
       now < this.automationFlowUntil ? CONFIG.FLOW_SCORE_MULT : 1;
     return flow;
+  }
+
+  _activateManualBoost() {
+    const now = performance.now();
+    if (now < this.manualBoostCooldownUntil) return;
+    if (now < this.manualBoostUntil) return;
+    this.manualBoostUntil = now + CONFIG.MANUAL_BOOST_DURATION * 1000;
+    this.manualBoostCooldownUntil =
+      this.manualBoostUntil + CONFIG.MANUAL_BOOST_COOLDOWN * 1000;
+    play(SFX.BOOST_WHOOSH, 0.6);
+    this.ui.setStatus("Manual boost!", CONFIG.STATUS_MESSAGE_MS);
   }
 
   _gameOver() {
@@ -759,6 +798,14 @@ export class Game {
       speedMult *= CONFIG.BOOST_SPEED_MULT;
     }
 
+    if (now < this.manualBoostUntil) {
+      speedMult *= CONFIG.MANUAL_BOOST_MULT;
+    }
+
+    if (this.braking && this.state === "running") {
+      speedMult *= CONFIG.BRAKE_SPEED_MULT;
+    }
+
     const ws = CONFIG.BASE_SPEED * speedMult;
     this.worldSpeed = ws;
 
@@ -853,7 +900,10 @@ export class Game {
 
     this.recoveryPrompt = true;
     const showTip = !hasSeenRecoveryTip();
-    this.ui.showRecovery(true, showTip, () => this.onRecoveryNo());
+    this.ui.showRecovery(true, showTip, () => {
+      play(SFX.WRONG, 0.8);
+      this.onRecoveryNo();
+    });
   }
 
   _onHitRival(e) {
@@ -890,7 +940,10 @@ export class Game {
 
     this.recoveryPrompt = true;
     const showTip = !hasSeenRecoveryTip();
-    this.ui.showRecovery(true, showTip, () => this.onRecoveryNo());
+    this.ui.showRecovery(true, showTip, () => {
+      play(SFX.WRONG, 0.8);
+      this.onRecoveryNo();
+    });
   }
 
   _onPickup(e) {
@@ -994,9 +1047,8 @@ export class Game {
 
   _updateCamera(dt, now) {
     const px = this.player.mesh.position.x;
-    const camCurve = this.track.getCurveX(this.cameraBase.z);
     const target = new THREE.Vector3(
-      px * 0.35 + camCurve * 0.6,
+      px * 0.3,
       this.cameraBase.y,
       this.cameraBase.z
     );
@@ -1010,7 +1062,7 @@ export class Game {
         ((this.shakeUntil - now) / 200);
     }
     this.camera.position.x += shake;
-    this.camera.lookAt(px * 0.2, 1.2, -2);
+    this.camera.lookAt(px * 0.15, 1.2, -2);
   }
 
   render() {

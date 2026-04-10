@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Game } from "./game/Game.js";
 import { UI } from "./game/UI.js";
-import { getLastLevel } from "./utils/storage.js";
+import { getLastLevel, getLastDriver } from "./utils/storage.js";
 import { toggleMusicMute, toggleSfxMute } from "./utils/audio.js";
 import { loadQuestions } from "./data/questions.js";
 
@@ -55,8 +55,10 @@ ui.setHandlers({
   },
   onQuizSkip: () => game.skipQuiz(),
   onLevelSelect: (levelId, returnTo) => game.switchLevel(levelId, returnTo),
+  onDriverSelect: (driverId) => game.selectDriver(driverId),
 });
 
+ui.setActiveDriver(getLastDriver());
 game.switchLevel(getLastLevel());
 
 const btnMusic = document.getElementById("btn-music");

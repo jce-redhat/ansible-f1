@@ -5,11 +5,12 @@ import { CONFIG } from "../data/config.js";
  * Low-poly open-wheel race car (F1-style read from chase cam), smooth lane lerp.
  */
 export class Player {
-  constructor(scene) {
+  constructor(scene, carType = "f1") {
     this.scene = scene;
     this.laneIndex = 1;
     this.targetLaneIndex = 1;
-    this.mesh = this._buildMesh();
+    this.carType = carType;
+    this.mesh = carType === "truck" ? this._buildTruckMesh() : this._buildMesh();
     this.mesh.position.set(
       CONFIG.LANES[this.laneIndex],
       CONFIG.PLAYER_Y,
@@ -17,6 +18,22 @@ export class Player {
     );
     scene.add(this.mesh);
 
+    this.flowGlow = null;
+    this.shieldRing = null;
+    this._buildFlowGlow();
+    this._buildShieldRing();
+  }
+
+  swapCar(carType) {
+    if (carType === this.carType) return;
+    const pos = this.mesh.position.clone();
+    const vis = this.mesh.visible;
+    this.dispose();
+    this.carType = carType;
+    this.mesh = carType === "truck" ? this._buildTruckMesh() : this._buildMesh();
+    this.mesh.position.copy(pos);
+    this.mesh.visible = vis;
+    this.scene.add(this.mesh);
     this.flowGlow = null;
     this.shieldRing = null;
     this._buildFlowGlow();
@@ -227,6 +244,154 @@ export class Player {
     accent.dispose();
     rubber.dispose();
     rim.dispose();
+
+    return g;
+  }
+
+  _buildTruckMesh() {
+    const g = new THREE.Group();
+
+    const paint = new THREE.MeshStandardMaterial({
+      color: 0x22aa44, metalness: 0.4, roughness: 0.4,
+      emissive: 0x0a2a0a, emissiveIntensity: 0.3,
+    });
+    const dark = new THREE.MeshStandardMaterial({
+      color: 0x1a1a22, metalness: 0.5, roughness: 0.45,
+      emissive: 0x050508, emissiveIntensity: 0.15,
+    });
+    const chrome = new THREE.MeshStandardMaterial({
+      color: 0xccddee, metalness: 0.8, roughness: 0.2,
+    });
+    const rubber = new THREE.MeshStandardMaterial({
+      color: 0x0d0d0d, metalness: 0.15, roughness: 0.92,
+    });
+    const rim = new THREE.MeshStandardMaterial({
+      color: 0x88aacc, metalness: 0.75, roughness: 0.28,
+    });
+    const glass = new THREE.MeshStandardMaterial({
+      color: 0x88ccff, metalness: 0.5, roughness: 0.15,
+      transparent: true, opacity: 0.6,
+    });
+    const red = new THREE.MeshStandardMaterial({
+      color: 0xee2200, metalness: 0.3, roughness: 0.4,
+      emissive: 0x440000, emissiveIntensity: 0.4,
+    });
+
+    // Cab
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 1.1), paint);
+    cab.position.set(0, 0.7, -0.4);
+    g.add(cab);
+
+    // Cab roof
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 1.1), dark);
+    roof.position.set(0, 1.16, -0.4);
+    g.add(roof);
+
+    // Windshield
+    const ws = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.6), glass);
+    ws.position.set(0, 0.85, -0.97);
+    g.add(ws);
+
+    // Rear window
+    const rw = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.5), glass);
+    rw.position.set(0, 0.85, 0.16);
+    rw.rotation.y = Math.PI;
+    g.add(rw);
+
+    // Bed
+    const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 1.6), dark);
+    bedFloor.position.set(0, 0.28, 0.95);
+    g.add(bedFloor);
+
+    // Bed sides
+    const bedSideMat = paint.clone();
+    const bedL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 1.6), bedSideMat);
+    bedL.position.set(-0.75, 0.48, 0.95);
+    g.add(bedL);
+    const bedR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 1.6), bedSideMat);
+    bedR.position.set(0.75, 0.48, 0.95);
+    g.add(bedR);
+
+    // Tailgate
+    const tailgate = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.4, 0.06), bedSideMat);
+    tailgate.position.set(0, 0.48, 1.76);
+    g.add(tailgate);
+
+    // Hood
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.7), paint.clone());
+    hood.position.set(0, 0.45, -1.15);
+    g.add(hood);
+
+    // Front grille
+    const grille = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.35, 0.06), chrome);
+    grille.position.set(0, 0.45, -1.52);
+    g.add(grille);
+
+    // Front bumper
+    const fBump = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.18, 0.12), dark);
+    fBump.position.set(0, 0.22, -1.52);
+    g.add(fBump);
+
+    // Rear bumper
+    const rBump = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.18, 0.12), dark);
+    rBump.position.set(0, 0.22, 1.78);
+    g.add(rBump);
+
+    // Headlights
+    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+    for (const side of [-0.5, 0.5]) {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 0.06), hlMat);
+      hl.position.set(side, 0.5, -1.53);
+      g.add(hl);
+    }
+
+    // Taillights
+    for (const side of [-0.55, 0.55]) {
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.06), red);
+      tl.position.set(side, 0.5, 1.79);
+      g.add(tl);
+    }
+
+    // Roll bar in bed
+    const rollBar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.08), chrome);
+    rollBar.position.set(0, 0.85, 0.25);
+    g.add(rollBar);
+    for (const side of [-0.55, 0.55]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), chrome);
+      post.position.set(side, 0.6, 0.25);
+      g.add(post);
+    }
+
+    // Big tires (lifted truck!)
+    const addWheel = (x, z) => {
+      const tire = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.32, 0.22, 16), rubber
+      );
+      tire.rotation.z = Math.PI / 2;
+      tire.position.set(x, 0.32, z);
+      g.add(tire);
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.14, 0.08, 10), rim
+      );
+      disc.rotation.z = Math.PI / 2;
+      disc.position.set(x, 0.32, z);
+      g.add(disc);
+    };
+    addWheel(-0.82, -0.9);
+    addWheel(0.82, -0.9);
+    addWheel(-0.82, 1.2);
+    addWheel(0.82, 1.2);
+
+    // Underglow (green)
+    const glow = new THREE.PointLight(0x44ff66, 0.55, 9);
+    glow.position.set(0, 0.15, 0.4);
+    g.add(glow);
+    this.pointLight = glow;
+
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+
+    paint.dispose(); dark.dispose(); chrome.dispose();
+    rubber.dispose(); rim.dispose(); glass.dispose(); red.dispose();
 
     return g;
   }

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CONFIG, LEVELS } from "../data/config.js";
+import { CONFIG, LEVELS, DRIVERS } from "../data/config.js";
 import { Player } from "./Player.js";
 import { Track } from "./Track.js";
 import { Spawner } from "./Spawner.js";
@@ -18,6 +18,8 @@ import {
   getLastCountry,
   setLastCountry,
   setLastLevel,
+  getLastDriver,
+  setLastDriver,
   loadAchievements,
   unlockAchievement,
   ACHIEVEMENT_DEFS,
@@ -64,7 +66,9 @@ export class Game {
     this.currentQuestion = null;
 
     this.currentLevel = "A";
-    this.player = new Player(scene);
+    this.currentDriver = getLastDriver();
+    const carType = (DRIVERS[this.currentDriver] || DRIVERS.anshul).car;
+    this.player = new Player(scene, carType);
     this.track = new Track(scene, this.currentLevel);
     this.spawner = new Spawner(scene);
     this.collision = new CollisionSystem(this.player);
@@ -474,6 +478,7 @@ export class Game {
     this.ui.showQuiz(false);
     this.ui.showRecovery(false, false);
     this.ui.showLevelSelect(false);
+    this.ui.showDriverSelect(false);
     this.ui.showHud(false);
     this.ui.showMainMenu(true);
     this.ui.updateMenuBest(getBestScore());
@@ -498,6 +503,15 @@ export class Game {
 
     this.ui.setActiveLevel(levelId);
     this.backToMenu();
+  }
+
+  selectDriver(driverId) {
+    const d = DRIVERS[driverId];
+    if (!d) return;
+    this.currentDriver = driverId;
+    setLastDriver(driverId);
+    this.player.swapCar(d.car);
+    this.ui.setActiveDriver(driverId);
   }
 
   /**

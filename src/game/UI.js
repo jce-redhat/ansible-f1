@@ -1,6 +1,6 @@
 import { getLeaderboard, loadAchievements, ACHIEVEMENT_DEFS } from "../utils/storage.js";
 import { fetchGlobalLeaderboard } from "../utils/firebase.js";
-import { LEVELS } from "../data/config.js";
+import { LEVELS, DRIVERS } from "../data/config.js";
 
 /**
  * DOM overlays + HUD updates (Built to Automate)
@@ -80,8 +80,17 @@ export class UI {
       quizToggle: document.getElementById("quiz-toggle"),
       menuAchievements: document.getElementById("menu-achievements"),
       achievementsGrid: document.getElementById("achievements-grid"),
+
+      driverSelect: document.getElementById("driver-select"),
+      driverCards: document.getElementById("driver-cards"),
+      driverDetail: document.getElementById("driver-detail"),
+      driverDetailPhoto: document.getElementById("driver-detail-photo"),
+      driverDetailName: document.getElementById("driver-detail-name"),
+      driverDetailOrigin: document.getElementById("driver-detail-origin"),
+      driverDetailBio: document.getElementById("driver-detail-bio"),
     };
 
+    this._selectedDriver = "anshul";
     this._statusTimer = null;
     this._recoveryCountdownId = null;
     this._recoveryAutoTimer = null;
@@ -145,6 +154,10 @@ export class UI {
     on("btn-touch-pause", () => this.onTouchPause && this.onTouchPause());
 
     on("btn-quiz-skip", () => this.onQuizSkip && this.onQuizSkip());
+    on("btn-choose-driver", () => this._showDriverSelect());
+    on("btn-driver-back", () => this._hideDriverSelect());
+    on("btn-select-driver", () => this._confirmDriver());
+
     on("btn-choose-level-pause", () => this._openLevelSelect("running"));
     on("btn-choose-level-menu", () => this._openLevelSelect("main_menu"));
     on("btn-choose-level-go", () => this._openLevelSelect("game_over"));
@@ -174,6 +187,7 @@ export class UI {
     this.onTouchPause = h.onTouchPause;
     this.onLevelSelect = h.onLevelSelect;
     this.onQuizSkip = h.onQuizSkip;
+    this.onDriverSelect = h.onDriverSelect;
   }
 
   showMainMenu(visible) {
@@ -745,8 +759,74 @@ export class UI {
     this._toggleMenuButtons(true);
   }
 
+  _showDriverSelect() {
+    if (!this.el.driverSelect) return;
+    this.el.mainMenu.classList.add("hidden");
+    this.el.driverSelect.classList.remove("hidden");
+    this.el.driverDetail.classList.add("hidden");
+    this._renderDriverCards();
+  }
+
+  _hideDriverSelect() {
+    if (this.el.driverSelect) this.el.driverSelect.classList.add("hidden");
+    this.el.mainMenu.classList.remove("hidden");
+  }
+
+  _renderDriverCards() {
+    const container = this.el.driverCards;
+    if (!container) return;
+    container.innerHTML = "";
+    for (const d of Object.values(DRIVERS)) {
+      const card = document.createElement("div");
+      card.className = "driver-card" + (d.id === this._selectedDriver ? " active" : "");
+      card.innerHTML = `
+        <img class="driver-card-photo" src="${d.photo}" alt="${d.name}" />
+        <p class="driver-card-name">${d.name}</p>
+        <p class="driver-card-origin">${d.origin}</p>
+        <span class="driver-card-tag">${d.car === "f1" ? "F1 Racer" : "Pickup Truck"}</span>
+      `;
+      card.addEventListener("click", () => this._showDriverDetail(d.id));
+      container.appendChild(card);
+    }
+  }
+
+  _showDriverDetail(driverId) {
+    const d = DRIVERS[driverId];
+    if (!d) return;
+    this._pendingDriver = driverId;
+    this.el.driverDetail.classList.remove("hidden");
+    this.el.driverDetailPhoto.src = d.photo;
+    this.el.driverDetailPhoto.alt = d.name;
+    this.el.driverDetailName.textContent = d.name;
+    this.el.driverDetailOrigin.textContent = d.origin;
+    this.el.driverDetailBio.textContent = d.bio;
+
+    this.el.driverCards.querySelectorAll(".driver-card").forEach((c) => c.classList.remove("active"));
+    const cards = this.el.driverCards.children;
+    const keys = Object.keys(DRIVERS);
+    const idx = keys.indexOf(driverId);
+    if (idx >= 0 && cards[idx]) cards[idx].classList.add("active");
+  }
+
+  _confirmDriver() {
+    if (!this._pendingDriver) return;
+    this._selectedDriver = this._pendingDriver;
+    if (this.onDriverSelect) this.onDriverSelect(this._selectedDriver);
+    this._hideDriverSelect();
+  }
+
+  showDriverSelect(visible) {
+    if (this.el.driverSelect) {
+      this.el.driverSelect.classList.toggle("hidden", !visible);
+    }
+  }
+
+  setActiveDriver(id) {
+    this._selectedDriver = id;
+  }
+
   _toggleMenuButtons(visible) {
-    const ids = ["btn-start", "btn-choose-level-menu", "btn-highscores", "btn-achievements"];
+    const ids = ["btn-start", "btn-choose-driver", "btn-choose-level-menu", "btn-highscores", "btn-achievements"];
     for (const id of ids) {
       const el = document.getElementById(id);
       if (el) el.classList.toggle("hidden", !visible);

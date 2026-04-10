@@ -1841,6 +1841,141 @@ body {
   color: #444;
 }
 
+/* --- Driver select --- */
+#driver-select.panel {
+  max-width: 720px;
+  overflow-y: auto;
+  max-height: 92vh;
+}
+
+.driver-select-title {
+  font-family: var(--font-head);
+  color: var(--neon);
+  margin-bottom: 1rem;
+}
+
+.driver-cards {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.driver-card {
+  position: relative;
+  width: 200px;
+  padding: 0.8rem;
+  border: 2px solid rgba(0, 255, 204, 0.2);
+  border-radius: 10px;
+  background: rgba(0, 10, 20, 0.6);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  text-align: center;
+}
+
+.driver-card:hover {
+  border-color: var(--neon);
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.25);
+  transform: translateY(-3px);
+}
+
+.driver-card.active {
+  border-color: var(--neon);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.35);
+}
+
+.driver-card-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid rgba(0, 255, 204, 0.3);
+  margin-bottom: 0.5rem;
+}
+
+.driver-card-name {
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  color: #fff;
+  margin: 0.3rem 0 0.15rem;
+}
+
+.driver-card-origin {
+  font-size: 0.55rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.driver-card-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  background: rgba(0, 255, 204, 0.12);
+  color: var(--neon);
+  font-family: var(--font-mono);
+}
+
+/* Driver detail (expanded view) */
+.driver-detail {
+  margin-top: 1rem;
+}
+
+.driver-detail.hidden {
+  display: none;
+}
+
+.driver-detail-inner {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  text-align: left;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  border: 1px solid rgba(0, 255, 204, 0.15);
+  border-radius: 10px;
+  background: rgba(0, 10, 20, 0.7);
+}
+
+.driver-detail-photo {
+  width: 140px;
+  height: 170px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 8px;
+  border: 2px solid rgba(0, 255, 204, 0.25);
+  flex-shrink: 0;
+}
+
+.driver-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.driver-detail-name {
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  color: var(--neon);
+  margin: 0 0 0.2rem;
+}
+
+.driver-detail-origin {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 0.6rem;
+  font-style: italic;
+}
+
+.driver-detail-bio {
+  font-size: 0.6rem;
+  line-height: 1.55;
+  color: rgba(200, 220, 240, 0.85);
+  margin: 0 0 0.8rem;
+}
+
 .hidden {
   display: none !important;
 }

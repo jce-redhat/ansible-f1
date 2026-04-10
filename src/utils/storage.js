@@ -7,6 +7,7 @@ const KEYS = {
   LAST_NAME: "builtToAutomate_lastName",
   LAST_COUNTRY: "builtToAutomate_lastCountry",
   LAST_LEVEL: "builtToAutomate_lastLevel",
+  LAST_DRIVER: "builtToAutomate_lastDriver",
   ACHIEVEMENTS: "builtToAutomate_achievements",
 };
 
@@ -144,6 +145,20 @@ export function getLastLevel() {
 export function setLastLevel(id) {
   try {
     localStorage.setItem(KEYS.LAST_LEVEL, id);
+  } catch { /* ignore */ }
+}
+
+export function getLastDriver() {
+  try {
+    return localStorage.getItem(KEYS.LAST_DRIVER) || "anshul";
+  } catch {
+    return "anshul";
+  }
+}
+
+export function setLastDriver(id) {
+  try {
+    localStorage.setItem(KEYS.LAST_DRIVER, id);
   } catch { /* ignore */ }
 }
 

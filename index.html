@@ -157,6 +157,7 @@
           Best Score <span id="menu-best">0</span>
         </div>
         <button type="button" id="btn-start" class="btn primary">Start Run</button>
+        <button type="button" id="btn-choose-driver" class="btn">Choose Your Driver</button>
         <button type="button" id="btn-choose-level-menu" class="btn">Choose Level</button>
         <button type="button" id="btn-highscores" class="btn">Global Scores</button>
         <button type="button" id="btn-achievements" class="btn">Achievements</button>
@@ -190,6 +191,25 @@
           <li>Collect pickups · Dodge outages</li>
           <li>Answer fast questions for boosts &amp; recovery</li>
         </ul>
+      </div>
+
+      <div id="driver-select" class="overlay panel hidden">
+        <h2 class="driver-select-title">Choose Your Driver</h2>
+        <div class="driver-cards" id="driver-cards"></div>
+
+        <div id="driver-detail" class="driver-detail hidden">
+          <div class="driver-detail-inner">
+            <img id="driver-detail-photo" class="driver-detail-photo" src="" alt="" />
+            <div class="driver-detail-info">
+              <h3 id="driver-detail-name" class="driver-detail-name"></h3>
+              <p id="driver-detail-origin" class="driver-detail-origin"></p>
+              <p id="driver-detail-bio" class="driver-detail-bio"></p>
+              <button type="button" id="btn-select-driver" class="btn primary">Select Driver</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="btn-driver-back" class="btn" style="margin-top:0.8rem">Back</button>
       </div>
 
       <div id="pause-menu" class="overlay panel hidden">

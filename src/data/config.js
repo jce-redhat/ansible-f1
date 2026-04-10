@@ -99,6 +99,25 @@ export const CONFIG = {
   QUIZ_RESULT_DISPLAY_MS: 1000,
 };
 
+export const DRIVERS = {
+  anshul: {
+    id: "anshul",
+    name: "Anshul Behl",
+    car: "f1",
+    photo: "./assets/anshul_tron.png",
+    origin: "Toronto, Canada",
+    bio: "Former neural-net architect turned full-stack automation overlord. By day, Anshul codes sentient CI/CD pipelines for Red Hat. By night, he BASE-jumps off the CN Tower and trains for competitive high diving. Father of two future cyborg engineers, husband to the only person who can beat him at chess. Once automated an entire datacenter migration during a 14-hour flight from Toronto to Tokyo — and still had time to land a perfect reverse 3.5 somersault at the hotel pool. His enemies call him 'The Optimizer.' His daughters call him dad. The grid calls him inevitable.",
+  },
+  nuno: {
+    id: "nuno",
+    name: "Nuno do Carmo",
+    car: "truck",
+    photo: "./assets/nuno_tron.png",
+    origin: "Johannesburg, South Africa",
+    bio: "Part security researcher, part mad scientist, fully unhinged. Nuno reverse-engineers malware before breakfast and builds Faraday cages out of braai grills for fun. When he's not dissecting zero-days, he's riding wild hippos through the Kruger bushveld — the only man the hippos respect. Father of three junior hackers, connoisseur of obscure horror films (the gorier the better), and proud owner of the most heavily fortified home lab in the Southern Hemisphere. His truck runs on diesel, paranoia, and pure adrenaline. The dark web fears him. The hippos obey him.",
+  },
+};
+
 export const PICKUP_TYPES = [
   "PLAYBOOK",
   "CERTIFIED_COLLECTION",

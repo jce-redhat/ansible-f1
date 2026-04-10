@@ -16,7 +16,7 @@ import {
   getLastName,
   setLastName,
 } from "../utils/storage.js";
-import { preload, play, startLoop, stopLoop } from "../utils/audio.js";
+import { preload, play, startLoop, stopLoop, startBgm } from "../utils/audio.js";
 
 const SFX = {
   SHIELD_HIT: "./assets/audio/shield-hit.wav",
@@ -31,6 +31,7 @@ const SFX = {
 };
 
 const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
+const DEFAULT_BGM = "./assets/audio/bgm.m4a";
 
 preload(Object.values(SFX));
 
@@ -256,11 +257,15 @@ export class Game {
       const elapsed = performance.now() - touchStartTime;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Swipe detection: horizontal swipe > 30px and faster than 300ms
-      if (dist > 30 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 300) {
+      // Swipe detection: > 30px and faster than 300ms
+      if (dist > 30 && elapsed < 300) {
         if (this.state === "running" && !this.recoveryPrompt) {
-          if (dx < 0) this.player.moveLeft();
-          else this.player.moveRight();
+          if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+            if (dx < 0) this.player.moveLeft();
+            else this.player.moveRight();
+          } else if (Math.abs(dy) > Math.abs(dx) * 1.5) {
+            if (dy < 0) this._activateManualBoost();
+          }
         }
         e.preventDefault();
         return;
@@ -427,6 +432,8 @@ export class Game {
       this.scene.background = new THREE.Color(theme.sceneBg);
       this.scene.fog = new THREE.Fog(theme.fog, 48, 175);
     }
+
+    startBgm(theme.music || DEFAULT_BGM, 0.1);
 
     this.ui.setActiveLevel(levelId);
     this.backToMenu();
@@ -616,10 +623,25 @@ export class Game {
     this.ui.setStatus("Manual boost!", CONFIG.STATUS_MESSAGE_MS);
   }
 
+  _manualBoostHud(now) {
+    if (now < this.manualBoostUntil) {
+      const total = CONFIG.MANUAL_BOOST_DURATION * 1000;
+      const rem = this.manualBoostUntil - now;
+      return { mbState: "active", mbProgress: rem / total };
+    }
+    if (now < this.manualBoostCooldownUntil) {
+      const cdTotal = CONFIG.MANUAL_BOOST_COOLDOWN * 1000;
+      const elapsed = now - this.manualBoostUntil;
+      return { mbState: "cooldown", mbProgress: elapsed / cdTotal };
+    }
+    return { mbState: "ready", mbProgress: 1 };
+  }
+
   _gameOver() {
     this.state = "game_over";
     this.timeScale = 1;
     this.recoveryPrompt = false;
+    this.braking = false;
     this.ui.showRecovery(false, false);
     this.player.setAutomationFlowActive(false);
     this.player.explode();
@@ -766,6 +788,7 @@ export class Game {
     }
     const ws = CONFIG.BASE_SPEED * speedMult;
     const flowActive = now < this.automationFlowUntil;
+    const { mbState, mbProgress } = this._manualBoostHud(now);
     this.ui.updateHud({
       health: this.health,
       score: this.score,
@@ -779,6 +802,9 @@ export class Game {
       playbookPts: this.playbookPts,
       collections: this.collectionCount,
       collectionPts: this.collectionPts,
+      mbState,
+      mbProgress,
+      braking: this.braking,
     });
   }
 
@@ -850,6 +876,7 @@ export class Game {
     // Re-apply curve offsets for rendering
     this._applyCurve();
 
+    const { mbState, mbProgress } = this._manualBoostHud(now);
     this.ui.updateHud({
       health: this.health,
       score: this.score,
@@ -863,6 +890,9 @@ export class Game {
       playbookPts: this.playbookPts,
       collections: this.collectionCount,
       collectionPts: this.collectionPts,
+      mbState,
+      mbProgress,
+      braking: this.braking,
     });
   }
 

@@ -254,6 +254,7 @@ export const LEVELS = {
     sky:      0x182840,
     sceneBg:  0x1a2838,
     scenery: "durham",
+    music: "./assets/audio/bgm-durham.m4a",
     billboards: [
       { id: "demo22", label: "Demo 22", accent: 0xee1100 },
       { id: "demo23", label: "Demo 23", accent: 0x00bbff },

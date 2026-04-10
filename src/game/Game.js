@@ -74,6 +74,7 @@ export class Game {
 
     this.shield = false;
     this.boostUntil = 0;
+    this._boostStartedAt = 0;
     this.automationFlowUntil = 0;
 
     this.manualBoostUntil = 0;
@@ -416,6 +417,7 @@ export class Game {
     this.shield = false;
     this.player.setShieldActive(false);
     this.boostUntil = 0;
+    this._boostStartedAt = 0;
     this.automationFlowUntil = 0;
     this.manualBoostUntil = 0;
     this.manualBoostCooldownUntil = 0;
@@ -626,11 +628,12 @@ export class Game {
         this.sessionCorrect += 1;
         addTotalCorrectAnswers(1);
         const now = performance.now();
-        const base = now < this.boostUntil ? this.boostUntil : now;
+        const stacking = now < this.boostUntil;
+        const base = stacking ? this.boostUntil : now;
+        if (!stacking) this._boostStartedAt = now;
         this.boostUntil = base + CONFIG.BOOST_DURATION * 1000;
         this._runBoostCount += 1;
         play(SFX.BOOST_WHOOSH, 0.85);
-        const stacking = base > now;
         this.ui.setStatus(
           stacking ? "Boost extended! Keep it going!" : "Correct: Speed Boost",
           CONFIG.STATUS_MESSAGE_MS
@@ -881,7 +884,7 @@ export class Game {
       shield: this.shield,
       automationFlow: flowActive,
       boostRemaining: Math.max(0, this.boostUntil - now),
-      boostTotal: CONFIG.BOOST_DURATION * 1000,
+      boostTotal: this.boostUntil > this._boostStartedAt ? this.boostUntil - this._boostStartedAt : CONFIG.BOOST_DURATION * 1000,
       playbooks: this.playbookCount,
       playbookPts: this.playbookPts,
       collections: this.collectionCount,
@@ -992,7 +995,7 @@ export class Game {
       shield: this.shield,
       automationFlow: flowActive,
       boostRemaining: Math.max(0, this.boostUntil - now),
-      boostTotal: CONFIG.BOOST_DURATION * 1000,
+      boostTotal: this.boostUntil > this._boostStartedAt ? this.boostUntil - this._boostStartedAt : CONFIG.BOOST_DURATION * 1000,
       playbooks: this.playbookCount,
       playbookPts: this.playbookPts,
       collections: this.collectionCount,
@@ -1120,7 +1123,9 @@ export class Game {
       this.score += pts;
       this.playbookCount += 1;
       this.playbookPts += pts;
-      const label = comboMult > 1 ? `Playbook +${pts} (x${comboMult})` : `Playbook +${pts}`;
+      const extended = this._extendBoostOnPickup();
+      let label = comboMult > 1 ? `Playbook +${pts} (x${comboMult})` : `Playbook +${pts}`;
+      if (extended) label += " ⚡+boost";
       this.ui.showPickupPopup(label);
       if (this.playbookCount % 3 === 0) {
         this._applyPickupSpeedUp("Playbook", this.playbookCount);
@@ -1133,7 +1138,9 @@ export class Game {
       this.score += pts;
       this.collectionCount += 1;
       this.collectionPts += pts;
-      const label = comboMult > 1 ? `Collection +${pts} (x${comboMult})` : `Collection +${pts}`;
+      const extended = this._extendBoostOnPickup();
+      let label = comboMult > 1 ? `Collection +${pts} (x${comboMult})` : `Collection +${pts}`;
+      if (extended) label += " ⚡+boost";
       this.ui.showPickupPopup(label);
       if (this.collectionCount % 3 === 0) {
         this._applyPickupSpeedUp("Collection", this.collectionCount);
@@ -1154,14 +1161,23 @@ export class Game {
         this._openBoostQuiz();
       } else {
         const now = performance.now();
-        const base = now < this.boostUntil ? this.boostUntil : now;
+        const stacking = now < this.boostUntil;
+        const base = stacking ? this.boostUntil : now;
+        if (!stacking) this._boostStartedAt = now;
         this.boostUntil = base + CONFIG.BOOST_DURATION * 1000;
         this._runBoostCount += 1;
         play(SFX.BOOST_WHOOSH, 0.85);
-        this.ui.showPickupPopup("Speed Boost!");
+        this.ui.showPickupPopup(stacking ? "Boost Extended!" : "Speed Boost!");
         this.ui.setStatus("Boost token: Speed Boost!", CONFIG.STATUS_MESSAGE_MS);
       }
     }
+  }
+
+  _extendBoostOnPickup() {
+    const now = performance.now();
+    if (now >= this.boostUntil) return false;
+    this.boostUntil += CONFIG.BOOST_EXTEND_ON_PICKUP * 1000;
+    return true;
   }
 
   _applyPickupSpeedUp(type, count) {

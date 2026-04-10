@@ -56,6 +56,8 @@ export const CONFIG = {
 
   // Boost token quiz (gameplay pauses while answering)
   BOOST_DURATION: 5,
+  /** Seconds added to an active boost when collecting a playbook/collection */
+  BOOST_EXTEND_ON_PICKUP: 2,
   /** Speed multiplier during boost */
   BOOST_SPEED_MULT: 1.85,
 

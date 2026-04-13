@@ -874,6 +874,7 @@ export class UI {
     this.el.attractScores.classList.add("hidden");
     this.el.driverSelect.classList.remove("hidden");
     this.el.driverDetail.classList.add("hidden");
+    this.el.driverCards.classList.remove("compact");
     this._renderDriverCards();
   }
 
@@ -922,6 +923,7 @@ export class UI {
     this.el.driverDetailOrigin.textContent = d.origin;
     this.el.driverDetailBio.textContent = d.bio;
 
+    this.el.driverCards.classList.add("compact");
     this.el.driverCards.querySelectorAll(".driver-card").forEach((c) => c.classList.remove("active"));
     const cards = this.el.driverCards.children;
     const keys = Object.keys(DRIVERS);

@@ -1965,6 +1965,35 @@ body {
   font-family: var(--font-mono);
 }
 
+/* Driver cards compact mode (when detail is shown) */
+.driver-cards.compact {
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.driver-cards.compact .driver-card {
+  width: auto;
+  padding: 0.25rem;
+  border-width: 1px;
+}
+
+.driver-cards.compact .driver-card-photo {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 0;
+}
+
+.driver-cards.compact .driver-card-name,
+.driver-cards.compact .driver-card-origin,
+.driver-cards.compact .driver-card-tag {
+  display: none;
+}
+
+.driver-cards.compact .driver-card.active {
+  border-color: var(--neon);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.35);
+}
+
 /* Driver detail (expanded view) */
 .driver-detail {
   margin-top: 1rem;

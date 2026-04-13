@@ -907,8 +907,8 @@ export class Game {
   devSkipToFinish() {
     if (this.state !== "running") return;
     const dur = CONFIG.LEVEL_DURATION;
-    this.runTime = Math.max(this.runTime, dur - 18);
-    this.ui.setStatus("Dev: skipped to last 18 seconds", 2000);
+    this.runTime = Math.max(this.runTime, dur - 10);
+    this.ui.setStatus("Dev: skipped to last 10 seconds", 2000);
   }
 
   skipQuiz() {

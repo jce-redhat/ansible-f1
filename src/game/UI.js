@@ -70,6 +70,7 @@ export class UI {
       quizCountdown: document.getElementById("quiz-countdown"),
       damagePopup: document.getElementById("damage-popup"),
       pickupPopup: document.getElementById("pickup-popup"),
+      hippoAnnounce: document.getElementById("hippo-announce"),
 
       manualBoost: document.getElementById("hud-manual-boost"),
       mbFill: document.getElementById("mb-fill"),
@@ -354,6 +355,16 @@ export class UI {
     void el.offsetWidth;
     el.classList.add("show");
     setTimeout(() => el.classList.remove("show"), 1700);
+  }
+
+  showHippoAnnounce() {
+    const el = this.el.hippoAnnounce;
+    if (!el) return;
+    el.classList.remove("show");
+    el.innerHTML = "🦛 HIPPO MODE<br>ENGAGED 🦛";
+    void el.offsetWidth;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 3000);
   }
 
   showCombo(count) {

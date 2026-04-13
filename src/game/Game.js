@@ -253,7 +253,7 @@ export class Game {
         this._secretBuffer = (this._secretBuffer + e.key.toLowerCase()).slice(-5);
         if (this._secretBuffer === "hippo") {
           this.player.swapCar("hippo");
-          this.ui.setStatus("🦛 HIPPO MODE ENGAGED 🦛", 3000);
+          this.ui.showHippoAnnounce();
           play(SFX.CORRECT, 0.9);
           this._secretBuffer = "";
         }

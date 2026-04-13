@@ -704,48 +704,75 @@ export class Player {
     g.add(windshield);
 
     // Roof panel (narrow, between gull-wing doors)
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.75), steel.clone());
-    roof.position.set(0, 0.72 + H, 0.0);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.6), steel.clone());
+    roof.position.set(0, 0.72 + H, -0.1);
     g.add(roof);
 
     // Roof rails (where gull-wing doors hinge)
     for (const side of [-1, 1]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.8), darkSteel.clone());
-      rail.position.set(side * 0.35, 0.72 + H, 0.0);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.65), darkSteel.clone());
+      rail.position.set(side * 0.35, 0.72 + H, -0.1);
       g.add(rail);
     }
 
     // Side windows (triangular feel via two angled pieces)
     for (const side of [-1, 1]) {
-      const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.65), glass.clone());
-      sideWin.position.set(side * 0.78, 0.55 + H, -0.05);
+      const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.55), glass.clone());
+      sideWin.position.set(side * 0.78, 0.55 + H, -0.12);
       g.add(sideWin);
     }
 
     // B-pillar / rear quarter
     for (const side of [-1, 1]) {
       const bPillar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.06), steel.clone());
-      bPillar.position.set(side * 0.78, 0.55 + H, 0.28);
+      bPillar.position.set(side * 0.78, 0.55 + H, 0.15);
       g.add(bPillar);
     }
 
-    // Rear window (angled, with louver overlay)
-    const rearWin = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.28, 0.04), glass.clone());
-    rearWin.position.set(0, 0.58 + H, 0.36);
-    rearWin.rotation.x = 0.35;
+    // ── Sloping fastback (roof → rear deck) ──
+    const slopeLen = Math.sqrt(0.35 * 0.35 + 0.75 * 0.75);
+    const slopeAngle = Math.atan2(0.35, 0.75);
+    const slopePanel = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 0.04, slopeLen), steel.clone()
+    );
+    slopePanel.position.set(0, 0.55 + H, 0.55);
+    slopePanel.rotation.x = slopeAngle;
+    g.add(slopePanel);
+
+    // Rear window glass inset into the slope
+    const rearWin = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.03, slopeLen * 0.45), glass.clone()
+    );
+    rearWin.position.set(0, 0.62 + H, 0.35);
+    rearWin.rotation.x = slopeAngle;
     g.add(rearWin);
 
-    // Rear louvers (iconic DMC-12 feature)
-    for (let i = 0; i < 6; i++) {
-      const louver = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.015, 0.04), darkSteel.clone());
-      louver.position.set(0, 0.48 + H + i * 0.04, 0.38 + i * 0.02);
-      louver.rotation.x = 0.3;
+    // Rear louvers over the lower slope (iconic DMC-12 feature)
+    for (let i = 0; i < 5; i++) {
+      const t = i / 4;
+      const lz = 0.45 + t * 0.45;
+      const ly = 0.55 + H - t * 0.21;
+      const louver = new THREE.Mesh(
+        new THREE.BoxGeometry(1.3, 0.015, 0.04), darkSteel.clone()
+      );
+      louver.position.set(0, ly, lz);
+      louver.rotation.x = slopeAngle;
       g.add(louver);
     }
 
-    // ── Rear body / trunk area ──
-    const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.12, 0.8), steel.clone());
-    rearDeck.position.set(0, 0.32 + H, 0.85);
+    // Side slope panels (close the fastback edges)
+    for (const side of [-1, 1]) {
+      const slopeSide = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.04, slopeLen), steel.clone()
+      );
+      slopeSide.position.set(side * 0.76, 0.55 + H, 0.55);
+      slopeSide.rotation.x = slopeAngle;
+      g.add(slopeSide);
+    }
+
+    // ── Rear body / trunk area (lower, flat deck behind the slope) ──
+    const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 0.35), steel.clone());
+    rearDeck.position.set(0, 0.35 + H, 1.05);
     g.add(rearDeck);
 
     // Body sides (full length, giving the car its shape)

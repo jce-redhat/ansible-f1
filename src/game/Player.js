@@ -72,6 +72,11 @@ export class Player {
       accent: 0xdaa520, accentEmit: 0x332200,
       rim: 0xdaa520, glow: 0xffd700,
     });
+    if (type === "f1_pink_gold") return this._buildF1({
+      livery: 0xff69b4, liveryEmit: 0x330018,
+      accent: 0xdaa520, accentEmit: 0x332200,
+      rim: 0xdaa520, glow: 0xff69b4,
+    });
     if (type === "hippo") return this._buildHippoMesh();
     return this._buildF1();
   }

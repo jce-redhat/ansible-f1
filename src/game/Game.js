@@ -1051,6 +1051,7 @@ export class Game {
     if (!this._finishing && this._finishLineSpawned && finishZ !== null && finishZ >= this.player.mesh.position.z) {
       this._finishing = true;
       this._finishCoastSpeed = this.worldSpeed;
+      this.spawner.reset();
     }
 
     if (this._finishing) {

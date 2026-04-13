@@ -40,6 +40,9 @@ const SFX = {
   HORN: "./assets/audio/horn.m4a",
   HORN_ANDRIUS: "./assets/audio/horn-andrius.m4a",
   CROWD_CHEERS: "./assets/audio/crowd-cheers.mp4",
+  HIPPO_MODE: "./assets/audio/hippo-mode.m4a",
+  HIPPO_BLAH_1: "./assets/audio/hippo-blah-1.m4a",
+  HIPPO_BLAH_2: "./assets/audio/hippo-blah-2.m4a",
 };
 
 const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
@@ -254,7 +257,7 @@ export class Game {
         if (this._secretBuffer === "hippo") {
           this.player.swapCar("hippo");
           this.ui.showHippoAnnounce();
-          play(SFX.CORRECT, 0.9);
+          play(SFX.HIPPO_MODE, 0.9);
           this._secretBuffer = "";
         }
       }
@@ -1249,6 +1252,7 @@ export class Game {
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
       if (this.player.carType === "hippo") {
+        play(Math.random() < 0.5 ? SFX.HIPPO_BLAH_1 : SFX.HIPPO_BLAH_2, 0.85);
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];
@@ -1311,6 +1315,7 @@ export class Game {
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
       if (this.player.carType === "hippo") {
+        play(Math.random() < 0.5 ? SFX.HIPPO_BLAH_1 : SFX.HIPPO_BLAH_2, 0.85);
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];

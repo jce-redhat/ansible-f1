@@ -773,7 +773,7 @@ body {
 
 .hud-status {
   position: absolute;
-  bottom: 1.25rem;
+  bottom: 3.2rem;
   left: 50%;
   transform: translateX(-50%);
   min-height: 1.2rem;
@@ -781,6 +781,7 @@ body {
   color: var(--neon);
   text-align: center;
   text-shadow: 0 0 14px rgba(0, 255, 204, 0.5);
+  white-space: nowrap;
 }
 
 .overlay {

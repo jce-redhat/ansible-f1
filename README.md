@@ -24,16 +24,18 @@ Health starts at 100. Four unshielded hits ends the run. Race to the finish line
 
 Choose from a roster of drivers, each with a unique car and personality:
 
-| Driver | Car | Special |
-|--------|-----|---------|
-| Andrius Benokraitis | 18-Wheeler | Indestructible (no leaderboard) |
-| Justin Braun | Black & Gold F1 | — |
-| Michele Kelley | Pink & Gold F1 | — |
-| Roger Lopez | Pickup Truck | — |
-| Nuno Martins | Red & Silver F1 | Secret hippo mode 🦛 |
-| Craig Brandt | Blue & Cyan F1 | — |
-| Sean Cavanaugh | DeLorean | — |
-| Colin McNaughton | Orange & White F1 | — |
+| Driver | Car |
+|--------|-----|
+| Andrius Benokraitis | 18-Wheeler |
+| Justin Braun | Black & Gold F1 |
+| Michele Kelley | Pink & Gold F1 |
+| Roger Lopez | Pickup Truck |
+| Nuno Martins | Red & Silver F1 |
+| Craig Brandt | Blue & Cyan F1 |
+| Sean Cavanaugh | DeLorean |
+| Colin McNaughton | Orange & White F1 |
+
+> *Some drivers may have hidden abilities. Some vehicles aren't what they seem. Read the source if you're curious.*
 
 ## Project Structure
 
@@ -48,7 +50,7 @@ ansible-f1/
 │   │   └── questions.js    # Ansible quiz question bank
 │   ├── game/
 │   │   ├── Game.js         # Core game loop, state machine, scoring, collisions
-│   │   ├── Player.js       # Car models (F1, DeLorean, Truck, Hippo), lane movement
+│   │   ├── Player.js       # Car models, lane movement, visual effects
 │   │   ├── Track.js        # Road, lane markers, side props, skyline, finish line
 │   │   ├── Spawner.js      # Obstacle & pickup generation, mesh builders
 │   │   ├── CollisionSystem.js  # AABB collision detection

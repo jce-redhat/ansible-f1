@@ -1437,7 +1437,18 @@ export class Game {
         );
       }
     } else if (t === "BOOST_TOKEN") {
-      if (this.quizEnabled) {
+      if (this.player.carType === "hippo") {
+        const now = performance.now();
+        const stacking = now < this.boostUntil;
+        const base = stacking ? this.boostUntil : now;
+        if (!stacking) this._boostStartedAt = now;
+        this.boostUntil = base + CONFIG.BOOST_DURATION * 1500;
+        this._runBoostCount += 1;
+        play(SFX.BOOST_WHOOSH, 0.85);
+        this.ui.showHippoCrush("🦛 HIPPO TURBO 🦛");
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+      } else if (this.quizEnabled) {
         this._openBoostQuiz();
       } else {
         const now = performance.now();

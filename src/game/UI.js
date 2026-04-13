@@ -360,11 +360,21 @@ export class UI {
   showHippoAnnounce() {
     const el = this.el.hippoAnnounce;
     if (!el) return;
-    el.classList.remove("show");
+    el.classList.remove("show", "crush");
     el.innerHTML = "🦛 HIPPO MODE<br>ENGAGED 🦛";
     void el.offsetWidth;
     el.classList.add("show");
     setTimeout(() => el.classList.remove("show"), 3000);
+  }
+
+  showHippoCrush(text) {
+    const el = this.el.hippoAnnounce;
+    if (!el) return;
+    el.classList.remove("show", "crush");
+    el.innerHTML = text;
+    void el.offsetWidth;
+    el.classList.add("crush");
+    setTimeout(() => el.classList.remove("crush"), 1800);
   }
 
   showCombo(count) {

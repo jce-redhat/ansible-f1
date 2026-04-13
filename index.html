@@ -148,7 +148,6 @@
         </div>
         <div id="hud-status" class="hud-status"></div>
         <button type="button" id="btn-touch-pause" class="touch-pause" title="Pause">&#10074;&#10074;</button>
-        <button type="button" id="btn-dev-skip" class="dev-skip-btn" title="Skip to last 30s">&#9193; Skip to Finish</button>
       </div>
 
       <div id="attract-scores" class="attract-scores hidden">
@@ -418,9 +417,13 @@
         <button type="button" id="btn-level-back" class="btn" style="margin-top:1rem">Back</button>
       </div>
 
-      <button type="button" id="btn-unstick" class="btn-unstick" title="Stuck? Click to force-resume the run">
-        Skip / Unstick
-      </button>
+      <div id="debug-panel" class="debug-panel">
+        <button type="button" id="btn-debug-toggle" class="btn-debug-toggle">DEBUG - ADMIN ONLY</button>
+        <div id="debug-tools" class="debug-tools hidden">
+          <button type="button" id="btn-dev-skip" class="debug-btn" title="Skip to last 10s">&#9193; Skip to Finish</button>
+          <button type="button" id="btn-unstick" class="debug-btn" title="Stuck? Click to force-resume the run">Skip / Unstick</button>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="./src/main.js"></script>

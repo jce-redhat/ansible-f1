@@ -87,12 +87,19 @@ if (quizToggle) {
   });
 }
 
-// Dev skip-to-finish button
+// Debug panel toggle
+const btnDebugToggle = document.getElementById("btn-debug-toggle");
+const debugTools = document.getElementById("debug-tools");
+if (btnDebugToggle && debugTools) {
+  btnDebugToggle.addEventListener("click", () => {
+    const open = debugTools.classList.toggle("hidden");
+    btnDebugToggle.classList.toggle("active", !open);
+  });
+}
+
 const btnDevSkip = document.getElementById("btn-dev-skip");
 if (btnDevSkip) {
-  btnDevSkip.addEventListener("click", () => {
-    game.devSkipToFinish();
-  });
+  btnDevSkip.addEventListener("click", () => game.devSkipToFinish());
 }
 
 

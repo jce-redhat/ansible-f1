@@ -37,6 +37,7 @@ const SFX = {
   PICKUP: "./assets/audio/pickup.wav",
   GAME_OVER: "./assets/audio/game-over.wav",
   START_RUN: "./assets/audio/start-run.wav",
+  HORN: "./assets/audio/horn.m4a",
   HORN_ANDRIUS: "./assets/audio/horn-andrius.m4a",
   CROWD_CHEERS: "./assets/audio/crowd-cheers.mp4",
 };
@@ -300,8 +301,11 @@ export class Game {
 
   _bindHorn() {
     this.renderer.domElement.addEventListener("click", () => {
-      if (this.state === "running" && this.currentDriver === "andrius") {
+      if (this.state !== "running") return;
+      if (this.currentDriver === "andrius") {
         play(SFX.HORN_ANDRIUS, 0.8);
+      } else {
+        play(SFX.HORN, 0.8);
       }
     });
   }

@@ -1635,11 +1635,21 @@ export class Game {
 
     this.player.update(dt);
 
-    // Auto-collect pickups (pass through them), remove obstacles that pass the player
-    const entities = this.spawner.getAllCollidable();
-    for (const e of entities) {
-      if (e.mesh.position.z > CONFIG.DESPAWN_Z) {
-        this.spawner.removeEntity(e);
+    const px = this.player.mesh.position.x;
+    const pz = this.player.mesh.position.z;
+    for (const list of [this.spawner.obstacles, this.spawner.pickups, this.spawner.rivals]) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const e = list[i];
+        if (!e.active) continue;
+        if (e.mesh.position.z > CONFIG.DESPAWN_Z) {
+          this.spawner.removeEntity(e);
+          continue;
+        }
+        const dz = Math.abs(e.mesh.position.z - pz);
+        const dx = Math.abs(e.mesh.position.x - px);
+        if (dz < 1.8 && dx < 1.5) {
+          this.spawner.removeEntity(e);
+        }
       }
     }
   }

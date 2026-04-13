@@ -35,17 +35,17 @@
     "id": 5,
     "category": "services",
     "prompt": "Which module is commonly used to manage services?",
-    "options": ["copy", "user", "service", "debug"],
+    "options": ["ansible.builtin.copy", "ansible.builtin.user", "ansible.builtin.service", "ansible.builtin.debug"],
     "answer": 2,
-    "explanation": "The service module is commonly used to manage services."
+    "explanation": "The ansible.builtin.service module is commonly used to manage services."
   },
   {
     "id": 6,
     "category": "packages",
     "prompt": "Which Ansible module is commonly used to install packages on RHEL-based systems?",
-    "options": ["apt", "dnf", "pip", "npm"],
+    "options": ["ansible.builtin.apt", "ansible.builtin.dnf", "ansible.builtin.pip", "community.general.npm"],
     "answer": 1,
-    "explanation": "The dnf module is the standard package manager for RHEL-based systems."
+    "explanation": "The ansible.builtin.dnf module is the standard package manager for RHEL-based systems."
   },
   {
     "id": 7,
@@ -58,7 +58,7 @@
   {
     "id": 8,
     "category": "templating",
-    "prompt": "What is the preferred templating language of Ansible's template module?",
+    "prompt": "What is the preferred templating language of the ansible.builtin.template module?",
     "options": ["Mako", "Jinja2", "ERB", "Mustache"],
     "answer": 1,
     "explanation": "Jinja2 is the templating engine used by Ansible for variables, templates, and expressions."
@@ -748,10 +748,10 @@
   {
     "id": 94,
     "category": "modules",
-    "prompt": "What is the key difference between the command and shell modules?",
-    "options": ["command runs faster", "shell processes through /bin/sh, supporting pipes and redirects", "command supports Windows", "shell runs asynchronously"],
+    "prompt": "What is the key difference between the ansible.builtin.command and ansible.builtin.shell modules?",
+    "options": ["ansible.builtin.command runs faster", "ansible.builtin.shell processes through /bin/sh, supporting pipes and redirects", "ansible.builtin.command supports Windows", "ansible.builtin.shell runs asynchronously"],
     "answer": 1,
-    "explanation": "The shell module runs commands through /bin/sh, enabling pipes, redirects, and shell built-ins."
+    "explanation": "The ansible.builtin.shell module runs commands through /bin/sh, enabling pipes, redirects, and shell built-ins."
   },
   {
     "id": 95,
@@ -997,9 +997,9 @@
     "id": 125,
     "category": "network",
     "prompt": "What Ansible module backs up the running configuration of a network device?",
-    "options": ["network_backup", "cli_config with backup: yes", "config_manager", "network_save"],
+    "options": ["network_backup", "ansible.netcommon.cli_config with backup: yes", "config_manager", "network_save"],
     "answer": 1,
-    "explanation": "cli_config with backup: yes saves the current running configuration before making changes."
+    "explanation": "ansible.netcommon.cli_config with backup: yes saves the current running configuration before making changes."
   },
   {
     "id": 126,
@@ -1079,7 +1079,7 @@
     "prompt": "What module lets you define custom facts on managed nodes?",
     "options": ["ansible.builtin.custom_fact", "ansible.builtin.set_fact", "ansible.builtin.define_var", "ansible.builtin.register_fact"],
     "answer": 1,
-    "explanation": "set_fact creates or updates host-scoped variables (custom facts) during a play."
+    "explanation": "ansible.builtin.set_fact creates or updates host-scoped variables (custom facts) during a play."
   },
   {
     "id": 136,
@@ -1300,10 +1300,10 @@
   {
     "id": 164,
     "category": "modules",
-    "prompt": "What is the difference between lineinfile and blockinfile?",
-    "options": ["lineinfile manages single lines; blockinfile manages multi-line blocks", "They are aliases for the same module", "blockinfile is for binary files", "lineinfile is deprecated"],
+    "prompt": "What is the difference between ansible.builtin.lineinfile and ansible.builtin.blockinfile?",
+    "options": ["ansible.builtin.lineinfile manages single lines; ansible.builtin.blockinfile manages multi-line blocks", "They are aliases for the same module", "ansible.builtin.blockinfile is for binary files", "ansible.builtin.lineinfile is deprecated"],
     "answer": 0,
-    "explanation": "lineinfile handles single lines while blockinfile inserts or updates multi-line text blocks."
+    "explanation": "ansible.builtin.lineinfile handles single lines while ansible.builtin.blockinfile inserts or updates multi-line text blocks."
   },
   {
     "id": 165,

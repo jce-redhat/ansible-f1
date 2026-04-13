@@ -7,7 +7,7 @@ export const CONFIG = {
   LANE_INDEX: { LEFT: 0, CENTER: 1, RIGHT: 2 },
 
   // Movement
-  BASE_SPEED: 28.2,
+  BASE_SPEED: 31,
   /** Units per second²-ish scaling for forward speed over time */
   SPEED_RAMP: 0.161,
   /** Max multiplier on base speed from ramp + boosts */
@@ -25,12 +25,12 @@ export const CONFIG = {
   /** Minimum |Δz| between two obstacles in the same lane (fairness) */
   MIN_OBSTACLE_ALONG_Z: 26,
   /** Base interval (seconds) — lowered after warmup */
-  OBSTACLE_SPAWN_BASE: 2.1,
-  OBSTACLE_SPAWN_MIN: 0.95,
-  PICKUP_SPAWN_BASE: 2.8,
-  PICKUP_SPAWN_MIN: 1.35,
-  /** First ~25s: easier spawns */
-  WARMUP_SECONDS: 28,
+  OBSTACLE_SPAWN_BASE: 1.6,
+  OBSTACLE_SPAWN_MIN: 0.7,
+  PICKUP_SPAWN_BASE: 2.0,
+  PICKUP_SPAWN_MIN: 1.0,
+  /** First ~15s: easier spawns */
+  WARMUP_SECONDS: 15,
 
   // Single hazard type (MVP clarity)
   OBSTACLE_KIND: "OUTAGE",

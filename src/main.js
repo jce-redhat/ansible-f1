@@ -87,6 +87,14 @@ if (quizToggle) {
   });
 }
 
+// Dev skip-to-finish button
+const btnDevSkip = document.getElementById("btn-dev-skip");
+if (btnDevSkip) {
+  btnDevSkip.addEventListener("click", () => {
+    game.devSkipToFinish();
+  });
+}
+
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;

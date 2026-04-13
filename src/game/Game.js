@@ -896,6 +896,13 @@ export class Game {
     this._startQuizSafetyTimer();
   }
 
+  devSkipToFinish() {
+    if (this.state !== "running") return;
+    const dur = CONFIG.LEVEL_DURATION;
+    this.runTime = Math.max(this.runTime, dur - 30);
+    this.ui.setStatus("Dev: skipped to last 30 seconds", 2000);
+  }
+
   skipQuiz() {
     if (this.state !== "quiz" || this._quizPhase !== "question") return;
     play(SFX.WRONG, 0.8);
@@ -1023,16 +1030,22 @@ export class Game {
     const warnTime = dur - 10;
     if (this.runTime >= warnTime && !this._finishLineSpawned) {
       this._finishLineSpawned = true;
-      this.track.spawnFinishLine(this.player.mesh.position.z);
+      const timeLeft = dur - this.runTime;
+      this.track.spawnFinishLine(this.player.mesh.position.z, this.worldSpeed, timeLeft);
       this.ui.setStatus("Checkered flag ahead — finish is near!", 3000);
     }
 
-    if (this.runTime >= dur) {
+    this.track.update(effDt, this.worldSpeed);
+
+    const finishZ = this.track.getFinishZ();
+    if (this._finishLineSpawned && finishZ !== null && finishZ >= this.player.mesh.position.z) {
       this._levelComplete();
       return;
     }
-
-    this.track.update(effDt, this.worldSpeed);
+    if (this.runTime >= dur + 15) {
+      this._levelComplete();
+      return;
+    }
 
     const ramp = Math.min(
       CONFIG.MAX_SPEED_MULT,

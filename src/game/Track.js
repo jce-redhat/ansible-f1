@@ -1619,12 +1619,18 @@ export class Track {
         this.propsGroup.position.z -= this._propSpacing;
       }
     }
+
+    if (this._finishLine) {
+      this._finishLine.position.z += dz;
+      this._finishZ += dz;
+    }
   }
 
-  spawnFinishLine(playerZ) {
+  spawnFinishLine(playerZ, worldSpeed = 28, timeLeft = 10) {
     if (this._finishLine) return;
     const g = new THREE.Group();
-    const z = playerZ - 80;
+    const distance = Math.max(150, Math.min(500, worldSpeed * timeLeft));
+    const z = playerZ - distance;
 
     const white = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x333333, emissiveIntensity: 0.3 });
     const black = new THREE.MeshStandardMaterial({ color: 0x111111 });

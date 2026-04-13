@@ -974,6 +974,9 @@ export class Game {
         this._lcOverlayShown = true;
         this.ui.showLevelComplete(true);
       }
+      if (now - this._orbitStartTime > 30000) {
+        this.backToMenu();
+      }
       return;
     }
 

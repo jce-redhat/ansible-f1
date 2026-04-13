@@ -1222,6 +1222,25 @@ export class Game {
     return this._isSemiTruck() || this.player.carType === "hippo";
   }
 
+  _hippoSmashLines = [
+    "🦛 NUNO WALL CRUSH 🦛",
+    "🦛 HIPPO SMASH 🦛",
+    "🦛 NUNO HIPPO CRUSH 🦛",
+    "🦛 OBLITERATED 🦛",
+    "🦛 HIPPO DON'T CARE 🦛",
+    "🦛 NUNO DESTROYS ALL 🦛",
+    "🦛 TOTAL CARNAGE 🦛",
+    "🦛 HIPPO RAMPAGE 🦛",
+    "🦛 UNSTOPPABLE 🦛",
+    "🦛 NOTHING CAN<br>STOP THE HIPPO 🦛",
+    "🦛 GET OUT THE WAY 🦛",
+    "🦛 NUNO GOES BRRR 🦛",
+    "🦛 FLATTENED 🦛",
+    "🦛 HIPPO HUNGRY 🦛",
+    "🦛 THAT WAS A WALL? 🦛",
+    "🦛 NUNO SAYS NO 🦛",
+  ];
+
   _onHitObstacle(e) {
     if (this._isCheater()) {
       this.spawner.explodeObstacle(e);
@@ -1229,10 +1248,14 @@ export class Game {
       this.ui.shake();
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
-      const msg = this.player.carType === "hippo"
-        ? "The hippo doesn't care!"
-        : "Smashed right through it!";
-      this.ui.setStatus(msg, 1200);
+      if (this.player.carType === "hippo") {
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else {
+        this.ui.setStatus("Smashed right through it!", 1200);
+      }
       return;
     }
     const isGator = e.subtype === "GATOR";
@@ -1287,10 +1310,14 @@ export class Game {
       this.ui.shake();
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
-      const msg = this.player.carType === "hippo"
-        ? "Hippo trampled them!"
-        : "Plowed right through!";
-      this.ui.setStatus(msg, 1200);
+      if (this.player.carType === "hippo") {
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else {
+        this.ui.setStatus("Plowed right through!", 1200);
+      }
       return;
     }
     const isBus = e.subtype === "SCHOOL_BUS";

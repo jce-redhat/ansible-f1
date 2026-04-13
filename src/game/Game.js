@@ -37,6 +37,7 @@ const SFX = {
   PICKUP: "./assets/audio/pickup.wav",
   GAME_OVER: "./assets/audio/game-over.wav",
   START_RUN: "./assets/audio/start-run.wav",
+  HORN_ANDRIUS: "./assets/audio/horn-andrius.m4a",
 };
 
 const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
@@ -153,6 +154,7 @@ export class Game {
     this._bindQuizUi();
     this._bindBillboardInput();
     this._bindTouch();
+    this._bindHorn();
     this._quizBusy = false;
     /** @type {'question'|'result'} */
     this._quizPhase = "question";
@@ -282,6 +284,14 @@ export class Game {
         this._openBillboard(this._hoveredBillboard);
       }
       this._pointerDown = null;
+    });
+  }
+
+  _bindHorn() {
+    this.renderer.domElement.addEventListener("click", () => {
+      if (this.state === "running" && this.currentDriver === "andrius") {
+        play(SFX.HORN_ANDRIUS, 0.8);
+      }
     });
   }
 
@@ -912,7 +922,8 @@ export class Game {
     if (now < this.boostUntil) {
       speedMult *= CONFIG.BOOST_SPEED_MULT;
     }
-    const ws = CONFIG.BASE_SPEED * speedMult;
+    const driverMult = (DRIVERS[this.currentDriver] || {}).speedMult || 1;
+    const ws = CONFIG.BASE_SPEED * speedMult * driverMult;
     const flowActive = now < this.automationFlowUntil;
     const { mbState, mbProgress } = this._manualBoostHud(now);
     this.ui.updateHud({
@@ -967,7 +978,8 @@ export class Game {
       speedMult *= CONFIG.BRAKE_SPEED_MULT;
     }
 
-    const ws = CONFIG.BASE_SPEED * speedMult;
+    const driverMult = (DRIVERS[this.currentDriver] || {}).speedMult || 1;
+    const ws = CONFIG.BASE_SPEED * speedMult * driverMult;
     this.worldSpeed = ws;
 
     const flowActive = now < this.automationFlowUntil;

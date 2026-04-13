@@ -172,6 +172,16 @@ export const DRIVERS = {
     origin: "Durham, North Carolina",
     bio: "Virginia Tech Hokie, Baltimore-born, Durham-adopted, and absolutely insufferable about AI — in the best way. Andrius will corner you at any gathering and explain why large language models are going to automate your breakfast. And you'll listen, because he's right. Leads a black-ops squad of open-source hackers dedicated to liberating enterprise software from proprietary prisons using Ansible, AI, and sheer audacity. His son Austin already has a GitHub profile with more stars than most senior engineers. His wife Kristin is the only person who can shut down an AI monologue with a single look. Has a Costco Executive membership so elite they named an aisle after him — he once bought 400 pounds of chicken tenders in a single trip because 'bulk is a lifestyle, not a strategy.' Refuses to eat seafood with a conviction that makes allergies look casual — once left a five-star restaurant because the bread had a hint of anchovy. Built a custom AI pipeline that auto-generates Ansible playbooks from Slack conversations. His 18-wheeler runs on diesel, hubris, and a fine layer of smoke. They call him 'The Evangelist.' If you see the smoke, the sermon has already begun.",
   },
+  remy: {
+    id: "remy",
+    name: "Remy Duplantis",
+    car: "f1_turquoise",
+    country: "US",
+    speedMult: 1.1,
+    photo: "./assets/remy_tron.png",
+    origin: "Raleigh, North Carolina",
+    bio: "Raleigh-raised, caffeine-powered, and violently allergic to fantasy. If your game has orcs, ogres, elves, or anything remotely Tolkien-adjacent, Remy will leave the room with a look of genuine disgust. Once uninstalled a coworker's entire Steam library because it contained 'too many swords and not enough downforce.' The only acceptable game genre is Formula 1. Everything else is noise. Will deliver a twelve-minute TED Talk on why DRS zones are more compelling than any dragon fight ever rendered — and she will be right. Runs a turquoise F1 car tuned 10% hotter than anything else on the grid because stock settings are for people who read the manual. Her second greatest passion is riding elevators — up and down, up and down, for hours, no destination, just vibes. Has been banned from three office buildings in downtown Raleigh for 'recreational vertical transit.' Her third greatest passion is tormenting Alex Walczyk. She reprograms his keyboard shortcuts weekly, hides fake CVEs in his dashboards, and once convinced him his SSH keys had expired during a live demo. Alex has tried to retaliate exactly once. It did not go well. She learned to code on a Linux box her dad built from spare parts and never looked back. By twenty she was writing Ansible playbooks so elegant they made senior engineers weep. Holds the Triangle's unofficial record for most pull requests merged in a single weekend: 47, fueled entirely by Boulted Bread lattes and sheer stubbornness. They call her 'The Streak.' By the time you see the turquoise blur, she's already lapped you.",
+  },
 };
 
 export const PICKUP_TYPES = [

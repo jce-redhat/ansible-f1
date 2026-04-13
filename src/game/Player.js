@@ -62,6 +62,11 @@ export class Player {
       accent: 0xcc44ff, accentEmit: 0x330066,
       rim: 0xaa66dd, glow: 0x9944ff,
     });
+    if (type === "f1_turquoise") return this._buildF1({
+      livery: 0x00d4cc, liveryEmit: 0x002a28,
+      accent: 0x88eeff, accentEmit: 0x113344,
+      rim: 0x66ddee, glow: 0x00e5d0,
+    });
     return this._buildF1();
   }
 
@@ -317,31 +322,47 @@ export class Player {
       g.add(mirr);
     }
 
-    // ── Wheels — larger, with wheel covers ──
+    // ── Wheels — top-half only for clean arcade look ──
     const addWheel = (x, z, isFront) => {
       const r = isFront ? 0.24 : 0.26;
       const w = isFront ? 0.14 : 0.18;
-      // Tire
+      const tireGrp = new THREE.Group();
+      tireGrp.position.set(x, r, z);
+
+      // Half-cylinder tire (top half only)
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(r, r, w, 20), rubber.clone()
+        new THREE.CylinderGeometry(r, r, w, 20, 1, false, 0, Math.PI), rubber.clone()
       );
       tire.rotation.z = Math.PI / 2;
-      tire.position.set(x, r, z);
-      g.add(tire);
+      tire.rotation.y = Math.PI / 2;
+      tireGrp.add(tire);
+
+      // Flat cap to close the cut face
+      const capGeo = new THREE.PlaneGeometry(w, r * 2);
+      const cap = new THREE.Mesh(capGeo, rubber.clone());
+      cap.rotation.x = -Math.PI / 2;
+      cap.position.y = 0;
+      tireGrp.add(cap);
+
       // Wheel cover
       const cover = new THREE.Mesh(
-        new THREE.CylinderGeometry(r - 0.03, r - 0.03, 0.03, 16), rimMat.clone()
+        new THREE.CylinderGeometry(r - 0.03, r - 0.03, 0.03, 16, 1, false, 0, Math.PI),
+        rimMat.clone()
       );
       cover.rotation.z = Math.PI / 2;
-      cover.position.set(x + Math.sign(x) * (w / 2 + 0.01), r, z);
-      g.add(cover);
+      cover.rotation.y = Math.PI / 2;
+      cover.position.x = Math.sign(x) * (w / 2 + 0.01);
+      tireGrp.add(cover);
+
       // Hub detail
       const hub = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.04, 8), metal.clone()
       );
       hub.rotation.z = Math.PI / 2;
-      hub.position.set(x + Math.sign(x) * (w / 2 + 0.02), r, z);
-      g.add(hub);
+      hub.position.x = Math.sign(x) * (w / 2 + 0.02);
+      tireGrp.add(hub);
+
+      g.add(tireGrp);
     };
     addWheel(-0.85, -0.95, true);
     addWheel(0.85, -0.95, true);

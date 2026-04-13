@@ -27,8 +27,8 @@ export const CONFIG = {
   /** Base interval (seconds) — lowered after warmup */
   OBSTACLE_SPAWN_BASE: 1.6,
   OBSTACLE_SPAWN_MIN: 0.7,
-  PICKUP_SPAWN_BASE: 1.0,
-  PICKUP_SPAWN_MIN: 0.45,
+  PICKUP_SPAWN_BASE: 0.35,
+  PICKUP_SPAWN_MIN: 0.15,
   /** First ~15s: easier spawns */
   WARMUP_SECONDS: 15,
 

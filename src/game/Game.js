@@ -498,6 +498,7 @@ export class Game {
     this.timeScale = 1;
     this._activeBillboard = null;
     clearTimeout(this._gameOverTimer);
+    this._cleanupCelebration();
     stopLoop();
     this.ui.showBillboard(false);
     this.ui.showGameOver(false);

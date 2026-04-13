@@ -809,44 +809,70 @@ export class Player {
       g.add(tl);
     }
 
-    // ── BTTF2 rear thruster vents (boxy units flanking the trunk) ──
+    // ── BTTF2 rear louver vents (right-triangle wedge with grid slats) ──
     for (const side of [-1, 1]) {
       const ventGrp = new THREE.Group();
-      ventGrp.position.set(side * 0.52, 0.42 + H, 1.0);
+      ventGrp.position.set(side * 0.52, 0.35 + H, 1.0);
 
-      // Main housing
-      const housing = new THREE.Mesh(
-        new THREE.BoxGeometry(0.32, 0.22, 0.4), darkSteel.clone()
-      );
-      ventGrp.add(housing);
+      const ventW = 0.34;
+      const ventD = 0.42;
+      const ventH = 0.28;
 
-      // Horizontal louver slats
-      for (let i = 0; i < 4; i++) {
+      // Wedge shell via triangular prism (right-triangle profile: tall at rear, slopes to front)
+      const triShape = new THREE.Shape();
+      triShape.moveTo(0, 0);
+      triShape.lineTo(0, ventH);
+      triShape.lineTo(-ventD, 0);
+      triShape.closePath();
+
+      const ventShellGeo = new THREE.ExtrudeGeometry(triShape, {
+        depth: ventW, bevelEnabled: false,
+      });
+      ventShellGeo.translate(-ventW / 2, 0, 0);
+      const ventShell = new THREE.Mesh(ventShellGeo, darkSteel.clone());
+      ventShell.rotation.y = Math.PI / 2;
+      ventGrp.add(ventShell);
+
+      // Interior dark void (slightly inset to show depth)
+      const innerShape = new THREE.Shape();
+      const inset = 0.025;
+      const innerH = ventH - inset * 2;
+      const innerD = ventD - inset * 2;
+      innerShape.moveTo(0, 0);
+      innerShape.lineTo(0, innerH);
+      innerShape.lineTo(-innerD, 0);
+      innerShape.closePath();
+      const innerGeo = new THREE.ExtrudeGeometry(innerShape, {
+        depth: ventW - inset * 2, bevelEnabled: false,
+      });
+      innerGeo.translate(-(ventW - inset * 2) / 2, 0, 0);
+      const inner = new THREE.Mesh(innerGeo, black.clone());
+      inner.rotation.y = Math.PI / 2;
+      inner.position.set(0, inset, -inset);
+      ventGrp.add(inner);
+
+      // Horizontal grid slats following the wedge angle
+      const slatCount = 6;
+      for (let i = 1; i < slatCount; i++) {
+        const frac = i / slatCount;
+        const slatY = frac * ventH;
+        const slatDepth = ventD * (1 - frac);
+        if (slatDepth < 0.03) continue;
         const slat = new THREE.Mesh(
-          new THREE.BoxGeometry(0.34, 0.012, 0.42), steel.clone()
+          new THREE.BoxGeometry(ventW + 0.01, 0.012, slatDepth),
+          steel.clone()
         );
-        slat.position.y = -0.08 + i * 0.05;
+        slat.position.set(0, slatY, -(ventD - slatDepth) / 2);
         ventGrp.add(slat);
       }
 
-      // Outer face plate (darker)
-      const face = new THREE.Mesh(
-        new THREE.BoxGeometry(0.34, 0.24, 0.02), black.clone()
+      // Rear face frame (vertical edge of the triangle)
+      const rearFrame = new THREE.Mesh(
+        new THREE.BoxGeometry(ventW + 0.02, ventH + 0.01, 0.02),
+        darkSteel.clone()
       );
-      face.position.z = 0.21;
-      ventGrp.add(face);
-
-      // Glowing exhaust port on the rear face
-      const exhaust = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.05, 0.02, 8),
-        new THREE.MeshStandardMaterial({
-          color: 0xff6622, emissive: 0xff4400, emissiveIntensity: 0.8,
-          transparent: true, opacity: 0.7,
-        })
-      );
-      exhaust.rotation.x = Math.PI / 2;
-      exhaust.position.z = 0.22;
-      ventGrp.add(exhaust);
+      rearFrame.position.set(0, ventH / 2, 0.01);
+      ventGrp.add(rearFrame);
 
       g.add(ventGrp);
     }

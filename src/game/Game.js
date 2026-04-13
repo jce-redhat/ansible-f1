@@ -147,6 +147,8 @@ export class Game {
     this._orbitStartTime = 0;
     this._orbitCenter = new THREE.Vector3();
     this._lcOverlayShown = false;
+    this._celebCrowd = [];
+    this._celebConfetti = [];
 
     // Attract mode (demo play behind main menu)
     this._attractActive = false;
@@ -470,6 +472,7 @@ export class Game {
     this._finishLineSpawned = false;
     this._finishing = false;
     this._finishCoastSpeed = 0;
+    this._cleanupCelebration();
     this.track.removeFinishLine();
     this.player.targetLaneIndex = 1;
     this.player.laneIndex = 1;
@@ -807,6 +810,7 @@ export class Game {
 
     this._orbitStartTime = performance.now();
     this._orbitCenter = this.player.mesh.position.clone();
+    this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isSemiTruck();
     this.ui.setLevelCompleteStats({
@@ -962,6 +966,7 @@ export class Game {
 
     if (this.state === "level_complete") {
       this._updateOrbitCamera(dt, now);
+      this._updateCelebration(dt, now);
       if (!this._lcOverlayShown && now - this._orbitStartTime > 3000) {
         this._lcOverlayShown = true;
         this.ui.showLevelComplete(true);
@@ -1609,6 +1614,154 @@ export class Game {
       center.z + Math.cos(angle) * radius
     );
     this.camera.lookAt(center.x, center.y + 1.2, center.z);
+  }
+
+  // ── Celebration crowd + confetti ──
+
+  _buildCheeringPerson(shirtColor) {
+    const g = new THREE.Group();
+    const skin = new THREE.MeshStandardMaterial({ color: 0xf4c18a });
+    const shirt = new THREE.MeshStandardMaterial({ color: shirtColor });
+    const pants = new THREE.MeshStandardMaterial({ color: 0x334466 });
+    const shoe = new THREE.MeshStandardMaterial({ color: 0x222222 });
+
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), skin);
+    head.position.y = 1.55;
+    g.add(head);
+
+    // Torso
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.22), shirt);
+    torso.position.y = 1.1;
+    g.add(torso);
+
+    // Arms raised in a V
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.12), skin);
+      arm.position.set(side * 0.32, 1.45, 0);
+      arm.rotation.z = side * -0.6;
+      g.add(arm);
+    }
+
+    // Legs
+    for (const side of [-1, 1]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.5, 0.14), pants);
+      leg.position.set(side * 0.1, 0.5, 0);
+      g.add(leg);
+      const s = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 0.2), shoe);
+      s.position.set(side * 0.1, 0.22, 0.03);
+      g.add(s);
+    }
+
+    g.traverse((c) => {
+      if (c.isMesh) {
+        c.material.transparent = true;
+        c.material.opacity = 0;
+      }
+    });
+
+    return g;
+  }
+
+  _spawnCelebration(center) {
+    this._cleanupCelebration();
+
+    const shirtColors = [
+      0xee1133, 0x2288ff, 0x22cc55, 0xffaa00, 0xcc44ff,
+      0xff6622, 0x00ccbb, 0xff2288, 0x8855ff, 0xffdd00,
+    ];
+
+    const crowdRadius = 4.5;
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const person = this._buildCheeringPerson(shirtColors[i]);
+      person.position.set(
+        center.x + Math.sin(angle) * crowdRadius,
+        CONFIG.PLAYER_Y,
+        center.z + Math.cos(angle) * crowdRadius
+      );
+      person.lookAt(center.x, CONFIG.PLAYER_Y + 1, center.z);
+      person.userData.phase = Math.random() * Math.PI * 2;
+      person.userData.baseY = CONFIG.PLAYER_Y;
+      this.scene.add(person);
+      this._celebCrowd.push(person);
+    }
+
+    // Confetti burst
+    const confettiColors = [0xff2255, 0x22ccff, 0xffdd00, 0x44ff66, 0xff8800, 0xcc44ff, 0xffffff];
+    for (let i = 0; i < 80; i++) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: confettiColors[i % confettiColors.length],
+        transparent: true,
+        opacity: 0,
+      });
+      const size = 0.06 + Math.random() * 0.08;
+      const geo = new THREE.BoxGeometry(size, size * 0.3, size);
+      const c = new THREE.Mesh(geo, mat);
+      const spread = 5;
+      c.position.set(
+        center.x + (Math.random() - 0.5) * spread * 2,
+        CONFIG.PLAYER_Y + 6 + Math.random() * 6,
+        center.z + (Math.random() - 0.5) * spread * 2
+      );
+      c.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      c.userData.vy = -(1.0 + Math.random() * 1.5);
+      c.userData.vx = (Math.random() - 0.5) * 1.2;
+      c.userData.vz = (Math.random() - 0.5) * 1.2;
+      c.userData.spin = (Math.random() - 0.5) * 6;
+      this.scene.add(c);
+      this._celebConfetti.push(c);
+    }
+  }
+
+  _updateCelebration(dt, now) {
+    const elapsed = (now - this._orbitStartTime) / 1000;
+    const fadeIn = Math.min(1, elapsed / 1.5);
+
+    for (const person of this._celebCrowd) {
+      person.traverse((c) => {
+        if (c.isMesh) c.material.opacity = fadeIn;
+      });
+      const bounce = Math.abs(Math.sin((elapsed * 5) + person.userData.phase)) * 0.2;
+      person.position.y = person.userData.baseY + bounce;
+      // Arms pump: vary the arm rotation with time
+      const children = person.children;
+      for (const child of children) {
+        if (child.rotation && Math.abs(child.rotation.z) > 0.3) {
+          const side = child.rotation.z < 0 ? -1 : 1;
+          child.rotation.z = side * -(0.4 + Math.sin((elapsed * 6) + person.userData.phase) * 0.3);
+        }
+      }
+    }
+
+    for (const c of this._celebConfetti) {
+      c.material.opacity = fadeIn;
+      c.position.y += c.userData.vy * dt;
+      c.position.x += c.userData.vx * dt;
+      c.position.z += c.userData.vz * dt;
+      c.rotation.x += c.userData.spin * dt;
+      c.rotation.z += c.userData.spin * 0.7 * dt;
+      if (c.position.y < CONFIG.PLAYER_Y) {
+        c.position.y = CONFIG.PLAYER_Y + 8 + Math.random() * 4;
+      }
+    }
+  }
+
+  _cleanupCelebration() {
+    for (const p of this._celebCrowd) {
+      this.scene.remove(p);
+      p.traverse((c) => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      });
+    }
+    this._celebCrowd = [];
+    for (const c of this._celebConfetti) {
+      this.scene.remove(c);
+      c.geometry.dispose();
+      c.material.dispose();
+    }
+    this._celebConfetti = [];
   }
 
   _updateCamera(dt, now) {

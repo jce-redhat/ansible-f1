@@ -253,7 +253,7 @@ export class Game {
         this._secretBuffer = (this._secretBuffer + e.key.toLowerCase()).slice(-5);
         if (this._secretBuffer === "hippo") {
           this.player.swapCar("hippo");
-          this.ui.setStatus("HIPPO MODE ACTIVATED!", 3000);
+          this.ui.setStatus("🦛 HIPPO MODE ENGAGED 🦛", 3000);
           play(SFX.CORRECT, 0.9);
           this._secretBuffer = "";
         }
@@ -830,14 +830,15 @@ export class Game {
     this._orbitCenter = this.player.mesh.position.clone();
     this._spawnCelebration(this._orbitCenter);
 
-    const isCheater = this._isSemiTruck();
+    const isCheater = this._isCheater();
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
       pickups: this.pickupsCollected,
       correct: this.sessionCorrect,
       finishBonus,
-    }, isCheater);
+    }, isCheater, cheaterType);
     if (!isCheater) {
       this.ui.resetLevelComplete(getLastName(), getLastCountry());
     }
@@ -848,8 +849,11 @@ export class Game {
   }
 
   async saveLcScore() {
-    if (this._isSemiTruck()) {
-      this.ui.setStatus("Nice try, but you can't set a high score as Andrius. Too easy!", 4000);
+    if (this._isCheater()) {
+      const msg = this.player.carType === "hippo"
+        ? "Sorry, hippo mode can't be on the leaderboard. Stop cheating!"
+        : "Nice try, but you can't set a high score as Andrius. Too easy!";
+      this.ui.setStatus(msg, 4000);
       return;
     }
     const name = this.ui.getLcEnteredName() || "AAA";
@@ -862,8 +866,11 @@ export class Game {
   }
 
   async saveScore() {
-    if (this._isSemiTruck()) {
-      this.ui.setStatus("Nice try, but you can't set a high score as Andrius. Too easy!", 4000);
+    if (this._isCheater()) {
+      const msg = this.player.carType === "hippo"
+        ? "Sorry, hippo mode can't be on the leaderboard. Stop cheating!"
+        : "Nice try, but you can't set a high score as Andrius. Too easy!";
+      this.ui.setStatus(msg, 4000);
       return;
     }
     const name = this.ui.getEnteredName() || "AAA";
@@ -1211,14 +1218,21 @@ export class Game {
     return d && d.car === "semi_truck";
   }
 
+  _isCheater() {
+    return this._isSemiTruck() || this.player.carType === "hippo";
+  }
+
   _onHitObstacle(e) {
-    if (this._isSemiTruck()) {
+    if (this._isCheater()) {
       this.spawner.explodeObstacle(e);
       play(SFX.OBSTACLE_HIT, 0.6);
       this.ui.shake();
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
-      this.ui.setStatus("Smashed right through it!", 1200);
+      const msg = this.player.carType === "hippo"
+        ? "The hippo doesn't care!"
+        : "Smashed right through it!";
+      this.ui.setStatus(msg, 1200);
       return;
     }
     const isGator = e.subtype === "GATOR";
@@ -1267,13 +1281,16 @@ export class Game {
   }
 
   _onHitRival(e) {
-    if (this._isSemiTruck()) {
+    if (this._isCheater()) {
       this.spawner.explodeRival(e);
       play(SFX.OBSTACLE_HIT, 0.6);
       this.ui.shake();
       this.shakeUntil = performance.now() + 100;
       this.shakeAmp = 0.15;
-      this.ui.setStatus("Plowed right through!", 1200);
+      const msg = this.player.carType === "hippo"
+        ? "Hippo trampled them!"
+        : "Plowed right through!";
+      this.ui.setStatus(msg, 1200);
       return;
     }
     const isBus = e.subtype === "SCHOOL_BUS";
@@ -1375,10 +1392,13 @@ export class Game {
         this.ui.setStatus(`Pickup: Certified Collection — +${pts} score`, CONFIG.STATUS_HIT_MS);
       }
     } else if (t === "POLICY_SHIELD") {
-      if (this._isSemiTruck()) {
+      if (this._isCheater()) {
         this.score += 50;
         this.ui.showPickupPopup("+50");
-        this.ui.setStatus("Shield? You ARE the shield. +50 score", CONFIG.STATUS_HIT_MS);
+        const msg = this.player.carType === "hippo"
+          ? "Shield? The hippo IS the shield. +50 score"
+          : "Shield? You ARE the shield. +50 score";
+        this.ui.setStatus(msg, CONFIG.STATUS_HIT_MS);
       } else {
         this.shield = true;
         this.player.setShieldActive(true);

@@ -733,15 +733,21 @@ export class UI {
     if (this.el.levelComplete) this.el.levelComplete.classList.toggle("hidden", !visible);
   }
 
-  setLevelCompleteStats(stats, isCheater = false) {
+  setLevelCompleteStats(stats, isCheater = false, cheaterType = null) {
     if (this.el.lcScore) this.el.lcScore.textContent = String(Math.floor(stats.score));
     if (this.el.lcHits) this.el.lcHits.textContent = String(stats.hits);
     if (this.el.lcPickups) this.el.lcPickups.textContent = String(stats.pickups);
     if (this.el.lcCorrect) this.el.lcCorrect.textContent = String(stats.correct);
     if (isCheater) {
-      if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
-      if (this.el.lcMessage) this.el.lcMessage.textContent =
-        "Playing as Andrius is basically cheating. Pick a real driver and try again — if you dare.";
+      if (cheaterType === "hippo") {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "🦛 Hippo Mode Complete!";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "Sorry, hippo mode can't be on the leaderboard. Stop cheating!";
+      } else {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "Playing as Andrius is basically cheating. Pick a real driver and try again — if you dare.";
+      }
       if (this.el.lcEntry) this.el.lcEntry.classList.add("hidden");
     } else {
       if (this.el.lcTitle) this.el.lcTitle.textContent = "Level Complete!";

@@ -1427,6 +1427,47 @@ export class Player {
       this._hippoLegs.push({ mesh: leg, baseY: 0.15, phase: i < 2 ? 0 : Math.PI });
     }
 
+    // Rider sitting on top
+    const skin = new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.7 });
+    const shirt = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6 });
+    const pants = new THREE.MeshStandardMaterial({ color: 0x222244, roughness: 0.7 });
+    const hair = new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.8 });
+
+    const riderGrp = new THREE.Group();
+    riderGrp.position.set(0, 1.1, 0.1);
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.5, 0.35), shirt);
+    torso.position.set(0, 0.45, 0);
+    riderGrp.add(torso);
+
+    const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), skin);
+    rHead.position.set(0, 0.85, 0);
+    riderGrp.add(rHead);
+
+    const rHair = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.32), hair);
+    rHair.position.set(0, 1.03, 0);
+    riderGrp.add(rHair);
+
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 0.14), shirt);
+      arm.position.set(side * 0.32, 0.4, -0.05);
+      arm.rotation.x = -0.4;
+      riderGrp.add(arm);
+
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), skin);
+      hand.position.set(side * 0.32, 0.15, -0.2);
+      riderGrp.add(hand);
+    }
+
+    for (const side of [-1, 1]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.4, 0.17), pants);
+      leg.position.set(side * 0.15, 0.05, 0.02);
+      leg.rotation.x = 0.2;
+      riderGrp.add(leg);
+    }
+
+    g.add(riderGrp);
+
     // Underglow
     const glow = new THREE.PointLight(0x66ffcc, 0.5, 8);
     glow.position.set(0, 0.1, 0);

@@ -1,19 +1,39 @@
 # Built to Automate
 
-A retro-arcade endless runner game built with Three.js, themed around Ansible and IT automation. Dodge outages, collect playbooks and collections, answer skill-check quizzes, and race your way up the leaderboard.
+A retro-arcade racing game built with Three.js, themed around Ansible and IT automation. Dodge outages, collect playbooks and collections, answer skill-check quizzes, and race your way up the leaderboard.
 
 **[Play it live on GitHub Pages](https://ansible-tmm.github.io/ansible-f1/)**
+
+![Built to Automate — gameplay screenshot](assets/screenshots/gameplay.png)
 
 ## Gameplay
 
 - **Move:** Arrow keys (← / →) or A / D
+- **Boost:** Arrow Up or W (manual boost when available)
+- **Brake:** Arrow Down or S
 - **Pause:** Escape or Space
+- **Horn:** Mouse click
 - **Dodge** Outage obstacles that drain your health
 - **Collect** Ansible Playbooks (+100 pts), Collections (+150 pts), Policy Shields, and Boost Tokens
 - **Answer** Ansible skill-check quizzes to recover health or earn speed boosts
 - **Achieve** Automation Flow by getting 3 correct answers in a row (1.2× score + pickup magnet)
 
-Health starts at 100. Four unshielded hits ends the run. Scores persist in a local leaderboard (top 50, stored in `localStorage`).
+Health starts at 100. Four unshielded hits ends the run. Race to the finish line, coast to a stop, and enter your score on the global leaderboard.
+
+## Drivers
+
+Choose from a roster of drivers, each with a unique car and personality:
+
+| Driver | Car | Special |
+|--------|-----|---------|
+| Andrius Benokraitis | 18-Wheeler | Indestructible (no leaderboard) |
+| Justin Braun | Black & Gold F1 | — |
+| Michele Kelley | Pink & Gold F1 | — |
+| Roger Lopez | Pickup Truck | — |
+| Nuno Martins | Red & Silver F1 | Secret hippo mode 🦛 |
+| Craig Brandt | Blue & Cyan F1 | — |
+| Sean Cavanaugh | DeLorean | — |
+| Colin McNaughton | Orange & White F1 | — |
 
 ## Project Structure
 
@@ -25,11 +45,11 @@ ansible-f1/
 │   ├── main.js             # Three.js init, render loop, UI wiring
 │   ├── data/
 │   │   ├── config.js       # All tuning constants (speed, scoring, spawning)
-│   │   └── questions.js    # Ansible quiz question bank (10 questions)
+│   │   └── questions.js    # Ansible quiz question bank
 │   ├── game/
 │   │   ├── Game.js         # Core game loop, state machine, scoring, collisions
-│   │   ├── Player.js       # F1 car model, lane movement, visual effects
-│   │   ├── Track.js        # Road, lane markers, side props, skyline, lighting
+│   │   ├── Player.js       # Car models (F1, DeLorean, Truck, Hippo), lane movement
+│   │   ├── Track.js        # Road, lane markers, side props, skyline, finish line
 │   │   ├── Spawner.js      # Obstacle & pickup generation, mesh builders
 │   │   ├── CollisionSystem.js  # AABB collision detection
 │   │   ├── QuizSystem.js   # Question pool management
@@ -39,6 +59,7 @@ ansible-f1/
 │       └── storage.js      # localStorage wrapper (scores, leaderboard, settings)
 └── assets/
     ├── audio/              # Sound effects and background music
+    ├── screenshots/        # Game screenshots
     ├── playbook-icon.png   # Ansible Playbook pickup texture
     └── collection-icon.png # Ansible Collections pickup texture
 ```
@@ -83,11 +104,10 @@ Contributions are welcome! Here's how to get started:
 - **No build tools** — this project intentionally has zero build step. All JS uses native ES modules loaded via import map.
 - **Three.js r160** — imported from CDN. Don't add a `package.json` or bundler unless absolutely necessary.
 - **`config.js` is the tuning hub** — game balance constants (speed, damage, scoring, timing) all live in `src/data/config.js`. Change values there instead of scattering magic numbers.
-- **One obstacle type** — the game uses a single obstacle ("Outage") for MVP clarity. New obstacle types should follow the pattern in `Spawner.js` and update `config.js`.
 - **Fair spawning** — obstacles must always leave at least two lanes free. See `_pickLaneForObstacle()` in `Spawner.js`.
-- **Quiz questions** — the 10 Ansible questions live in `src/data/questions.js`. Add new ones following the same `{ q, options, answer, explain }` format.
+- **Quiz questions** — live in `src/data/questions.js`. Add new ones following the same `{ q, options, answer, explain }` format.
 - **Audio** — sound effects go in `assets/audio/`. Wire them through `src/utils/audio.js` using `preload()` and `play()`. Background music uses `startBgm()`.
-- **State machine** — game states are `boot → main_menu → running → quiz → paused → game_over`. State transitions happen in `Game.js`.
+- **State machine** — game states are `boot → main_menu → running → quiz → paused → game_over → level_complete`. State transitions happen in `Game.js`.
 
 ### Making Changes
 
@@ -101,9 +121,12 @@ Contributions are welcome! Here's how to get started:
 - Add more Ansible quiz questions to `src/data/questions.js`
 - Improve the pixel-art skyline buildings in `Track.js` `_skyline()`
 - Add new pickup types (follow the `PICKUP_TYPES` pattern in `config.js` and `Spawner.js`)
+- Add new driver characters and car designs
 - Improve mobile touch controls
 - Accessibility improvements (screen reader hints, reduced-motion support)
 
 ## License
 
-This project is maintained by the Ansible TMM team.
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+Maintained by the Ansible TMM team.

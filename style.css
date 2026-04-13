@@ -1958,8 +1958,10 @@ body {
 /* --- Driver select --- */
 #driver-select.panel {
   max-width: 1060px;
-  overflow-y: auto;
   max-height: 94vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .driver-select-title {
@@ -2068,6 +2070,9 @@ body {
 /* Driver detail (expanded view) */
 .driver-detail {
   margin-top: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .driver-detail.hidden {

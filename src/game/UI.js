@@ -179,6 +179,20 @@ export class UI {
     on("btn-driver-back", () => this._hideDriverSelect());
     on("btn-select-driver", () => this._confirmDriver());
 
+    window.addEventListener("keydown", (e) => {
+      if (!this.isDriverSelectVisible() || this.el.driverDetail.classList.contains("hidden")) return;
+      const keys = Object.keys(DRIVERS);
+      const idx = keys.indexOf(this._pendingDriver);
+      if (idx < 0) return;
+      if (e.code === "ArrowLeft" || e.code === "ArrowUp") {
+        e.preventDefault();
+        this._showDriverDetail(keys[(idx - 1 + keys.length) % keys.length]);
+      } else if (e.code === "ArrowRight" || e.code === "ArrowDown") {
+        e.preventDefault();
+        this._showDriverDetail(keys[(idx + 1) % keys.length]);
+      }
+    });
+
     on("btn-next-lc", () => this.onRestart && this.onRestart());
     on("btn-menu-lc", () => this.onMenu && this.onMenu());
     on("btn-save-score-lc", () => this.onSaveScoreLc && this.onSaveScoreLc());

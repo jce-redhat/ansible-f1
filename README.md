@@ -12,7 +12,7 @@ A retro-arcade racing game built with Three.js, themed around Ansible and IT aut
 - **Boost:** Arrow Up or W (manual boost when available)
 - **Brake:** Arrow Down or S
 - **Pause:** Escape or Space
-- **Horn:** Mouse click
+- **Horn:** Mouse click (some vehicles have special abilities instead)
 - **Dodge** Outage obstacles that drain your health
 - **Collect** Ansible Playbooks (+100 pts), Collections (+150 pts), Policy Shields, and Boost Tokens
 - **Answer** Ansible skill-check quizzes to recover health or earn speed boosts
@@ -22,20 +22,45 @@ Health starts at 100. Four unshielded hits ends the run. Race to the finish line
 
 ## Drivers
 
-Choose from a roster of drivers, each with a unique car and personality:
+| Driver | Origin | Default Car |
+|--------|--------|-------------|
+| Anshul Behl | Toronto, Canada | Red & Silver F1 |
+| Andrius Benokraitis | Durham, NC | Maroon & Orange F1 (VT) |
+| Justin Braun | Cary, NC | Black & Gold F1 |
+| Remy Duplantis | Raleigh, NC | Turquoise F1 |
+| Leo Gallego | Raleigh, NC | Purple F1 |
+| Michele Kelley | Durham, NC | Pink & Gold F1 |
+| Roger Lopez | Austin, TX | DeLorean |
+| Nuno Martins | Johannesburg, ZA | Pickup Truck |
+| Hicham Mourad | Casablanca, Morocco | Light Cycle |
+| Matthew Packer | Greensboro, NC | Blue & White F1 (Leafs) |
+| Aubrey Trotter | Durham, NC | Pink F1 |
+| Alex Walczyk | Raleigh, NC | Yellow F1 |
 
-| Driver | Car |
-|--------|-----|
-| Andrius Benokraitis | 18-Wheeler |
-| Justin Braun | Black & Gold F1 |
-| Michele Kelley | Pink & Gold F1 |
-| Roger Lopez | Pickup Truck |
-| Nuno Martins | Red & Silver F1 |
-| Craig Brandt | Blue & Cyan F1 |
-| Sean Cavanaugh | DeLorean |
-| Colin McNaughton | Orange & White F1 |
+## Secret Modes
 
-> *Some drivers may have hidden abilities. Some vehicles aren't what they seem. Read the source if you're curious.*
+Some drivers have hidden alternate vehicles that transform the gameplay. Type the secret word during a race while playing as the correct driver to unlock them.
+
+| Driver | Secret Word | Unlocks | Effect |
+|--------|-------------|---------|--------|
+| Nuno Martins | `hippo` | 🦛 Hippo Mode | Indestructible hippo with a rider. Crushes everything for +50,000 pts each. Ridiculous smash messages. Scores don't count on the leaderboard. Horn plays hippo sound. Victory dance at the end. |
+| Andrius Benokraitis | `chunky` | 🚛 Chunky Mode | 18-wheeler semi truck. Indestructible. Plows through everything. Scores don't count on the leaderboard. Custom horn sound. |
+| Matthew Packer | `matt` | 🛹 Skate Mode | Skateboard rider with backwards cap and flannel. Click to jump — while airborne you're invincible and pass through obstacles. |
+
+## Special Vehicle Abilities
+
+Some vehicles have unique abilities triggered by clicking (instead of honking):
+
+| Vehicle | Click Action |
+|---------|-------------|
+| **DeLorean** (Roger) | Time travel — accelerates with fire trails, car vanishes for 1.5s (invincible, phases through everything), then reappears. 15s cooldown shown on the "Flux Capacitor" bar. Random Back to the Future quotes. |
+| **Skateboard** (Matt, after unlock) | Jump — launches into the air, invincible while airborne. |
+| **Hippo** (Nuno, after unlock) | Plays the hippo mode sound. |
+| **Semi Truck** (Andrius, after unlock) | Custom Andrius horn. |
+
+## Nuno's Pickup Truck
+
+Nuno's default pickup truck features a visible exhaust pipe with thick black smoke billowing from the tailpipe — purely cosmetic, but very on-brand.
 
 ## Project Structure
 
@@ -46,11 +71,11 @@ ansible-f1/
 ├── src/
 │   ├── main.js             # Three.js init, render loop, UI wiring
 │   ├── data/
-│   │   ├── config.js       # All tuning constants (speed, scoring, spawning)
-│   │   └── questions.js    # Ansible quiz question bank
+│   │   ├── config.js       # All tuning constants (speed, scoring, spawning, drivers)
+│   │   └── questions.json  # Ansible quiz question bank
 │   ├── game/
 │   │   ├── Game.js         # Core game loop, state machine, scoring, collisions
-│   │   ├── Player.js       # Car models, lane movement, visual effects
+│   │   ├── Player.js       # Car/vehicle models, lane movement, visual effects
 │   │   ├── Track.js        # Road, lane markers, side props, skyline, finish line
 │   │   ├── Spawner.js      # Obstacle & pickup generation, mesh builders
 │   │   ├── CollisionSystem.js  # AABB collision detection
@@ -59,11 +84,13 @@ ansible-f1/
 │   └── utils/
 │       ├── audio.js        # Web Audio API + HTML audio for SFX, BGM, engine loop
 │       └── storage.js      # localStorage wrapper (scores, leaderboard, settings)
-└── assets/
-    ├── audio/              # Sound effects and background music
-    ├── screenshots/        # Game screenshots
-    ├── playbook-icon.png   # Ansible Playbook pickup texture
-    └── collection-icon.png # Ansible Collections pickup texture
+├── assets/
+│   ├── audio/              # Sound effects and background music
+│   ├── screenshots/        # Game screenshots
+│   ├── playbook-icon.png   # Ansible Playbook pickup texture
+│   └── collection-icon.png # Ansible Collections pickup texture
+└── .cursor/
+    └── skills/             # Cursor AI agent skills (see below)
 ```
 
 ## Tech Stack
@@ -73,6 +100,40 @@ ansible-f1/
 - **Web Audio API** for sound effects; HTML `<audio>` for music/loops
 - **localStorage** for persistence
 - **GitHub Pages** for hosting (static files only)
+
+## Cursor Skills
+
+This repo includes [Cursor AI agent skills](https://docs.cursor.com/context/skills) that help anyone contributing to the game work more effectively. When you clone this repo and open it in Cursor, the agent automatically has access to these skills and will use them when relevant.
+
+### Available Skills
+
+| Skill | When It's Used |
+|-------|---------------|
+| **Game Architecture** | Understanding the codebase structure, state machine, module responsibilities, and how systems connect. Great for onboarding or debugging. |
+| **Adding Game Features** | Step-by-step patterns for adding new pickups, obstacles, visual effects, HUD elements, quiz questions, and UI overlays. |
+| **Audio & Assets** | Managing sounds, textures, and visual assets. Adding new sound effects, icon textures, or troubleshooting audio timing and mute controls. |
+| **Drivers & Vehicles** | Adding new drivers, custom F1 color schemes, entirely new car meshes, secret unlockable modes, special click abilities, and invincibility states. |
+
+### Using the Skills
+
+1. Clone this repo and open it in [Cursor](https://cursor.com)
+2. Start a conversation with the AI agent
+3. Ask about game features, architecture, or how to add something — the agent will automatically reference the relevant skill
+4. Example prompts:
+   - *"Add a new pickup type that gives double score for 10 seconds"*
+   - *"How does the state machine work?"*
+   - *"Add a new sound effect for when the player finishes a level"*
+   - *"Add a new driver with a custom car"*
+
+### Adding More Skills
+
+To add a new skill, create a folder under `.cursor/skills/` with a `SKILL.md` file:
+
+```
+.cursor/skills/my-new-skill/SKILL.md
+```
+
+The SKILL.md should have YAML frontmatter with `name` and `description`, followed by the skill content. See existing skills for examples.
 
 ## Running Locally
 
@@ -99,7 +160,8 @@ Contributions are welcome! Here's how to get started:
    git clone https://github.com/<your-username>/ansible-f1.git
    cd ansible-f1
    ```
-3. Serve locally (see above) and open in a browser
+3. Open in [Cursor](https://cursor.com) to get the AI skills automatically
+4. Serve locally (see above) and open in a browser
 
 ### Development Guidelines
 
@@ -107,7 +169,7 @@ Contributions are welcome! Here's how to get started:
 - **Three.js r160** — imported from CDN. Don't add a `package.json` or bundler unless absolutely necessary.
 - **`config.js` is the tuning hub** — game balance constants (speed, damage, scoring, timing) all live in `src/data/config.js`. Change values there instead of scattering magic numbers.
 - **Fair spawning** — obstacles must always leave at least two lanes free. See `_pickLaneForObstacle()` in `Spawner.js`.
-- **Quiz questions** — live in `src/data/questions.js`. Add new ones following the same `{ q, options, answer, explain }` format.
+- **Quiz questions** — live in `src/data/questions.json`. Add new ones following the same `{ id, category, prompt, options, answer, explanation }` format.
 - **Audio** — sound effects go in `assets/audio/`. Wire them through `src/utils/audio.js` using `preload()` and `play()`. Background music uses `startBgm()`.
 - **State machine** — game states are `boot → main_menu → running → quiz → paused → game_over → level_complete`. State transitions happen in `Game.js`.
 
@@ -120,12 +182,13 @@ Contributions are welcome! Here's how to get started:
 
 ### Good First Contributions
 
-- Add more Ansible quiz questions to `src/data/questions.js`
-- Improve the pixel-art skyline buildings in `Track.js` `_skyline()`
-- Add new pickup types (follow the `PICKUP_TYPES` pattern in `config.js` and `Spawner.js`)
+- Add more Ansible quiz questions to `src/data/questions.json`
 - Add new driver characters and car designs
+- Add new pickup types (follow the `PICKUP_TYPES` pattern in `config.js` and `Spawner.js`)
+- Improve the pixel-art skyline buildings in `Track.js` `_skyline()`
 - Improve mobile touch controls
 - Accessibility improvements (screen reader hints, reduced-motion support)
+- Add a new Cursor skill for an area of the codebase
 
 ## License
 

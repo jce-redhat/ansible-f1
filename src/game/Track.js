@@ -625,8 +625,8 @@ export class Track {
       g.add(frame);
 
       const screenMat = new THREE.MeshStandardMaterial({
-        color: 0x101824, metalness: 0.05, roughness: 0.92,
-        emissive: 0x0a1020, emissiveIntensity: 0.3,
+        color: 0xffffff, metalness: 0.05, roughness: 0.3,
+        emissive: 0xffffff, emissiveIntensity: 0.5,
       });
       const screen = new THREE.Mesh(
         new THREE.BoxGeometry(boardW, boardH, 0.18), screenMat
@@ -640,14 +640,14 @@ export class Track {
         metalness: 0.1, roughness: 0.4,
       });
       const stripTop = new THREE.Mesh(
-        new THREE.BoxGeometry(boardW + 0.1, 0.12, 0.2), accentMat
+        new THREE.BoxGeometry(boardW + 0.1, 0.25, 0.2), accentMat
       );
-      stripTop.position.set(0, poleH + boardH + 0.08, 0.1);
+      stripTop.position.set(0, poleH + boardH + 0.12, 0.1);
       g.add(stripTop);
       const stripBot = new THREE.Mesh(
-        new THREE.BoxGeometry(boardW + 0.1, 0.12, 0.2), accentMat
+        new THREE.BoxGeometry(boardW + 0.1, 0.25, 0.2), accentMat
       );
-      stripBot.position.set(0, poleH - 0.08, 0.1);
+      stripBot.position.set(0, poleH - 0.12, 0.1);
       g.add(stripBot);
 
       const canvas = document.createElement("canvas");
@@ -668,7 +668,7 @@ export class Track {
       g.add(label);
 
       const drawFace = (logoImg) => {
-        ctx.fillStyle = "#0d1420";
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, 512, 320);
 
         if (logoImg) {
@@ -681,7 +681,7 @@ export class Track {
         } else {
           ctx.textAlign = "center";
           ctx.font = "bold 56px 'Courier New', monospace";
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#1a1a2e";
           ctx.fillText(def.label.toUpperCase(), 256, 175);
         }
 
@@ -698,17 +698,17 @@ export class Track {
         drawFace(null);
       }
 
-      const spotL = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
+      const spotL = new THREE.SpotLight(0xffffff, 5, 18, Math.PI / 5, 0.5, 1);
       spotL.position.set(-boardW / 3, poleH + boardH + 1.5, 3);
       spotL.target.position.set(0, poleH + boardH / 2, 0);
       g.add(spotL); g.add(spotL.target);
 
-      const spotR = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
+      const spotR = new THREE.SpotLight(0xffffff, 5, 18, Math.PI / 5, 0.5, 1);
       spotR.position.set(boardW / 3, poleH + boardH + 1.5, 3);
       spotR.target.position.set(0, poleH + boardH / 2, 0);
       g.add(spotR); g.add(spotR.target);
 
-      const glow = new THREE.PointLight(def.accent, 0.5, 12);
+      const glow = new THREE.PointLight(def.accent, 1.5, 18);
       glow.position.set(0, poleH + boardH / 2, 3);
       g.add(glow);
 

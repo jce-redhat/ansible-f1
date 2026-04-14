@@ -333,7 +333,17 @@ export class Game {
       if (this.player.carType === "delorean") {
         if (this.player.startTimeTravel()) {
           play(SFX.DELOREAN, 0.9);
-          this.ui.showHippoCrush("⚡ 88 MPH ⚡<br>WHERE WE'RE GOING<br>WE DON'T NEED ROADS");
+          const lines = [
+            "⚡ 88 MPH!!! ⚡",
+            "⚡ 1.21 GIGAWATTS! ⚡",
+            "⚡ GREAT SCOTT! ⚡",
+            "⚡ BACK IN TIME! ⚡",
+            "⚡ FLUX CAPACITOR<br>FLUXING! ⚡",
+            "⚡ WHERE WE'RE GOING<br>WE DON'T NEED ROADS ⚡",
+            "⚡ TEMPORAL<br>DISPLACEMENT! ⚡",
+            "⚡ HEAVY! ⚡",
+          ];
+          this.ui.showHippoCrush(lines[Math.floor(Math.random() * lines.length)]);
         } else if (this.player.ttCooldownRemaining > 0) {
           this.ui.setStatus(`Flux capacitor recharging... ${Math.ceil(this.player.ttCooldownRemaining)}s`, 1000);
         }

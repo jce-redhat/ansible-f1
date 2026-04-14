@@ -1736,12 +1736,15 @@ export class Player {
     this._ttTimer = 0;
     this._ttSavedSpeed = 1;
     this._ttSpeedMult = 1;
+    this._ttCooldown = 0;
+    this._ttCooldownMax = 15;
   }
 
   startTimeTravel() {
     if (this.carType !== "delorean") return false;
     this.initTimeTravel();
     if (this._ttState !== "idle") return false;
+    if (this._ttCooldown > 0) return false;
     this._ttState = "accelerating";
     this._ttTimer = 0;
     this._ttSpeedMult = 1;
@@ -1753,12 +1756,25 @@ export class Player {
     return this._ttState && this._ttState !== "idle";
   }
 
+  get ttCooldownRemaining() {
+    return this._ttCooldown || 0;
+  }
+
+  get ttCooldownMax() {
+    return this._ttCooldownMax || 15;
+  }
+
+  get ttReady() {
+    return this.carType === "delorean" && (this._ttCooldown || 0) <= 0
+      && (!this._ttState || this._ttState === "idle");
+  }
+
   get timeTravelSpeedMult() {
     return this._ttSpeedMult || 1;
   }
 
   get isTimeTravelInvisible() {
-    return this._ttState === "vanished";
+    return this._ttState === "accelerating" || this._ttState === "vanished" || this._ttState === "reappearing";
   }
 
   _showFireTrails(on) {
@@ -1767,6 +1783,9 @@ export class Player {
   }
 
   updateTimeTravel(dt) {
+    if (this._ttCooldown > 0) {
+      this._ttCooldown = Math.max(0, this._ttCooldown - dt);
+    }
     if (!this._ttState || this._ttState === "idle") return;
     this._ttTimer += dt;
     const t = performance.now();
@@ -1857,6 +1876,7 @@ export class Player {
         this._ttState = "idle";
         this._ttTimer = 0;
         this._ttSpeedMult = 1;
+        this._ttCooldown = this._ttCooldownMax;
         this._showFireTrails(false);
         this.mesh.traverse((o) => {
           if (o.isMesh) o.visible = true;

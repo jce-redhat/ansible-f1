@@ -771,6 +771,46 @@ body {
   background: linear-gradient(90deg, #00ffcc, #ffcc00);
 }
 
+.tt-cooldown-bar {
+  position: absolute;
+  top: 7.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6rem;
+  color: #44ccff;
+  text-shadow: 0 0 6px rgba(68, 204, 255, 0.5);
+}
+.tt-cooldown-bar.ready span {
+  color: #44ccff;
+  animation: tt-pulse 1.5s ease-in-out infinite;
+}
+@keyframes tt-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; text-shadow: 0 0 10px #44ccff; }
+}
+.tt-track {
+  width: 120px;
+  height: 8px;
+  border: 1px solid rgba(68, 204, 255, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+#tt-cooldown-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #ff6600, #44ccff);
+  transition: background 0.3s;
+}
+.tt-cooldown-bar.ready #tt-cooldown-fill {
+  background: #44ccff;
+}
+
 .hud-status {
   position: absolute;
   bottom: 3.2rem;

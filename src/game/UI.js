@@ -71,6 +71,8 @@ export class UI {
       damagePopup: document.getElementById("damage-popup"),
       pickupPopup: document.getElementById("pickup-popup"),
       hippoAnnounce: document.getElementById("hippo-announce"),
+      ttBar: document.getElementById("tt-cooldown-bar"),
+      ttFill: document.getElementById("tt-cooldown-fill"),
 
       manualBoost: document.getElementById("hud-manual-boost"),
       mbFill: document.getElementById("mb-fill"),
@@ -675,6 +677,21 @@ export class UI {
       if (active) {
         const t = boostRemaining / boostTotal;
         this.el.boostFill.style.transform = `scaleX(${Math.max(0, Math.min(1, t))})`;
+      }
+    }
+
+    if (this.el.ttBar && this.el.ttFill && data.ttCooldown !== undefined) {
+      const cd = data.ttCooldown;
+      const max = data.ttCooldownMax || 15;
+      const isDelorean = data.isDelorean;
+      const cooling = cd > 0;
+      const ready = isDelorean && !cooling && !data.ttActive;
+      this.el.ttBar.classList.toggle("hidden", !isDelorean);
+      this.el.ttBar.classList.toggle("ready", ready);
+      if (cooling) {
+        this.el.ttFill.style.transform = `scaleX(${Math.max(0, 1 - cd / max)})`;
+      } else if (ready) {
+        this.el.ttFill.style.transform = "scaleX(1)";
       }
     }
 

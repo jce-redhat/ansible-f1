@@ -332,7 +332,9 @@ export class Game {
       if (this.player.carType === "delorean") {
         if (this.player.startTimeTravel()) {
           play(SFX.BOOST_WHOOSH, 0.7);
-          this.ui.setStatus("⚡ 1.21 GIGAWATTS! ⚡", 1500);
+          this.ui.showHippoCrush("⚡ 88 MPH ⚡<br>WHERE WE'RE GOING<br>WE DON'T NEED ROADS");
+        } else if (this.player.ttCooldownRemaining > 0) {
+          this.ui.setStatus(`Flux capacitor recharging... ${Math.ceil(this.player.ttCooldownRemaining)}s`, 1000);
         }
         return;
       }
@@ -1241,6 +1243,10 @@ export class Game {
       maxRemediations: CONFIG.MAX_REMEDIATIONS,
       finishProgress: this.runTime / CONFIG.LEVEL_DURATION,
       finishTimeLeft: CONFIG.LEVEL_DURATION - this.runTime,
+      isDelorean: this.player.carType === "delorean",
+      ttCooldown: this.player.ttCooldownRemaining,
+      ttCooldownMax: this.player.ttCooldownMax,
+      ttActive: this.player.isTimeTraveling,
     });
   }
 

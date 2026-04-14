@@ -329,6 +329,13 @@ export class Game {
         play(SFX.BOOST_WHOOSH, 0.6);
         return;
       }
+      if (this.player.carType === "delorean") {
+        if (this.player.startTimeTravel()) {
+          play(SFX.BOOST_WHOOSH, 0.7);
+          this.ui.setStatus("⚡ 1.21 GIGAWATTS! ⚡", 1500);
+        }
+        return;
+      }
       if (this.player.carType === "hippo") {
         play(SFX.HIPPO_MODE, 0.9);
       } else if (this.currentDriver === "andrius") {
@@ -1138,6 +1145,11 @@ export class Game {
       speedMult *= CONFIG.BRAKE_SPEED_MULT;
     }
 
+    this.player.updateTimeTravel(effDt);
+    if (this.player.isTimeTraveling) {
+      speedMult *= this.player.timeTravelSpeedMult;
+    }
+
     const driverMult = (DRIVERS[this.currentDriver] || {}).speedMult || 1;
     const ws = CONFIG.BASE_SPEED * speedMult * driverMult;
     this.worldSpeed = ws;
@@ -1267,6 +1279,10 @@ export class Game {
       play(SFX.OBSTACLE_HIT, 0.4);
       return;
     }
+    if (this.player.isTimeTravelInvisible) {
+      this.spawner.explodeObstacle(e);
+      return;
+    }
     if (this._isCheater()) {
       this.spawner.explodeObstacle(e);
       play(SFX.OBSTACLE_HIT, 0.6);
@@ -1335,6 +1351,10 @@ export class Game {
       this.spawner.explodeRival(e);
       this.ui.setStatus("🛹 Skated over them!", 1200);
       play(SFX.OBSTACLE_HIT, 0.4);
+      return;
+    }
+    if (this.player.isTimeTravelInvisible) {
+      this.spawner.explodeRival(e);
       return;
     }
     if (this._isCheater()) {

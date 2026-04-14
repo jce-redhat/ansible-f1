@@ -1698,6 +1698,174 @@ export class Player {
     return this.carType === "skateboard" && this._skateJumping;
   }
 
+  // ── DeLorean Time Travel ──
+
+  initTimeTravel() {
+    if (this._ttFireTrails) return;
+    const fireMat = new THREE.PointsMaterial({
+      color: 0xff6600,
+      size: 0.25,
+      transparent: true,
+      opacity: 0.9,
+      sizeAttenuation: true,
+      depthWrite: false,
+    });
+
+    const trailCount = 80;
+    const trails = [];
+    for (const xOff of [-0.85, 0.85]) {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(trailCount * 3);
+      for (let i = 0; i < trailCount; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 0.15;
+        pos[i * 3 + 1] = Math.random() * 0.2;
+        pos[i * 3 + 2] = i * 0.12;
+      }
+      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const pts = new THREE.Points(geo, fireMat.clone());
+      pts.position.set(xOff, 0.1, 1.0);
+      pts.visible = false;
+      this.mesh.add(pts);
+      trails.push(pts);
+    }
+    this._ttFireTrails = trails;
+    this._ttState = "idle";
+    this._ttTimer = 0;
+    this._ttSavedSpeed = 1;
+    this._ttSpeedMult = 1;
+  }
+
+  startTimeTravel() {
+    if (this.carType !== "delorean") return false;
+    if (this._ttState !== "idle") return false;
+    this.initTimeTravel();
+    this._ttState = "accelerating";
+    this._ttTimer = 0;
+    this._ttSpeedMult = 1;
+    this._showFireTrails(true);
+    return true;
+  }
+
+  get isTimeTraveling() {
+    return this._ttState && this._ttState !== "idle";
+  }
+
+  get timeTravelSpeedMult() {
+    return this._ttSpeedMult || 1;
+  }
+
+  get isTimeTravelInvisible() {
+    return this._ttState === "vanished";
+  }
+
+  _showFireTrails(on) {
+    if (!this._ttFireTrails) return;
+    for (const t of this._ttFireTrails) t.visible = on;
+  }
+
+  updateTimeTravel(dt) {
+    if (!this._ttState || this._ttState === "idle") return;
+    this._ttTimer += dt;
+    const t = performance.now();
+
+    if (this._ttState === "accelerating") {
+      this._ttSpeedMult = 1 + this._ttTimer * 4;
+      if (this._ttFireTrails) {
+        for (const trail of this._ttFireTrails) {
+          trail.material.opacity = Math.min(0.95, 0.4 + this._ttTimer * 1.5);
+          trail.material.color.setHex(
+            this._ttTimer > 0.4 ? 0x44ccff : 0xff6600
+          );
+          const pos = trail.geometry.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3] = (Math.random() - 0.5) * 0.2;
+            pos.array[i * 3 + 1] = Math.random() * 0.3;
+            pos.array[i * 3 + 2] = i * 0.12 + Math.random() * 0.1;
+          }
+          pos.needsUpdate = true;
+        }
+      }
+      if (this.pointLight) {
+        this.pointLight.intensity = 0.5 + this._ttTimer * 3;
+        this.pointLight.color.setHex(this._ttTimer > 0.4 ? 0x44ccff : 0xff8800);
+      }
+      if (this._ttTimer >= 0.7) {
+        this._ttState = "vanished";
+        this._ttTimer = 0;
+        this._ttSpeedMult = 3;
+        this.mesh.traverse((o) => {
+          if (o.isMesh) {
+            o._ttSavedVis = o.visible;
+            o.visible = false;
+          }
+        });
+        this._showFireTrails(true);
+        if (this._ttFireTrails) {
+          for (const trail of this._ttFireTrails) {
+            trail.material.opacity = 0.95;
+            trail.material.color.setHex(0x44ccff);
+            trail.visible = true;
+          }
+        }
+      }
+    } else if (this._ttState === "vanished") {
+      this._ttSpeedMult = THREE.MathUtils.lerp(3, 1.5, this._ttTimer / 1.5);
+      if (this._ttFireTrails) {
+        const fade = Math.max(0, 1 - this._ttTimer / 1.5);
+        for (const trail of this._ttFireTrails) {
+          trail.material.opacity = fade * 0.8;
+          const pos = trail.geometry.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3] = (Math.random() - 0.5) * 0.3;
+            pos.array[i * 3 + 1] = Math.random() * 0.4;
+            pos.array[i * 3 + 2] = i * 0.15 + Math.random() * 0.2;
+          }
+          pos.needsUpdate = true;
+        }
+      }
+      if (this._ttTimer >= 1.5) {
+        this._ttState = "reappearing";
+        this._ttTimer = 0;
+        this.mesh.traverse((o) => {
+          if (o.isMesh && o._ttSavedVis !== undefined) {
+            o.visible = o._ttSavedVis;
+            delete o._ttSavedVis;
+          }
+        });
+      }
+    } else if (this._ttState === "reappearing") {
+      this._ttSpeedMult = THREE.MathUtils.lerp(1.5, 1, this._ttTimer / 0.6);
+      if (this._ttFireTrails) {
+        const fade = Math.max(0, 1 - this._ttTimer / 0.6);
+        for (const trail of this._ttFireTrails) {
+          trail.material.opacity = fade * 0.6;
+          trail.material.color.setHex(0xff6600);
+        }
+      }
+      if (this.pointLight) {
+        this.pointLight.intensity = THREE.MathUtils.lerp(2, 0.5, this._ttTimer / 0.6);
+        this.pointLight.color.setHex(0xffaa44);
+      }
+      const flicker = Math.sin(t * 0.05) > 0;
+      this.mesh.traverse((o) => {
+        if (o.isMesh && !o.isPoints) o.visible = flicker || this._ttTimer > 0.3;
+      });
+      if (this._ttTimer >= 0.6) {
+        this._ttState = "idle";
+        this._ttTimer = 0;
+        this._ttSpeedMult = 1;
+        this._showFireTrails(false);
+        this.mesh.traverse((o) => {
+          if (o.isMesh) o.visible = true;
+        });
+        if (this.pointLight) {
+          this.pointLight.intensity = 0.5;
+          this.pointLight.color.setHex(0xffaa44);
+        }
+      }
+    }
+  }
+
   setShieldActive(on) {
     if (!this.shieldRing) return;
     this.shieldRing.material.opacity = on ? 0.75 : 0;

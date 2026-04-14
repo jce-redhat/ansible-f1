@@ -1541,11 +1541,11 @@ export class Player {
     // ── FRONT LEG (left) — single tall piece, slight angle toward front of board ──
     const footYaw = 1.3;
     const ftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.28), shoe);
-    ftShoe.position.set(0, 0.0, 0.38);
+    ftShoe.position.set(0.06, 0.0, 0.40);
     ftShoe.rotation.y = footYaw;
     rider.add(ftShoe);
     const ftSole = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.03, 0.29), sole);
-    ftSole.position.set(0, -0.04, 0.38);
+    ftSole.position.set(0.06, -0.04, 0.40);
     ftSole.rotation.y = footYaw;
     rider.add(ftSole);
 
@@ -1556,11 +1556,11 @@ export class Player {
 
     // ── BACK LEG (right) — single tall piece, angled toward back of board ──
     const bkShoe = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.28), shoe);
-    bkShoe.position.set(0, 0.0, -0.36);
+    bkShoe.position.set(0.06, 0.0, -0.34);
     bkShoe.rotation.y = footYaw;
     rider.add(bkShoe);
     const bkSole = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.03, 0.29), sole);
-    bkSole.position.set(0, -0.04, -0.36);
+    bkSole.position.set(0.06, -0.04, -0.34);
     bkSole.rotation.y = footYaw;
     rider.add(bkSole);
 

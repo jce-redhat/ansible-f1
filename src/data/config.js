@@ -224,8 +224,8 @@ export const PICKUP_TYPES = [
 export const LEVELS = {
   A: {
     id: "A",
-    name: "Level A",
-    subtitle: "Neon City",
+    name: "AIOps",
+    subtitle: "AIOps",
     road:     0x2a2c38,
     roadEmissive: 0x06080c,
     edge:     0x1a1a2e,
@@ -238,9 +238,30 @@ export const LEVELS = {
     sceneBg:  0x0a0e18,
     scenery: "city",
     billboards: [
-      { id: "demo1", label: "Demo 1", accent: 0x00c8ea },
-      { id: "demo2", label: "Demo 2", accent: 0xff6644 },
-      { id: "demo3", label: "Demo 3", accent: 0x66ffcc },
+      {
+        id: "demo1",
+        label: "Instana",
+        accent: 0x00c8ea,
+        logo: "./assets/instana-logo.png",
+        embed: "https://demo.arcade.software/iv4MGA8BVPeEtdjNYmBM?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true",
+        embedTitle: "Unlock AIOps with IBM Instana and Ansible Automation Platform",
+      },
+      {
+        id: "demo2",
+        label: "ServiceNow",
+        accent: 0xff6644,
+        logo: "./assets/servicenow-logo.png",
+        embed: null,
+        embedTitle: "ServiceNow & Ansible Automation Platform",
+      },
+      {
+        id: "demo3",
+        label: "Splunk",
+        accent: 0x66ffcc,
+        logo: "./assets/splunk-logo.png",
+        embed: "https://demo.arcade.software/7faQ6yWmyhzRFQxIn3ea?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true",
+        embedTitle: "Splunk AIOPs and Event-Driven Ansible",
+      },
     ],
   },
   B: {

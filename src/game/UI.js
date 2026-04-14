@@ -63,6 +63,7 @@ export class UI {
       billboardOverlay: document.getElementById("billboard-overlay"),
       billboardLabel: document.getElementById("billboard-label"),
       billboardContent: document.getElementById("billboard-content"),
+      billboardBonus: document.getElementById("billboard-bonus"),
 
       levelSelect: document.getElementById("level-select"),
       hudLevelName: document.getElementById("hud-level-name"),
@@ -893,12 +894,40 @@ export class UI {
     }
   }
 
-  showBillboard(visible, label = "") {
+  showBillboard(visible, { label = "", embed = null, embedTitle = "", logo = null, showBonus = false } = {}) {
     if (this.el.billboardOverlay) {
       this.el.billboardOverlay.classList.toggle("hidden", !visible);
     }
     if (this.el.billboardLabel && label) {
       this.el.billboardLabel.textContent = label;
+    }
+    if (this.el.billboardBonus) {
+      this.el.billboardBonus.classList.toggle("hidden", !showBonus);
+    }
+
+    if (!this.el.billboardContent) return;
+
+    if (!visible) {
+      this.el.billboardContent.innerHTML = "";
+      return;
+    }
+
+    if (embed) {
+      this.el.billboardContent.innerHTML =
+        `<iframe src="${embed}" title="${embedTitle || label}" ` +
+        `loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen ` +
+        `allow="clipboard-write"></iframe>`;
+    } else {
+      const logoHtml = logo
+        ? `<img class="billboard-placeholder-logo" src="${logo}" alt="${label}" />`
+        : `<div class="billboard-placeholder-icon">&#9881;</div>`;
+      this.el.billboardContent.innerHTML =
+        `<div class="billboard-placeholder">` +
+        logoHtml +
+        `<h3>${label}</h3>` +
+        `<p>Interactive demo coming soon.</p>` +
+        `<p class="billboard-placeholder-hint">Check back — this side quest is being built.</p>` +
+        `</div>`;
     }
   }
 
@@ -1188,7 +1217,8 @@ export class UI {
       card.classList.toggle("active", card.dataset.level === levelId);
     });
     if (this.el.hudLevelName) {
-      this.el.hudLevelName.textContent = `Level ${levelId}`;
+      const lvl = LEVELS[levelId];
+      this.el.hudLevelName.textContent = lvl && lvl.name ? lvl.name : `Level ${levelId}`;
     }
   }
 

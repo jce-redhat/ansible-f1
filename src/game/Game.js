@@ -147,6 +147,8 @@ export class Game {
     this._bbOverlayShown = false;
     this._bbReturning = false;
     this._bbLabel = "";
+    this._bbDef = null;
+    this._demoCompleted = new Set();
 
     // Level completion
     this._finishLineSpawned = false;
@@ -464,13 +466,25 @@ export class Game {
     const theme = LEVELS[this.currentLevel];
     const bbDef = theme && theme.billboards.find((b) => b.id === id);
     this._bbLabel = bbDef ? bbDef.label : id;
+    this._bbDef = bbDef || null;
   }
 
   closeBillboard() {
     if (this._bbReturning) return;
+
+    const demoId = this._activeBillboard;
+    if (demoId && !this._demoCompleted.has(demoId)) {
+      this._demoCompleted.add(demoId);
+      this.score += 500;
+      this.ui.showPickupPopup("+500");
+      this.ui.setStatus("⭐ +500 Interactive Experience", 2500);
+      play(SFX.CORRECT, 0.7);
+    }
+
     this.ui.showBillboard(false);
     this._bbReturning = true;
     this._bbOverlayShown = false;
+    this._bbDef = null;
 
     const px = this.player.mesh.position.x;
     this._bbTargetPos.set(px * 0.35, this.cameraBase.y, this.cameraBase.z);
@@ -527,6 +541,7 @@ export class Game {
     this.comboCount = 0;
     this.comboTimer = 0;
     this._nearMissChecked.clear();
+    this._demoCompleted.clear();
     this._runBoostCount = 0;
     this._runMaxCombo = 0;
     this._finishLineSpawned = false;
@@ -1636,7 +1651,15 @@ export class Game {
 
     if (!this._bbReturning && !this._bbOverlayShown && dist < 3) {
       this._bbOverlayShown = true;
-      this.ui.showBillboard(true, this._bbLabel);
+      const def = this._bbDef || {};
+      const alreadyClaimed = this._demoCompleted.has(this._activeBillboard);
+      this.ui.showBillboard(true, {
+        label: this._bbLabel,
+        embed: def.embed || null,
+        embedTitle: def.embedTitle || "",
+        logo: def.logo || null,
+        showBonus: !alreadyClaimed,
+      });
     }
 
     if (this._bbReturning && dist < 1.5) {

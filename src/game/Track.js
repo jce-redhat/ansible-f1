@@ -654,34 +654,8 @@ export class Track {
       canvas.width = 512;
       canvas.height = 320;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#0d1420";
-      ctx.fillRect(0, 0, 512, 320);
 
       const accentHex = "#" + def.accent.toString(16).padStart(6, "0");
-      ctx.strokeStyle = accentHex;
-      ctx.lineWidth = 4;
-      ctx.strokeRect(16, 16, 480, 288);
-
-      ctx.font = "bold 24px 'Courier New', monospace";
-      ctx.fillStyle = accentHex;
-      ctx.textAlign = "center";
-      ctx.fillText("SIDE QUEST", 256, 60);
-
-      ctx.font = "bold 48px 'Courier New', monospace";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(def.label.toUpperCase(), 256, 140);
-
-      ctx.font = "20px 'Courier New', monospace";
-      ctx.fillStyle = "rgba(200,220,255,0.5)";
-      ctx.fillText("[ Click to explore ]", 256, 200);
-
-      ctx.setLineDash([8, 6]);
-      ctx.strokeStyle = "rgba(200,220,255,0.2)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(120, 230, 272, 60);
-      ctx.font = "16px 'Courier New', monospace";
-      ctx.fillStyle = "rgba(200,220,255,0.3)";
-      ctx.fillText("Demo content placeholder", 256, 268);
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.colorSpace = THREE.SRGBColorSpace;
@@ -692,6 +666,53 @@ export class Track {
       label.position.y = poleH + boardH / 2;
       label.position.z = 0.18;
       g.add(label);
+
+      const drawFace = (logoImg) => {
+        ctx.fillStyle = "#0d1420";
+        ctx.fillRect(0, 0, 512, 320);
+        ctx.strokeStyle = accentHex;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(16, 16, 480, 288);
+        ctx.textAlign = "center";
+
+        if (logoImg) {
+          const maxW = 240, maxH = 100;
+          let w = logoImg.width, h = logoImg.height;
+          const scale = Math.min(maxW / w, maxH / h, 1);
+          w *= scale; h *= scale;
+          ctx.drawImage(logoImg, 256 - w / 2, 50, w, h);
+          ctx.font = "bold 28px 'Courier New', monospace";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(def.label.toUpperCase(), 256, 190);
+        } else {
+          ctx.font = "bold 24px 'Courier New', monospace";
+          ctx.fillStyle = accentHex;
+          ctx.fillText("SIDE QUEST", 256, 60);
+          ctx.font = "bold 48px 'Courier New', monospace";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(def.label.toUpperCase(), 256, 140);
+        }
+
+        ctx.font = "20px 'Courier New', monospace";
+        ctx.fillStyle = "rgba(200,220,255,0.5)";
+        ctx.fillText("[ Click to explore ]", 256, 240);
+
+        ctx.font = "bold 16px 'Courier New', monospace";
+        ctx.fillStyle = accentHex;
+        ctx.fillText("★ +500 pts ★", 256, 280);
+
+        tex.needsUpdate = true;
+      };
+
+      if (def.logo) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => drawFace(img);
+        img.onerror = () => drawFace(null);
+        img.src = def.logo;
+      } else {
+        drawFace(null);
+      }
 
       const spotL = new THREE.SpotLight(0xffffff, 2, 14, Math.PI / 5, 0.5, 1);
       spotL.position.set(-boardW / 3, poleH + boardH + 1.5, 3);

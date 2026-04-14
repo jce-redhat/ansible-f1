@@ -274,10 +274,10 @@
   {
     "id": 35,
     "category": "community",
-    "prompt": "___ is an annual conference of the Ansible community of users, contributors, and enthusiasts.",
-    "options": ["AnsibleCon", "AnsibleFest", "AutomateCon", "Red Hat Summit"],
-    "answer": 1,
-    "explanation": "AnsibleFest is the annual conference for the Ansible community."
+    "prompt": "What is the premier annual conference where Ansible and Red Hat automation are showcased?",
+    "options": ["AnsibleCon", "KubeCon", "AutomateCon", "Red Hat Summit"],
+    "answer": 3,
+    "explanation": "Red Hat Summit is the premier event for Red Hat technologies including Ansible Automation Platform."
   },
   {
     "id": 36,
@@ -1324,10 +1324,10 @@
   {
     "id": 167,
     "category": "community",
-    "prompt": "Where does the Ansible community primarily collaborate on development?",
-    "options": ["Slack only", "GitHub and Matrix/IRC", "Stack Overflow only", "Red Hat forums only"],
+    "prompt": "Where does the Ansible community primarily collaborate on development and discussions?",
+    "options": ["Slack only", "forum.ansible.com, GitHub, and Matrix", "Stack Overflow only", "Reddit only"],
     "answer": 1,
-    "explanation": "The Ansible community uses GitHub for code and Matrix/IRC for real-time discussion."
+    "explanation": "The Ansible community uses forum.ansible.com for discussions, GitHub for code, and Matrix for real-time chat."
   },
   {
     "id": 168,
@@ -1376,5 +1376,45 @@
     "options": ["Red Hat Copilot", "Automation code assistant", "Ansible intelligent assistant", "Ansible AI Engine"],
     "answer": 1,
     "explanation": "Automation code assistant replaced Ansible Lightspeed as the AI-powered VS Code experience for Ansible."
+  },
+  {
+    "id": 174,
+    "category": "community",
+    "prompt": "What is the official community forum for Ansible discussions, Q&A, and collaboration?",
+    "options": ["answers.ansible.com", "forum.ansible.com", "community.redhat.com", "discuss.ansible.org"],
+    "answer": 1,
+    "explanation": "forum.ansible.com is the official Ansible community forum for discussions, help, and collaboration."
+  },
+  {
+    "id": 175,
+    "category": "community",
+    "prompt": "Where should you go to ask questions and get help from the Ansible community?",
+    "options": ["File a GitHub issue", "Post on forum.ansible.com", "Email the Ansible mailing list", "Open a Red Hat support ticket"],
+    "answer": 1,
+    "explanation": "forum.ansible.com is the go-to place for community Q&A, getting help, and sharing knowledge."
+  },
+  {
+    "id": 176,
+    "category": "community",
+    "prompt": "What replaced the old Ansible mailing lists as the primary community discussion platform?",
+    "options": ["Ansible Discord", "Ansible Slack", "forum.ansible.com", "Reddit r/ansible"],
+    "answer": 2,
+    "explanation": "forum.ansible.com replaced the legacy mailing lists as the central hub for Ansible community discussions."
+  },
+  {
+    "id": 177,
+    "category": "community",
+    "prompt": "Where can you find community-driven working groups, project updates, and ecosystem news for Ansible?",
+    "options": ["ansible.com/blog only", "forum.ansible.com", "Twitter/X only", "The ansible-core changelog"],
+    "answer": 1,
+    "explanation": "forum.ansible.com hosts working group updates, project news, and ecosystem announcements."
+  },
+  {
+    "id": 178,
+    "category": "community",
+    "prompt": "What annual Red Hat event features hands-on Ansible labs, keynotes, and the latest automation announcements?",
+    "options": ["DevConf", "Red Hat Summit", "Open Source Summit", "FOSDEM"],
+    "answer": 1,
+    "explanation": "Red Hat Summit features keynotes, hands-on labs, and the latest Ansible Automation Platform announcements."
   }
 ]

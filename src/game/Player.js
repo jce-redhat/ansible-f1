@@ -1531,42 +1531,37 @@ export class Player {
       }
     }
 
-    // ── RIDER — all parts placed directly, no sub-groups for legs ──
-    // The rider faces -Z in local space. We rotate the whole group so
-    // the rider stands sideways on the board (body perpendicular to travel).
+    // ── RIDER — stands sideways: left side faces forward (-Z), right side faces camera ──
+    // Rider's local -Z = forward (face direction). Rotate so left shoulder leads.
     const rider = new THREE.Group();
     rider.position.set(0, 0.28, 0);
-    rider.rotation.y = -1.4;
+    rider.rotation.y = Math.PI / 2;
 
-    // ── FRONT LEG (left) — single tall piece, slight angle toward front of board ──
-    const footYaw = 1.3;
-    const ftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.28), shoe);
-    ftShoe.position.set(-0.07, 0.0, 0.40);
-    ftShoe.rotation.y = footYaw;
+    // Feet go across the board (rider local Z = board X axis).
+    // In rider local space: +Z is toward the nose, -Z is toward the tail.
+    // Shoes are wider across (X) to span the board width, shorter in Z.
+    const ftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.10, 0.20), shoe);
+    ftShoe.position.set(0, 0.0, 0.38);
     rider.add(ftShoe);
-    const ftSole = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.03, 0.29), sole);
-    ftSole.position.set(-0.07, -0.04, 0.40);
-    ftSole.rotation.y = footYaw;
+    const ftSole = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.03, 0.21), sole);
+    ftSole.position.set(0, -0.04, 0.38);
     rider.add(ftSole);
 
     const ftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.58, 0.14), jeans);
     ftLeg.position.set(0, 0.36, 0.24);
-    ftLeg.rotation.x = -0.22;
+    ftLeg.rotation.z = 0.22;
     rider.add(ftLeg);
 
-    // ── BACK LEG (right) — single tall piece, angled toward back of board ──
-    const bkShoe = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.28), shoe);
-    bkShoe.position.set(-0.07, 0.0, -0.36);
-    bkShoe.rotation.y = footYaw;
+    const bkShoe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.10, 0.20), shoe);
+    bkShoe.position.set(0, 0.0, -0.36);
     rider.add(bkShoe);
-    const bkSole = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.03, 0.29), sole);
-    bkSole.position.set(-0.07, -0.04, -0.36);
-    bkSole.rotation.y = footYaw;
+    const bkSole = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.03, 0.21), sole);
+    bkSole.position.set(0, -0.04, -0.36);
     rider.add(bkSole);
 
     const bkLeg = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.58, 0.14), jeans);
     bkLeg.position.set(0, 0.36, -0.20);
-    bkLeg.rotation.x = 0.22;
+    bkLeg.rotation.z = -0.22;
     rider.add(bkLeg);
 
     this._skateLegs = [ftLeg, bkLeg];

@@ -191,6 +191,9 @@ export class UI {
       } else if (e.code === "ArrowRight" || e.code === "ArrowDown") {
         e.preventDefault();
         this._showDriverDetail(keys[(idx + 1) % keys.length]);
+      } else if (e.code === "Enter") {
+        e.preventDefault();
+        this._confirmDriver();
       }
     });
 

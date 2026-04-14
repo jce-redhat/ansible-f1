@@ -2064,7 +2064,15 @@ body {
 .driver-select-title {
   font-family: var(--font-head);
   color: var(--neon);
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.driver-select-hint {
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  color: rgba(0, 255, 204, 0.5);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8rem;
 }
 
 .driver-cards {

@@ -45,6 +45,7 @@ const SFX = {
   HIPPO_BLAH_2: "./assets/audio/hippo-blah-2.m4a",
   HIPPO_BLAH_3: "./assets/audio/hippo-blah-3.m4a",
   HIPPO_BLAH_4: "./assets/audio/hippo-blah-4.m4a",
+  DELOREAN: "./assets/audio/delorean.m4a",
 };
 
 const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
@@ -331,7 +332,7 @@ export class Game {
       }
       if (this.player.carType === "delorean") {
         if (this.player.startTimeTravel()) {
-          play(SFX.BOOST_WHOOSH, 0.7);
+          play(SFX.DELOREAN, 0.9);
           this.ui.showHippoCrush("⚡ 88 MPH ⚡<br>WHERE WE'RE GOING<br>WE DON'T NEED ROADS");
         } else if (this.player.ttCooldownRemaining > 0) {
           this.ui.setStatus(`Flux capacitor recharging... ${Math.ceil(this.player.ttCooldownRemaining)}s`, 1000);

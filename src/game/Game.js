@@ -46,6 +46,7 @@ const SFX = {
   HIPPO_BLAH_3: "./assets/audio/hippo-blah-3.m4a",
   HIPPO_BLAH_4: "./assets/audio/hippo-blah-4.m4a",
   DELOREAN: "./assets/audio/delorean.m4a",
+  SCALONETA: "./assets/audio/scaloneta.m4a",
 };
 
 const ENGINE_LOOP = "./assets/audio/engine-loop.mp4";
@@ -331,7 +332,8 @@ export class Game {
         if (this.currentDriver === "leo" && this.player.carType !== "scaloneta" && this._secretBuffer.endsWith("scaloneta")) {
           this.player.swapCar("scaloneta");
           this.ui.showHippoCrush("🇦🇷 LA SCALONETA 🇦🇷");
-          play(SFX.HORN_ANDRIUS, 0.9);
+          play(SFX.SCALONETA, 0.9);
+          this.ui.setScalonetaHud(true);
           this._secretBuffer = "";
         }
       }
@@ -418,7 +420,9 @@ export class Game {
       }
       if (this.player.carType === "hippo") {
         play(SFX.HIPPO_MODE, 0.9);
-      } else if (this.currentDriver === "andrius" || this.player.carType === "scaloneta") {
+      } else if (this.player.carType === "scaloneta") {
+        play(SFX.SCALONETA, 0.8);
+      } else if (this.currentDriver === "andrius") {
         play(SFX.HORN_ANDRIUS, 0.8);
       } else {
         play(SFX.HORN, 0.8);
@@ -635,6 +639,13 @@ export class Game {
     this._cleanupCelebration();
     this.player.resetCelebrationPose();
     stopLoop();
+
+    const d = DRIVERS[this.currentDriver];
+    if (d && this.player.carType !== d.car) {
+      this.player.swapCar(d.car);
+    }
+    this.ui.setScalonetaHud(false);
+
     this.ui.showBillboard(false);
     this.ui.showGameOver(false);
     this.ui.showLevelComplete(false);
@@ -1442,7 +1453,7 @@ export class Game {
         const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else if (this.player.carType === "scaloneta") {
-        play(SFX.HORN_ANDRIUS, 0.6);
+        play(SFX.SCALONETA, 0.6);
         this.score += 50000;
         this.ui.showPickupPopup("+50.000");
         const line = this._scalonetaSmashLines[Math.floor(Math.random() * this._scalonetaSmashLines.length)];
@@ -1525,7 +1536,7 @@ export class Game {
         const line = this._hippoSmashLines[Math.floor(Math.random() * this._hippoSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else if (this.player.carType === "scaloneta") {
-        play(SFX.HORN_ANDRIUS, 0.6);
+        play(SFX.SCALONETA, 0.6);
         this.score += 50000;
         this.ui.showPickupPopup("+50.000");
         const line = this._scalonetaSmashLines[Math.floor(Math.random() * this._scalonetaSmashLines.length)];

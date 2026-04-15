@@ -39,13 +39,14 @@ Health starts at 100. Four unshielded hits ends the run. Race to the finish line
 
 ## Secret Modes
 
-Some drivers have hidden alternate vehicles that transform the gameplay. Type the secret word during a race while playing as the correct driver to unlock them.
+Some drivers have hidden alternate vehicles that transform the gameplay. Type the secret word during a race while playing as the correct driver to unlock them. Secret modes reset when you return to the main menu — each player has to unlock them on their own.
 
 | Driver | Secret Word | Unlocks | Effect |
 |--------|-------------|---------|--------|
 | Nuno Martins | `hippo` | 🦛 Hippo Mode | Indestructible hippo with a rider. Crushes everything for +50,000 pts each. Ridiculous smash messages. Scores don't count on the leaderboard. Horn plays hippo sound. Victory dance at the end. |
 | Andrius Benokraitis | `chunky` | 🚛 Chunky Mode | 18-wheeler semi truck. Indestructible. Plows through everything. Scores don't count on the leaderboard. Custom horn sound. |
 | Matthew Packer | `matt` | 🛹 Skate Mode | Skateboard rider with backwards cap and flannel. Click to jump — while airborne you're invincible and pass through obstacles. |
+| Leo Gallego | `scaloneta` | 🇦🇷 La Scaloneta | Argentina flag-themed Mercedes-Benz LO 1114 bus. Indestructible. Crushes everything for +50,000 pts with Argentine catchphrases. Entire UI flips to Spanish. Custom sound effect. Scores don't count on the leaderboard. |
 
 ## Special Vehicle Abilities
 
@@ -57,6 +58,7 @@ Some vehicles have unique abilities triggered by clicking (instead of honking):
 | **Skateboard** (Matt, after unlock) | Jump — launches into the air, invincible while airborne. |
 | **Hippo** (Nuno, after unlock) | Plays the hippo mode sound. |
 | **Semi Truck** (Andrius, after unlock) | Custom Andrius horn. |
+| **La Scaloneta** (Leo, after unlock) | Plays the scaloneta sound. |
 
 ## Nuno's Pickup Truck
 

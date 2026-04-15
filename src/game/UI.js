@@ -940,9 +940,19 @@ export class UI {
 
     if (embed) {
       this.el.billboardContent.innerHTML =
-        `<iframe src="${embed}" title="${embedTitle || label}" ` +
-        `loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen ` +
-        `allow="clipboard-write"></iframe>`;
+        `<div class="billboard-loading"><div class="billboard-loading-spinner"></div><p>Loading demo...</p></div>`;
+      requestAnimationFrame(() => {
+        const iframe = document.createElement("iframe");
+        iframe.title = embedTitle || label;
+        iframe.allow = "clipboard-write";
+        iframe.allowFullscreen = true;
+        iframe.onload = () => {
+          const spinner = this.el.billboardContent.querySelector(".billboard-loading");
+          if (spinner) spinner.remove();
+        };
+        iframe.src = embed;
+        this.el.billboardContent.appendChild(iframe);
+      });
     } else {
       const logoHtml = logo
         ? `<img class="billboard-placeholder-logo" src="${logo}" alt="${label}" />`

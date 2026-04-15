@@ -1639,6 +1639,7 @@ body {
   justify-content: center;
   padding: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .billboard-content iframe {
@@ -1646,6 +1647,32 @@ body {
   height: 100%;
   border: none;
   color-scheme: light;
+}
+
+.billboard-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: #141820;
+  z-index: 1;
+}
+.billboard-loading p {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.billboard-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--neon);
+  border-radius: 50%;
+  animation: billboard-spin 0.8s linear infinite;
 }
 
 .billboard-placeholder {

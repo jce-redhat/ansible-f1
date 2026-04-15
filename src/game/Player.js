@@ -32,6 +32,7 @@ export class Player {
     this.dispose();
     this._smokeParticles = null;
     this._truckExhaust = null;
+    this._jetFlame = null;
     this.carType = carType;
     this.mesh = this._buildCarForType(carType);
     this.mesh.position.copy(pos);
@@ -49,6 +50,7 @@ export class Player {
     if (type === "delorean") return this._buildDeloreanMesh();
     if (type === "semi_truck") return this._buildSemiTruckMesh();
     if (type === "scaloneta") return this._buildScalonetaMesh();
+    if (type === "f16") return this._buildF16Mesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -1375,6 +1377,158 @@ export class Player {
     return g;
   }
 
+  _buildF16Mesh() {
+    const g = new THREE.Group();
+
+    const grey = new THREE.MeshStandardMaterial({ color: 0x8899aa, metalness: 0.7, roughness: 0.3 });
+    const darkGrey = new THREE.MeshStandardMaterial({ color: 0x445566, metalness: 0.6, roughness: 0.4 });
+    const cockpitGlass = new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.7 });
+    const accentRed = new THREE.MeshStandardMaterial({ color: 0xcc2200, metalness: 0.5, roughness: 0.4, emissive: 0x440000 });
+    const exhaust = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 });
+
+    // Fuselage
+    const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 4.0, 8), grey);
+    fuselage.rotation.x = Math.PI / 2;
+    fuselage.position.set(0, 0, 0);
+    g.add(fuselage);
+
+    // Nose cone
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.2, 8), grey);
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, 0, -2.6);
+    g.add(nose);
+
+    // Nose tip (pitot tube)
+    const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4), darkGrey);
+    pitot.rotation.x = Math.PI / 2;
+    pitot.position.set(0, 0, -3.4);
+    g.add(pitot);
+
+    // Cockpit canopy
+    const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), cockpitGlass);
+    canopy.scale.set(0.8, 0.7, 1.6);
+    canopy.position.set(0, 0.3, -0.8);
+    g.add(canopy);
+
+    // Cockpit frame
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.9), darkGrey);
+    frame.position.set(0, 0.5, -0.8);
+    g.add(frame);
+
+    // Air intake (under fuselage)
+    const intake = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 1.0), darkGrey);
+    intake.position.set(0, -0.25, 0.2);
+    g.add(intake);
+
+    // Main wings (delta shape)
+    for (const side of [-1, 1]) {
+      const wingShape = new THREE.Shape();
+      wingShape.moveTo(0, 0);
+      wingShape.lineTo(side * 2.2, 0.3);
+      wingShape.lineTo(side * 1.6, 1.2);
+      wingShape.lineTo(0, 0.8);
+      wingShape.closePath();
+      const wingGeo = new THREE.ExtrudeGeometry(wingShape, { depth: 0.06, bevelEnabled: false });
+      const wing = new THREE.Mesh(wingGeo, grey);
+      wing.rotation.x = -Math.PI / 2;
+      wing.position.set(0, -0.05, -0.3);
+      g.add(wing);
+
+      // Wingtip missile
+      const missile = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.03, 0.6, 6), accentRed);
+      missile.rotation.x = Math.PI / 2;
+      missile.position.set(side * 2.1, -0.05, 0.2);
+      g.add(missile);
+    }
+
+    // Horizontal stabilizers (tail)
+    for (const side of [-1, 1]) {
+      const stabShape = new THREE.Shape();
+      stabShape.moveTo(0, 0);
+      stabShape.lineTo(side * 0.9, 0.1);
+      stabShape.lineTo(side * 0.6, 0.5);
+      stabShape.lineTo(0, 0.35);
+      stabShape.closePath();
+      const stabGeo = new THREE.ExtrudeGeometry(stabShape, { depth: 0.04, bevelEnabled: false });
+      const stab = new THREE.Mesh(stabGeo, grey);
+      stab.rotation.x = -Math.PI / 2;
+      stab.position.set(0, 0.05, 1.4);
+      g.add(stab);
+    }
+
+    // Vertical tail fin
+    const tailShape = new THREE.Shape();
+    tailShape.moveTo(0, 0);
+    tailShape.lineTo(0.04, 0);
+    tailShape.lineTo(0.04, 1.0);
+    tailShape.lineTo(-0.15, 0.6);
+    tailShape.closePath();
+    const tailGeo = new THREE.ExtrudeGeometry(tailShape, { depth: 0.04, bevelEnabled: false });
+    const tail = new THREE.Mesh(tailGeo, grey);
+    tail.position.set(-0.02, 0.25, 1.2);
+    g.add(tail);
+
+    // Red tail stripe
+    const tailStripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.3), accentRed);
+    tailStripe.position.set(0, 1.1, 1.45);
+    g.add(tailStripe);
+
+    // Engine exhaust nozzle
+    const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.4, 8), exhaust);
+    nozzle.rotation.x = Math.PI / 2;
+    nozzle.position.set(0, 0, 2.2);
+    g.add(nozzle);
+
+    // Afterburner inner glow
+    const burnerMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 });
+    const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.05, 0.3, 8), burnerMat);
+    burner.rotation.x = Math.PI / 2;
+    burner.position.set(0, 0, 2.4);
+    g.add(burner);
+    burnerMat.dispose();
+
+    // Jet flame particle system
+    const flameCount = 120;
+    const flameGeo = new THREE.BufferGeometry();
+    const flamePos = new Float32Array(flameCount * 3);
+    for (let i = 0; i < flameCount; i++) {
+      flamePos[i * 3] = (Math.random() - 0.5) * 0.2;
+      flamePos[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+      flamePos[i * 3 + 2] = Math.random() * 2.0;
+    }
+    flameGeo.setAttribute("position", new THREE.BufferAttribute(flamePos, 3));
+    const flameMat = new THREE.PointsMaterial({
+      color: 0xff4400,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const flame = new THREE.Points(flameGeo, flameMat);
+    flame.position.set(0, 0, 2.5);
+    g.add(flame);
+    this._jetFlame = flame;
+
+    // Underglow (orange)
+    const glow = new THREE.PointLight(0xff6600, 1.0, 8);
+    glow.position.set(0, -0.3, 1.5);
+    g.add(glow);
+    this.pointLight = glow;
+
+    // Headlight
+    const headlight = new THREE.PointLight(0xffffff, 0.5, 10);
+    headlight.position.set(0, 0, -2.5);
+    g.add(headlight);
+
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+
+    grey.dispose(); darkGrey.dispose(); cockpitGlass.dispose();
+    accentRed.dispose(); exhaust.dispose();
+
+    return g;
+  }
+
   _buildTruckMesh() {
     const g = new THREE.Group();
 
@@ -2157,8 +2311,9 @@ export class Player {
     const isHover = this.carType === "delorean";
     const isHippo = this.carType === "hippo";
     const isSkate = this.carType === "skateboard";
-    const bob = Math.sin(t * 0.004) * (isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
-    const hoverLift = isHover ? 0.25 : 0;
+    const isF16 = this.carType === "f16";
+    const bob = Math.sin(t * 0.004) * (isF16 ? 0.1 : isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
+    const hoverLift = isF16 ? 2.0 : isHover ? 0.25 : 0;
 
     if (isSkate && this._skateJumping) {
       this._skateJumpVel -= 18 * dt;
@@ -2176,7 +2331,7 @@ export class Player {
 
     this.mesh.rotation.z = THREE.MathUtils.lerp(
       this.mesh.rotation.z,
-      -(this.mesh.position.x - tx) * (isHippo ? 0.1 : isSkate ? 0.15 : 0.22),
+      -(this.mesh.position.x - tx) * (isF16 ? 0.35 : isHippo ? 0.1 : isSkate ? 0.15 : 0.22),
       0.2
     );
     this.mesh.rotation.y = Math.sin(t * 0.002) * 0.02;
@@ -2203,9 +2358,11 @@ export class Player {
       }
     }
 
-    this.mesh.rotation.x = isHover
-      ? Math.sin(t * 0.0025) * 0.035 + Math.cos(t * 0.0017) * 0.02
-      : 0;
+    this.mesh.rotation.x = isF16
+      ? Math.sin(t * 0.003) * 0.04 + Math.cos(t * 0.002) * 0.025
+      : isHover
+        ? Math.sin(t * 0.0025) * 0.035 + Math.cos(t * 0.0017) * 0.02
+        : 0;
 
     if (this._smokeParticles) {
       for (const smoke of this._smokeParticles) {
@@ -2237,6 +2394,25 @@ export class Player {
         }
       }
       pos.needsUpdate = true;
+    }
+
+    if (this._jetFlame) {
+      const pos = this._jetFlame.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        pos.array[i * 3] += (Math.random() - 0.5) * 0.04;
+        pos.array[i * 3 + 1] += (Math.random() - 0.5) * 0.04;
+        pos.array[i * 3 + 2] += dt * (8 + Math.random() * 4);
+        const age = pos.array[i * 3 + 2];
+        if (age > 2.5) {
+          pos.array[i * 3] = (Math.random() - 0.5) * 0.15;
+          pos.array[i * 3 + 1] = (Math.random() - 0.5) * 0.15;
+          pos.array[i * 3 + 2] = 0;
+        }
+      }
+      pos.needsUpdate = true;
+      this._jetFlame.material.color.setHex(
+        Math.random() > 0.5 ? 0xff4400 : 0xff6600
+      );
     }
 
     if (this.flowGlow && this.flowGlow.material.opacity > 0.01) {

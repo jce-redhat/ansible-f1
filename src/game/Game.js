@@ -336,6 +336,12 @@ export class Game {
           this.ui.setScalonetaHud(true);
           this._secretBuffer = "";
         }
+        if (this.currentDriver === "alex" && this.player.carType !== "f16" && this._secretBuffer.endsWith("topgun")) {
+          this.player.swapCar("f16");
+          this.ui.showHippoCrush("✈️ TOP GUN MODE ✈️");
+          play(SFX.BOOST_WHOOSH, 0.9);
+          this._secretBuffer = "";
+        }
       }
     });
 
@@ -395,6 +401,10 @@ export class Game {
       if (this.player.carType === "skateboard") {
         this.player.skateJump();
         play(SFX.BOOST_WHOOSH, 0.6);
+        return;
+      }
+      if (this.player.carType === "f16") {
+        this._dropBomb();
         return;
       }
       if (this.player.carType === "delorean") {
@@ -612,6 +622,7 @@ export class Game {
     this._finishing = false;
     this._finishCoastSpeed = 0;
     this._cleanupCelebration();
+    this._cleanupBombs();
     this.track.removeFinishLine();
     this.player.targetLaneIndex = 1;
     this.player.laneIndex = 1;
@@ -974,7 +985,7 @@ export class Game {
     this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isCheater();
-    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : isCheater ? "semi" : null;
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
@@ -997,6 +1008,8 @@ export class Game {
         ? "Sorry, hippo mode can't be on the leaderboard. Stop cheating!"
         : this.player.carType === "scaloneta"
         ? "¡La Scaloneta no necesita leaderboard, campeón!"
+        : this.player.carType === "f16"
+        ? "Nice try, Maverick. Fighter jets don't qualify for the leaderboard."
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1016,6 +1029,8 @@ export class Game {
         ? "Sorry, hippo mode can't be on the leaderboard. Stop cheating!"
         : this.player.carType === "scaloneta"
         ? "¡La Scaloneta no necesita leaderboard, campeón!"
+        : this.player.carType === "f16"
+        ? "Nice try, Maverick. Fighter jets don't qualify for the leaderboard."
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1308,6 +1323,7 @@ export class Game {
     this.spawner.update(rawDt, ws, this.runTime, scale);
 
     this.player.update(effDt);
+    this._updateBombs(effDt);
 
     // Combo timer countdown
     if (this.comboTimer > 0) {
@@ -1389,7 +1405,166 @@ export class Game {
   }
 
   _isCheater() {
-    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta";
+    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16";
+  }
+
+  _f16BombLines = [
+    "✈️ BOMBS AWAY! ✈️",
+    "✈️ DANGER ZONE! ✈️",
+    "✈️ FOX TWO! ✈️",
+    "✈️ SPLASH ONE! ✈️",
+    "✈️ TALLY HO! ✈️",
+    "✈️ GOOD KILL! ✈️",
+    "✈️ TARGET<br>DESTROYED! ✈️",
+    "✈️ HIGHWAY TO<br>THE DANGER ZONE ✈️",
+  ];
+
+  _bombs = [];
+
+  _dropBomb() {
+    play(SFX.OBSTACLE_HIT, 0.7);
+    const px = this.player.mesh.position.x;
+    const pz = this.player.mesh.position.z;
+    const py = this.player.mesh.position.y;
+
+    const bombGeo = new THREE.SphereGeometry(0.12, 6, 6);
+    const bombMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 });
+    const bomb = new THREE.Mesh(bombGeo, bombMat);
+    bomb.position.set(px, py - 0.3, pz);
+    this.scene.add(bomb);
+
+    this._bombs.push({
+      mesh: bomb,
+      vy: -8,
+      age: 0,
+      exploded: false,
+    });
+  }
+
+  _updateBombs(dt) {
+    for (let i = this._bombs.length - 1; i >= 0; i--) {
+      const b = this._bombs[i];
+      b.age += dt;
+      b.vy -= 20 * dt;
+      b.mesh.position.y += b.vy * dt;
+      b.mesh.position.z -= this.worldSpeed * dt * 0.5;
+
+      if (b.mesh.position.y <= 0.1 && !b.exploded) {
+        b.exploded = true;
+        this._explodeBomb(b.mesh.position.clone());
+        this.scene.remove(b.mesh);
+        b.mesh.geometry.dispose();
+        b.mesh.material.dispose();
+        this._bombs.splice(i, 1);
+      } else if (b.age > 5) {
+        this.scene.remove(b.mesh);
+        b.mesh.geometry.dispose();
+        b.mesh.material.dispose();
+        this._bombs.splice(i, 1);
+      }
+    }
+  }
+
+  _cleanupBombs() {
+    for (const b of this._bombs) {
+      this.scene.remove(b.mesh);
+      b.mesh.geometry.dispose();
+      b.mesh.material.dispose();
+    }
+    this._bombs = [];
+  }
+
+  _explodeBomb(pos) {
+    play(SFX.OBSTACLE_HIT, 0.9);
+    this.ui.shake();
+    this.shakeUntil = performance.now() + 200;
+    this.shakeAmp = 0.3;
+
+    // Explosion particle burst
+    const count = 40;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = 0;
+      positions[i * 3 + 1] = 0;
+      positions[i * 3 + 2] = 0;
+      velocities.push(
+        (Math.random() - 0.5) * 6,
+        Math.random() * 5 + 2,
+        (Math.random() - 0.5) * 6
+      );
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xff6600,
+      size: 0.25,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const explosion = new THREE.Points(geo, mat);
+    explosion.position.copy(pos);
+    this.scene.add(explosion);
+
+    const flash = new THREE.PointLight(0xff6600, 3, 10);
+    flash.position.copy(pos);
+    flash.position.y = 0.5;
+    this.scene.add(flash);
+
+    let elapsed = 0;
+    const animate = () => {
+      elapsed += 0.016;
+      const p = geo.attributes.position;
+      for (let i = 0; i < count; i++) {
+        p.array[i * 3] += velocities[i * 3] * 0.016;
+        p.array[i * 3 + 1] += velocities[i * 3 + 1] * 0.016;
+        velocities[i * 3 + 1] -= 9.8 * 0.016;
+        p.array[i * 3 + 2] += velocities[i * 3 + 2] * 0.016;
+      }
+      p.needsUpdate = true;
+      mat.opacity = Math.max(0, 1 - elapsed * 2);
+      flash.intensity = Math.max(0, 3 - elapsed * 8);
+      if (elapsed < 0.8) {
+        requestAnimationFrame(animate);
+      } else {
+        this.scene.remove(explosion);
+        this.scene.remove(flash);
+        geo.dispose();
+        mat.dispose();
+      }
+    };
+    requestAnimationFrame(animate);
+
+    // Destroy any obstacles/rivals near the explosion
+    const blastRadius = 2.5;
+    for (let i = this.spawner.obstacles.length - 1; i >= 0; i--) {
+      const o = this.spawner.obstacles[i];
+      if (!o.active) continue;
+      const dx = o.mesh.position.x - pos.x;
+      const dz = o.mesh.position.z - pos.z;
+      if (dx * dx + dz * dz < blastRadius * blastRadius) {
+        this.spawner.explodeObstacle(o);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._f16BombLines[Math.floor(Math.random() * this._f16BombLines.length)];
+        this.ui.showHippoCrush(line);
+      }
+    }
+    for (let i = this.spawner.rivals.length - 1; i >= 0; i--) {
+      const r = this.spawner.rivals[i];
+      if (!r.active) continue;
+      const dx = r.mesh.position.x - pos.x;
+      const dz = r.mesh.position.z - pos.z;
+      if (dx * dx + dz * dz < blastRadius * blastRadius) {
+        this.spawner.explodeRival(r);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._f16BombLines[Math.floor(Math.random() * this._f16BombLines.length)];
+        this.ui.showHippoCrush(line);
+      }
+    }
   }
 
   _hippoSmashLines = [
@@ -1429,6 +1604,7 @@ export class Game {
   ];
 
   _onHitObstacle(e) {
+    if (this.player.carType === "f16") return;
     if (this.player.isAirborne) {
       this.spawner.explodeObstacle(e);
       this.ui.setStatus(this._isScaloneta ? "🛹 ¡Saltó por encima!" : "🛹 Jumped right over it!", 1200);
@@ -1512,6 +1688,7 @@ export class Game {
   }
 
   _onHitRival(e) {
+    if (this.player.carType === "f16") return;
     if (this.player.isAirborne) {
       this.spawner.explodeRival(e);
       this.ui.setStatus(this._isScaloneta ? "🛹 ¡Pasó por arriba!" : "🛹 Skated over them!", 1200);

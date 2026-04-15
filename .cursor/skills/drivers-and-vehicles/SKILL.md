@@ -66,6 +66,7 @@ Existing custom meshes to reference:
 - `_buildHippoMesh()` — Nuno's secret hippo with rider
 - `_buildSkateboardMesh()` — Matt's secret skateboard with articulated rider
 - `_buildScalonetaMesh()` — Leo's secret Argentina flag bus (scaloneta unlock)
+- `_buildF16Mesh()` — Alex's secret F-16 fighter jet (topgun unlock) with jet flame particles
 
 ## Adding a Secret Unlockable Mode
 
@@ -121,6 +122,7 @@ This means each player has to type the secret code themselves — it doesn't per
 | Andrius | `chunky` | `semi_truck` | Yes — no leaderboard | Custom horn |
 | Matt | `matt` | `skateboard` | No — scores count | Click to jump (airborne invincibility) |
 | Leo | `scaloneta` | `scaloneta` | Yes — no leaderboard | Full Spanish UI, Argentine catchphrases, custom SFX |
+| Alex | `topgun` | `f16` | Yes — no leaderboard | Hovers above track, flies over everything, click to drop bombs |
 
 ### Spanish UI mode (Scaloneta)
 
@@ -170,7 +172,8 @@ Multiple systems can make the player invincible. All are checked at the top of `
 |-------|--------|----------|--------|
 | Skateboard airborne | `player.isAirborne` | `skateboard` | Obstacle explodes, no damage, "jumped over it" status |
 | DeLorean time travel | `player.isTimeTravelInvisible` | `delorean` | Obstacle explodes, no damage, phases through silently |
-| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta` | Obstacle explodes, no damage; hippo/scaloneta get +50k score and crush lines |
+| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16` | Obstacle explodes, no damage; hippo/scaloneta get +50k score and crush lines |
+| F-16 flyover | `carType === "f16"` | `f16` | Hovers 2 units above track, collision handlers return immediately (flies over everything) |
 | Shield active | `this.shield > 0` | any | Obstacle hit absorbed, shield decremented, no health loss |
 
 When adding a new invincibility state:

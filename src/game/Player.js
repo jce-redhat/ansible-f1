@@ -1186,8 +1186,9 @@ export class Player {
   _buildScalonetaMesh() {
     const g = new THREE.Group();
 
+    // Materials
     const skyBlue = new THREE.MeshStandardMaterial({
-      color: 0x75aadb, metalness: 0.3, roughness: 0.4,
+      color: 0x43A1D5, metalness: 0.3, roughness: 0.4,
       emissive: 0x1a3055, emissiveIntensity: 0.2,
     });
     const white = new THREE.MeshStandardMaterial({
@@ -1217,35 +1218,42 @@ export class Player {
       color: 0xddaa33, metalness: 0.7, roughness: 0.3,
       emissive: 0x553300, emissiveIntensity: 0.3,
     });
+    const sunYellow = new THREE.MeshStandardMaterial({
+      color: 0xffd700, metalness: 0.4, roughness: 0.3,
+      emissive: 0xaa8800, emissiveIntensity: 0.4,
+    });
 
-    // Bus body — lower half (sky blue)
+    // Geometries for reusable elements
+    const fW = 0.5; // Flag length
+    const fH = 0.12; // Flag stripe height
+    const fD = 0.01; // Flag thickness
+    const poleGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.9, 8);
+    const flagGeo = new THREE.BoxGeometry(fD, fH, fW);
+    const sunFlagGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.014, 12);
+
+    // Bus body structure
     const bodyLower = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.8, 3.6), skyBlue.clone());
     bodyLower.position.set(0, 0.65, 0.3);
     g.add(bodyLower);
 
-    // Bus body — white stripe (middle band)
     const stripeW = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.25, 3.62), white.clone());
     stripeW.position.set(0, 1.15, 0.3);
     g.add(stripeW);
 
-    // Bus body — upper half (sky blue)
     const bodyUpper = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.5, 3.6), skyBlue.clone());
     bodyUpper.position.set(0, 1.5, 0.3);
     g.add(bodyUpper);
 
-    // Roof (cream/off-white, slightly rounded look)
     const roof = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.12, 3.5), cream.clone());
     roof.position.set(0, 1.81, 0.3);
     g.add(roof);
 
-    // Roof rack / luggage rail
     for (const side of [-0.65, 0.65]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 2.8), chrome.clone());
       rail.position.set(side, 1.93, 0.3);
       g.add(rail);
     }
 
-    // Gold ornamental trim along roofline
     const trimFront = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.06), gold.clone());
     trimFront.position.set(0, 1.84, -1.48);
     g.add(trimFront);
@@ -1253,7 +1261,6 @@ export class Player {
     trimBack.position.set(0, 1.84, 2.08);
     g.add(trimBack);
 
-    // Front face — curved nose effect (slightly protruding lower)
     const noseLower = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.55, 0.2), skyBlue.clone());
     noseLower.position.set(0, 0.55, -1.6);
     g.add(noseLower);
@@ -1261,12 +1268,10 @@ export class Player {
     noseUpper.position.set(0, 1.0, -1.6);
     g.add(noseUpper);
 
-    // Windshield (large, two-piece)
     const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.65), glass.clone());
     windshield.position.set(0, 1.45, -1.52);
     g.add(windshield);
 
-    // Destination sign above windshield
     const signBg = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 0.06), dark.clone());
     signBg.position.set(0, 1.78, -1.54);
     g.add(signBg);
@@ -1274,12 +1279,10 @@ export class Player {
     signFace.position.set(0, 1.78, -1.56);
     g.add(signFace);
 
-    // Front bumper (chrome, classic style)
     const fBump = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.18, 0.2), chrome.clone());
     fBump.position.set(0, 0.28, -1.62);
     g.add(fBump);
 
-    // Headlights (round-ish, classic bus)
     const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
     for (const side of [-0.55, 0.55]) {
       const hl = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 10), hlMat);
@@ -1292,27 +1295,79 @@ export class Player {
       g.add(hlRim);
     }
 
-    // Grille (red accent, classic Mercedes front)
     const grille = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.06), red.clone());
     grille.position.set(0, 0.55, -1.65);
     g.add(grille);
 
-    // Number "10" badge (gold on front)
     const badge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.04), gold.clone());
     badge.position.set(-0.25, 0.55, -1.68);
     g.add(badge);
 
-    // Side windows (row of windows along each side)
+    // --- SIDE WINDOWS AND FLAGS ---
     for (const side of [-1, 1]) {
       for (let i = 0; i < 5; i++) {
+        const zPos = -0.9 + i * 0.6;
+
+        // Glass Window
         const win = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.35), glass.clone());
         win.rotation.y = side * Math.PI / 2;
-        win.position.set(side * 0.86, 1.45, -0.9 + i * 0.6);
+        win.position.set(side * 0.86, 1.45, zPos);
         g.add(win);
+
+        // Add Flags to 1st, 3rd, and 5th windows
+        if (i % 2 === 0) {
+          const poleGroup = new THREE.Group();
+
+          // Silver pole
+          const pole = new THREE.Mesh(poleGeo, chrome.clone());
+          pole.position.set(0, 0.45, 0);
+          poleGroup.add(pole);
+
+          // The Flag grouping (pivoting from the pole)
+          const flagGroup = new THREE.Group();
+          flagGroup.position.set(0, 0.75, 0);
+
+          // Top Blue Stripe
+          const fTop = new THREE.Mesh(flagGeo, skyBlue.clone());
+          fTop.position.set(0, fH, fW / 2);
+
+          // Middle White Stripe
+          const fMid = new THREE.Mesh(flagGeo, white.clone());
+          fMid.position.set(0, 0, fW / 2);
+
+          // Bottom Blue Stripe
+          const fBot = new THREE.Mesh(flagGeo, skyBlue.clone());
+          fBot.position.set(0, -fH, fW / 2);
+
+          // Tiny Suns on both sides of the middle stripe
+          const sun1 = new THREE.Mesh(sunFlagGeo, sunYellow.clone());
+          sun1.rotation.z = Math.PI / 2;
+          sun1.position.set(0.005, 0, fW / 2);
+
+          const sun2 = new THREE.Mesh(sunFlagGeo, sunYellow.clone());
+          sun2.rotation.z = Math.PI / 2;
+          sun2.position.set(-0.005, 0, fW / 2);
+
+          flagGroup.add(fTop, fMid, fBot, sun1, sun2);
+
+          // Randomize wave/flutter for organic feel
+          flagGroup.rotation.y = (Math.random() - 0.5) * 0.5; // Left/right flap
+          flagGroup.rotation.x = (Math.random() - 0.5) * 0.2; // Up/down flutter
+
+          poleGroup.add(flagGroup);
+
+          // Attach pole bottom to window sill
+          poleGroup.position.set(side * 0.86, 1.25, zPos - 0.1);
+          // Angle it outward (z) and backward toward rear (x)
+          poleGroup.rotation.z = side * -0.7;
+          poleGroup.rotation.x = 0.3;
+
+          g.add(poleGroup);
+        }
       }
     }
 
-    // Side white vertical stripes (Argentina flag pattern)
+    // Side stripes
     for (const side of [-1, 1]) {
       for (let i = 0; i < 3; i++) {
         const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.75, 0.15), white.clone());
@@ -1321,29 +1376,48 @@ export class Player {
       }
     }
 
-    // Rear
-    const rear = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.4, 0.1), skyBlue.clone());
-    rear.position.set(0, 1.0, 2.12);
-    g.add(rear);
+    // --- ARGENTINA FLAG REAR SECTION ---
+    const rearBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.4, 0.08), skyBlue.clone());
+    rearBase.position.set(0, 1.0, 2.11);
+    g.add(rearBase);
 
-    // Rear bumper
+    const stripeHeight = 0.46;
+    const rearWhiteStripe = new THREE.Mesh(new THREE.BoxGeometry(1.52, stripeHeight, 0.04), white.clone());
+    rearWhiteStripe.position.set(0, 1.0, 2.14);
+    g.add(rearWhiteStripe);
+
+    const sun = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.02, 16), sunYellow.clone());
+    sun.rotation.x = Math.PI / 2;
+    sun.position.set(0, 1.0, 2.17);
+    g.add(sun);
+
+    const starGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 5);
+
+    const star1 = new THREE.Mesh(starGeo, gold.clone());
+    star1.rotation.x = Math.PI / 2;
+    star1.position.set(-0.35, 1.45, 2.16);
+    g.add(star1);
+
+    const star2 = new THREE.Mesh(starGeo, gold.clone());
+    star2.rotation.x = Math.PI / 2;
+    star2.position.set(0, 1.55, 2.16);
+    g.add(star2);
+
+    const star3 = new THREE.Mesh(starGeo, gold.clone());
+    star3.rotation.x = Math.PI / 2;
+    star3.position.set(0.35, 1.45, 2.16);
+    g.add(star3);
+
     const rBump = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.14, 0.12), chrome.clone());
     rBump.position.set(0, 0.28, 2.16);
     g.add(rBump);
 
-    // Taillights
     for (const side of [-0.55, 0.55]) {
       const tl = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.18, 0.06), red.clone());
       tl.position.set(side, 0.5, 2.16);
       g.add(tl);
     }
 
-    // Rear white stripe
-    const rearStripe = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.25, 0.02), white.clone());
-    rearStripe.position.set(0, 1.15, 2.14);
-    g.add(rearStripe);
-
-    // Wheels (2 axles)
     const addAxle = (z) => {
       for (const side of [-1, 1]) {
         const tire = new THREE.Mesh(
@@ -1363,7 +1437,6 @@ export class Player {
     addAxle(-1.0);
     addAxle(1.5);
 
-    // Headlight glow
     const glow = new THREE.PointLight(0xffffcc, 0.4, 6);
     glow.position.set(0, 0.5, -1.7);
     g.add(glow);
@@ -1371,8 +1444,11 @@ export class Player {
 
     g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
 
+    // Cleanup geometries and materials
     skyBlue.dispose(); white.dispose(); cream.dispose(); chrome.dispose();
     dark.dispose(); rubber.dispose(); glass.dispose(); gold.dispose();
+    sunYellow.dispose(); hlMat.dispose(); red.dispose(); starGeo.dispose();
+    poleGeo.dispose(); flagGeo.dispose(); sunFlagGeo.dispose();
 
     return g;
   }

@@ -312,24 +312,28 @@ export class Game {
       if (this.state === "running" && e.key.length === 1) {
         this._secretBuffer = (this._secretBuffer + e.key.toLowerCase()).slice(-12);
         if (this.currentDriver === "nuno" && this.player.carType !== "hippo" && this._secretBuffer.endsWith("hippo")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("hippo");
           this.ui.showHippoAnnounce();
           play(SFX.HIPPO_MODE, 0.9);
           this._secretBuffer = "";
         }
         if (this.currentDriver === "matt" && this.player.carType !== "skateboard" && this._secretBuffer.endsWith("matt")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("skateboard");
           this.ui.showHippoCrush("🛹 SKATE MODE 🛹");
           play(SFX.CORRECT, 0.9);
           this._secretBuffer = "";
         }
         if (this.currentDriver === "andrius" && this.player.carType !== "semi_truck" && this._secretBuffer.endsWith("chunky")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("semi_truck");
           this.ui.showHippoCrush("🚛 CHUNKY MODE 🚛");
           play(SFX.HORN_ANDRIUS, 0.9);
           this._secretBuffer = "";
         }
         if (this.currentDriver === "leo" && this.player.carType !== "scaloneta" && this._secretBuffer.endsWith("scaloneta")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("scaloneta");
           this.ui.showHippoCrush("🇦🇷 LA SCALONETA 🇦🇷");
           play(SFX.SCALONETA, 0.9);
@@ -337,16 +341,26 @@ export class Game {
           this._secretBuffer = "";
         }
         if (this.currentDriver === "alex" && this.player.carType !== "f16" && this._secretBuffer.endsWith("topgun")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("f16");
           this.ui.showHippoCrush("✈️ TOP GUN MODE ✈️");
           play(SFX.BOOST_WHOOSH, 0.9);
           this._secretBuffer = "";
         }
         if (this.currentDriver === "anshul" && this.player.carType !== "trex" && this._secretBuffer.endsWith("leavemealone")) {
+          this._spawnTransformSmoke();
           this.player.swapCar("trex");
-          this._spawnTrexSmoke();
           this.ui.showHippoCrush("🦖 T-REX MODE 🦖");
           play(SFX.OBSTACLE_HIT, 0.9);
+          this._secretBuffer = "";
+        }
+        if (this.currentDriver === "aubrey" && this.player.carType !== "cadillac" && this._secretBuffer.endsWith("hollywood")) {
+          this._spawnTransformSmoke();
+          this.player.swapCar("cadillac");
+          this.ui.showHippoCrush("🌟 HOLLYWOOD MODE 🌟");
+          play(SFX.BOOST_WHOOSH, 0.9);
+          this._rainbowRoad = true;
+          this.track.setRainbow(true);
           this._secretBuffer = "";
         }
       }
@@ -630,7 +644,7 @@ export class Game {
     this._finishCoastSpeed = 0;
     this._cleanupCelebration();
     this._cleanupBombs();
-    this._cleanupTrexSmoke();
+    this._cleanupTransformSmoke();
     this.track.removeFinishLine();
     this.player.targetLaneIndex = 1;
     this.player.laneIndex = 1;
@@ -664,6 +678,8 @@ export class Game {
       this.player.swapCar(d.car);
     }
     this.ui.setScalonetaHud(false);
+    this._rainbowRoad = false;
+    this.track.setRainbow(false);
 
     this.ui.showBillboard(false);
     this.ui.showGameOver(false);
@@ -993,7 +1009,7 @@ export class Game {
     this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isCheater();
-    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : isCheater ? "semi" : null;
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
@@ -1020,6 +1036,8 @@ export class Game {
         ? "Nice try, Maverick. Fighter jets don't qualify for the leaderboard."
         : this.player.carType === "trex"
         ? "T-Rex arms are too short to reach the leaderboard. Nice try though!"
+        : this.player.carType === "cadillac"
+        ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1043,6 +1061,8 @@ export class Game {
         ? "Nice try, Maverick. Fighter jets don't qualify for the leaderboard."
         : this.player.carType === "trex"
         ? "T-Rex arms are too short to reach the leaderboard. Nice try though!"
+        : this.player.carType === "cadillac"
+        ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1336,7 +1356,7 @@ export class Game {
 
     this.player.update(effDt);
     this._updateBombs(effDt);
-    this._updateTrexSmoke(effDt);
+    this._updateTransformSmoke(effDt);
 
     // Combo timer countdown
     if (this.comboTimer > 0) {
@@ -1418,8 +1438,21 @@ export class Game {
   }
 
   _isCheater() {
-    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex";
+    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac";
   }
+
+  _hollywoodSmashLines = [
+    "🌟 LIGHTS, CAMERA,<br>DESTRUCTION! 🌟",
+    "🌟 AND THE OSCAR<br>GOES TO... 🌟",
+    "🌟 THAT'S A WRAP! 🌟",
+    "🌟 STUNT DOUBLE<br>NOT REQUIRED! 🌟",
+    "🌟 BOX OFFICE<br>SMASH HIT! 🌟",
+    "🌟 SCENE<br>STEALER! 🌟",
+    "🌟 STARRING<br>AUBREY! 🌟",
+    "🌟 RED CARPET<br>ROLLOVER! 🌟",
+    "🌟 AAAND CUT! 🌟",
+    "🌟 BLOCKBUSTER! 🌟",
+  ];
 
   _trexSmashLines = [
     "🦖 ROOAARRR!! 🦖",
@@ -1434,9 +1467,9 @@ export class Game {
     "🦖 CRETACEOUS<br>CRUNCH! 🦖",
   ];
 
-  _trexSmokeParticles = [];
+  _transformSmoke = [];
 
-  _spawnTrexSmoke() {
+  _spawnTransformSmoke() {
     const pos = this.player.mesh.position;
     const count = 60;
     const geo = new THREE.BufferGeometry();
@@ -1461,12 +1494,12 @@ export class Game {
     const smoke = new THREE.Points(geo, mat);
     smoke.position.copy(pos);
     this.scene.add(smoke);
-    this._trexSmokeParticles.push({ points: smoke, velocities, count, age: 0 });
+    this._transformSmoke.push({ points: smoke, velocities, count, age: 0 });
   }
 
-  _updateTrexSmoke(dt) {
-    for (let i = this._trexSmokeParticles.length - 1; i >= 0; i--) {
-      const s = this._trexSmokeParticles[i];
+  _updateTransformSmoke(dt) {
+    for (let i = this._transformSmoke.length - 1; i >= 0; i--) {
+      const s = this._transformSmoke[i];
       s.age += dt;
       const p = s.points.geometry.attributes.position;
       for (let j = 0; j < s.count; j++) {
@@ -1480,18 +1513,18 @@ export class Game {
         this.scene.remove(s.points);
         s.points.geometry.dispose();
         s.points.material.dispose();
-        this._trexSmokeParticles.splice(i, 1);
+        this._transformSmoke.splice(i, 1);
       }
     }
   }
 
-  _cleanupTrexSmoke() {
-    for (const s of this._trexSmokeParticles) {
+  _cleanupTransformSmoke() {
+    for (const s of this._transformSmoke) {
       this.scene.remove(s.points);
       s.points.geometry.dispose();
       s.points.material.dispose();
     }
-    this._trexSmokeParticles = [];
+    this._transformSmoke = [];
   }
 
   _f16BombLines = [
@@ -1714,6 +1747,12 @@ export class Game {
         this.ui.showPickupPopup("+50,000");
         const line = this._trexSmashLines[Math.floor(Math.random() * this._trexSmashLines.length)];
         this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "cadillac") {
+        play(SFX.OBSTACLE_HIT, 0.6);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._hollywoodSmashLines[Math.floor(Math.random() * this._hollywoodSmashLines.length)];
+        this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Smashed right through it!"), 1200);
       }
@@ -1803,6 +1842,12 @@ export class Game {
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._trexSmashLines[Math.floor(Math.random() * this._trexSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "cadillac") {
+        play(SFX.OBSTACLE_HIT, 0.6);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._hollywoodSmashLines[Math.floor(Math.random() * this._hollywoodSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Plowed right through!"), 1200);

@@ -40,6 +40,10 @@ export class Track {
       color: t.road, metalness: 0.15, roughness: 0.88,
       emissive: t.roadEmissive, emissiveIntensity: 0.12,
     });
+    this._roadMat = roadMat;
+    this._roadOrigColor = roadMat.color.getHex();
+    this._roadOrigEmissive = roadMat.emissive.getHex();
+    this._rainbowMode = false;
 
     if (this._curve) {
       this._roadSegGroup = new THREE.Group();
@@ -72,6 +76,9 @@ export class Track {
     const edgeMat = new THREE.MeshStandardMaterial({
       color: t.edge, emissive: t.edgeEmissive, emissiveIntensity: 0.6,
     });
+    this._edgeMat = edgeMat;
+    this._edgeOrigColor = edgeMat.color.getHex();
+    this._edgeOrigEmissive = edgeMat.emissive.getHex();
     this._edgeMeshes = [];
     for (let i = 0; i < this._edgeCount; i++) {
       const z = -200 + i * this._edgeSpacing;
@@ -1552,8 +1559,35 @@ export class Track {
     }
   }
 
+  setRainbow(on) {
+    this._rainbowMode = on;
+    if (!on && this._roadMat) {
+      this._roadMat.color.setHex(this._roadOrigColor);
+      this._roadMat.emissive.setHex(this._roadOrigEmissive);
+      this._roadMat.emissiveIntensity = 0.12;
+      if (this._edgeMat) {
+        this._edgeMat.color.setHex(this._edgeOrigColor);
+        this._edgeMat.emissive.setHex(this._edgeOrigEmissive);
+        this._edgeMat.emissiveIntensity = 0.6;
+      }
+    }
+  }
+
   update(dt, worldSpeed) {
     const dz = worldSpeed * dt;
+
+    if (this._rainbowMode && this._roadMat) {
+      const hue = (performance.now() * 0.0003) % 1;
+      this._roadMat.color.setHSL(hue, 0.7, 0.45);
+      this._roadMat.emissive.setHSL(hue, 0.8, 0.15);
+      this._roadMat.emissiveIntensity = 0.35;
+      if (this._edgeMat) {
+        const edgeHue = (hue + 0.5) % 1;
+        this._edgeMat.color.setHSL(edgeHue, 0.9, 0.6);
+        this._edgeMat.emissive.setHSL(edgeHue, 1.0, 0.4);
+        this._edgeMat.emissiveIntensity = 0.9;
+      }
+    }
 
     if (this._curve) {
       this._scrollDist += worldSpeed * dt;

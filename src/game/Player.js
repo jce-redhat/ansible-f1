@@ -55,6 +55,7 @@ export class Player {
     if (type === "scaloneta") return this._buildScalonetaMesh();
     if (type === "f16") return this._buildF16Mesh();
     if (type === "trex") return this._buildTrexMesh();
+    if (type === "cadillac") return this._buildCadillacMesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -1835,6 +1836,203 @@ export class Player {
     ring.position.y = 0.3;
     this.mesh.add(ring);
     this.shieldRing = ring;
+  }
+
+  _buildCadillacMesh() {
+    const g = new THREE.Group();
+    const pink = new THREE.MeshStandardMaterial({
+      color: 0xff85a2, metalness: 0.45, roughness: 0.3,
+      emissive: 0x330010, emissiveIntensity: 0.2,
+    });
+    const darkPink = new THREE.MeshStandardMaterial({
+      color: 0xcc6080, metalness: 0.5, roughness: 0.35,
+      emissive: 0x220008, emissiveIntensity: 0.15,
+    });
+    const chrome = new THREE.MeshStandardMaterial({
+      color: 0xddddee, metalness: 0.92, roughness: 0.08,
+    });
+    const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+    const black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.92 });
+    const glass = new THREE.MeshStandardMaterial({
+      color: 0x88bbdd, metalness: 0.4, roughness: 0.1,
+      transparent: true, opacity: 0.35,
+    });
+    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const tailRed = new THREE.MeshStandardMaterial({
+      color: 0xff2200, emissive: 0xff2200, emissiveIntensity: 0.5,
+    });
+
+    const H = 0.15;
+
+    // Chassis / underbody
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 4.0), black);
+    chassis.position.set(0, 0.12 + H, 0);
+    g.add(chassis);
+
+    // Main body — long, low, wide (classic '59 Cadillac proportions)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.3, 3.6), pink);
+    body.position.set(0, 0.3 + H, 0);
+    g.add(body);
+
+    // Hood — long, flat, extends forward
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.4), pink);
+    hood.position.set(0, 0.48 + H, -1.0);
+    g.add(hood);
+
+    // Hood ornament
+    const ornament = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.15, 4), chrome);
+    ornament.position.set(0, 0.58 + H, -1.6);
+    g.add(ornament);
+
+    // Front fascia
+    const frontFascia = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.25, 0.08), chrome);
+    frontFascia.position.set(0, 0.3 + H, -1.75);
+    g.add(frontFascia);
+
+    // Chrome bumper — front
+    const fBumper = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.12), chrome);
+    fBumper.position.set(0, 0.2 + H, -1.8);
+    g.add(fBumper);
+
+    // Grille — wide chrome teeth
+    for (let i = 0; i < 8; i++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.15, 0.06), chrome);
+      bar.position.set(-0.56 + i * 0.16, 0.32 + H, -1.78);
+      g.add(bar);
+    }
+
+    // Headlights — dual round, chrome housing
+    for (const side of [-1, 1]) {
+      for (const offset of [0, 0.22]) {
+        const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 12), chrome);
+        housing.rotation.x = Math.PI / 2;
+        housing.position.set(side * (0.65 + offset), 0.38 + H, -1.78);
+        g.add(housing);
+        const lens = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), hlMat);
+        lens.position.set(side * (0.65 + offset), 0.38 + H, -1.82);
+        g.add(lens);
+      }
+    }
+
+    // Side body trim — chrome strip along the length
+    for (const side of [-1, 1]) {
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 3.2), chrome);
+      trim.position.set(side * 0.96, 0.38 + H, 0);
+      g.add(trim);
+    }
+
+    // Rear deck — slightly raised
+    const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.12, 0.8), pink);
+    rearDeck.position.set(0, 0.5 + H, 1.2);
+    g.add(rearDeck);
+
+    // Trunk
+    const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.5), pink);
+    trunk.position.set(0, 0.46 + H, 1.55);
+    g.add(trunk);
+
+    // Iconic tail fins — the signature '59 Cadillac feature
+    for (const side of [-1, 1]) {
+      // Fin body — tall, sweeping back
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.35, 0.6), pink);
+      fin.position.set(side * 0.88, 0.6 + H, 1.5);
+      fin.rotation.x = -0.15;
+      g.add(fin);
+      // Fin tip — pointed
+      const finTip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 4), darkPink);
+      finTip.rotation.x = -Math.PI / 2;
+      finTip.position.set(side * 0.88, 0.72 + H, 1.8);
+      g.add(finTip);
+      // Tail light — iconic bullet shape in the fin
+      const tailLight = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.12, 8), tailRed);
+      tailLight.rotation.x = Math.PI / 2;
+      tailLight.position.set(side * 0.88, 0.5 + H, 1.82);
+      g.add(tailLight);
+    }
+
+    // Rear bumper — chrome
+    const rBumper = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.1), chrome);
+    rBumper.position.set(0, 0.2 + H, 1.85);
+    g.add(rBumper);
+
+    // Convertible interior — seats visible (no roof)
+    // Front bench seat
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 0.5), white);
+    seat.position.set(0, 0.52 + H, -0.1);
+    g.add(seat);
+    // Seat back
+    const seatBack = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, 0.1), white);
+    seatBack.position.set(0, 0.62 + H, 0.12);
+    g.add(seatBack);
+
+    // Rear seat
+    const rSeat = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.18, 0.45), white);
+    rSeat.position.set(0, 0.5 + H, 0.6);
+    g.add(rSeat);
+    const rSeatBack = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.28, 0.08), white);
+    rSeatBack.position.set(0, 0.6 + H, 0.8);
+    g.add(rSeatBack);
+
+    // Windshield — wrap-around style
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.4, 0.04), glass);
+    windshield.position.set(0, 0.7 + H, -0.45);
+    windshield.rotation.x = -0.35;
+    g.add(windshield);
+
+    // Windshield frame — chrome
+    const wsFrame = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.42, 0.02), chrome);
+    wsFrame.position.set(0, 0.7 + H, -0.44);
+    wsFrame.rotation.x = -0.35;
+    g.add(wsFrame);
+
+    // Dashboard
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 0.3), black);
+    dash.position.set(0, 0.55 + H, -0.35);
+    g.add(dash);
+
+    // Steering wheel
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.015, 6, 12), chrome);
+    wheel.rotation.x = Math.PI / 4;
+    wheel.position.set(-0.3, 0.65 + H, -0.3);
+    g.add(wheel);
+
+    // Doors — side panels with contour
+    for (const side of [-1, 1]) {
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.28, 1.2), darkPink);
+      door.position.set(side * 0.94, 0.42 + H, 0);
+      g.add(door);
+    }
+
+    // Whitewall tires — classic style
+    for (const xSign of [-1, 1]) {
+      for (const zPos of [-1.15, 1.15]) {
+        // Tire
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.14, 12), rubber);
+        tire.rotation.z = Math.PI / 2;
+        tire.position.set(xSign * 1.0, 0.22 + H, zPos);
+        g.add(tire);
+        // Whitewall band
+        const whitewall = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.16, 12), white);
+        whitewall.rotation.z = Math.PI / 2;
+        whitewall.position.set(xSign * 1.0, 0.22 + H, zPos);
+        whitewall.scale.set(0.85, 0.85, 0.85);
+        g.add(whitewall);
+        // Chrome hubcap
+        const hubcap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 12), chrome);
+        hubcap.rotation.z = Math.PI / 2;
+        hubcap.position.set(xSign * 1.08, 0.22 + H, zPos);
+        g.add(hubcap);
+      }
+    }
+
+    // Pink underglow
+    const glow = new THREE.PointLight(0xff69b4, 1.5, 5);
+    glow.position.set(0, 0.15, 0);
+    g.add(glow);
+
+    g.rotation.y = Math.PI;
+    return g;
   }
 
   _buildTrexMesh() {

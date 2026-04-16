@@ -864,6 +864,10 @@ export class UI {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "🦖 Extinction-Level Finish! 🦖";
         if (this.el.lcMessage) this.el.lcMessage.textContent =
           "Life found a way... but T-Rex arms can't reach the leaderboard. Those tiny arms!";
+      } else if (cheaterType === "cadillac") {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "🌟 And The Oscar Goes To... 🌟";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "Darling, you were fabulous! But Hollywood stars don't need leaderboards — they have fans.";
       } else {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
         if (this.el.lcMessage) this.el.lcMessage.textContent =

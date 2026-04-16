@@ -68,10 +68,25 @@ Existing custom meshes to reference:
 - `_buildScalonetaMesh()` — Leo's secret Argentina flag bus (scaloneta unlock)
 - `_buildF16Mesh()` — Alex's secret F-16 fighter jet (topgun unlock) with jet flame particles
 - `_buildTrexMesh()` — Anshul's secret T-Rex (leavemealone unlock) with animated legs, tail, and jaw
+- `_buildCadillacMesh()` — Aubrey's secret pink Cadillac convertible (hollywood unlock) with tail fins and whitewall tires
 
 ## Adding a Secret Unlockable Mode
 
 Secret modes swap a driver's default car to an alternate vehicle when the player types a keyword during a race.
+
+### Standard rules for ALL secret characters
+
+Every secret character mode MUST follow these rules:
+
+1. **Smoke poof on transform** — Call `this._spawnTransformSmoke()` before `player.swapCar()`. This spawns a grey particle burst at the player's position that fades over 1.5 seconds. All secret modes use this.
+2. **Indestructible** — Add the car type to `_isCheater()` in `Game.js`. The cheater handler in `_onHitObstacle()` and `_onHitRival()` explodes obstacles with no damage.
+3. **No leaderboard** — `_isCheater()` returning `true` automatically blocks saving scores in both `saveLcScore()` and `saveScore()`. Add a custom message string for the car type in both methods.
+4. **No quiz mode** — The `_isCheater()` check in the recovery prompt and boost token handler automatically skips quizzes. No extra code needed.
+5. **Smash messages** — Add a `_myModeSmashLines` array and an `else if (this.player.carType === "my_secret")` branch in both `_onHitObstacle()` and `_onHitRival()` that shows +50k score and a random line.
+6. **Level complete screen** — Add an `else if (cheaterType === "my_secret")` in `UI.setLevelCompleteStats()` with a themed title and message.
+7. **Revert on back-to-menu** — Handled automatically (see below).
+
+Exception: Matt's skateboard is the only secret mode where `_isCheater()` returns false — scores count normally.
 
 ### End-to-end flow
 
@@ -79,9 +94,12 @@ Secret modes swap a driver's default car to an alternate vehicle when the player
 |------|-------|------|
 | 1. Build the mesh | `Player.js` | Add `_buildMySecretMesh()` and register in `_buildCarForType()` |
 | 2. Secret word detection | `Game._bindKeys()` | Check `currentDriver`, `player.carType`, and `_secretBuffer.endsWith("keyword")` |
-| 3. Swap the car | `Game._bindKeys()` | Call `player.swapCar("my_secret")`, show announcement, play SFX, clear buffer |
-| 4. Special behavior | `Player.js` + `Game.js` | Per-frame updates, click abilities, collision overrides |
-| 5. Leaderboard exclusion | `Game._isCheater()` | Add `this.player.carType === "my_secret"` if it should block scoring |
+| 3. Smoke + swap | `Game._bindKeys()` | Call `_spawnTransformSmoke()`, then `player.swapCar("my_secret")`, show announcement, play SFX, clear buffer |
+| 4. Cheater/invincibility | `Game._isCheater()` | Add `this.player.carType === "my_secret"` |
+| 5. Smash messages | `Game._onHitObstacle/Rival` | Add `else if` branch with themed `_smashLines` array, +50k score |
+| 6. Leaderboard message | `Game.saveLcScore/saveScore` | Add `this.player.carType === "my_secret"` ternary with denial message |
+| 7. Level complete | `UI.setLevelCompleteStats` | Add `else if (cheaterType === "my_secret")` with themed title/message |
+| 8. Special behavior | `Player.js` + `Game.js` | Per-frame updates, click abilities, visual effects |
 
 ### Key detection pattern
 
@@ -92,6 +110,7 @@ this._secretBuffer = (this._secretBuffer + e.key.toLowerCase()).slice(-12);
 if (this.currentDriver === "mydriver" &&
     this.player.carType !== "my_secret" &&
     this._secretBuffer.endsWith("keyword")) {
+  this._spawnTransformSmoke();
   this.player.swapCar("my_secret");
   this.ui.showHippoCrush("🎉 SECRET MODE 🎉");
   play(SFX.MY_SOUND, 0.9);
@@ -100,6 +119,14 @@ if (this.currentDriver === "mydriver" &&
 ```
 
 The buffer is 12 characters to accommodate the longest keyword ("leavemealone"). If you add a longer keyword, increase the `slice(-N)` value.
+
+### Transform smoke effect
+
+All secret modes trigger a grey smoke particle burst when the car transforms. This is handled by `Game._spawnTransformSmoke()`, which creates a `THREE.Points` cloud at the player's position. The particles are managed in `_transformSmoke[]` and updated each frame by `_updateTransformSmoke(dt)` in the game loop. Cleanup happens in `_cleanupTransformSmoke()` during `resetRun()`.
+
+### Rainbow road (Cadillac / Hollywood mode)
+
+When Aubrey's cadillac mode activates, `this._rainbowRoad = true` and `this.track.setRainbow(true)` are called. The `Track.setRainbow(on)` method stores the flag, and `Track.update()` cycles the road and edge materials through rainbow hues using `setHSL()` on each frame. The road hue cycles via `performance.now()` and the edge strips use the complementary hue. When returning to menu, `track.setRainbow(false)` restores original colors.
 
 ### Secret mode revert on back-to-menu
 
@@ -124,7 +151,8 @@ This means each player has to type the secret code themselves — it doesn't per
 | Matt | `matt` | `skateboard` | No — scores count | Click to jump (airborne invincibility) |
 | Leo | `scaloneta` | `scaloneta` | Yes — no leaderboard | Full Spanish UI, Argentine catchphrases, custom SFX |
 | Alex | `topgun` | `f16` | Yes — no leaderboard | Hovers above track, flies over everything, click to drop bombs |
-| Anshul | `leavemealone` | `trex` | Yes — no leaderboard | Smoke burst on activation, stomping legs/tail/jaw animation, smashes everything for +50k |
+| Anshul | `leavemealone` | `trex` | Yes — no leaderboard | Stomping legs/tail/jaw animation, smashes everything for +50k |
+| Aubrey | `hollywood` | `cadillac` | Yes — no leaderboard | Pink Cadillac convertible, rainbow road, Hollywood smash lines |
 
 ### Spanish UI mode (Scaloneta)
 
@@ -174,9 +202,10 @@ Multiple systems can make the player invincible. All are checked at the top of `
 |-------|--------|----------|--------|
 | Skateboard airborne | `player.isAirborne` | `skateboard` | Obstacle explodes, no damage, "jumped over it" status |
 | DeLorean time travel | `player.isTimeTravelInvisible` | `delorean` | Obstacle explodes, no damage, phases through silently |
-| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex` | Obstacle explodes, no damage; hippo/scaloneta/trex get +50k score and crush lines |
+| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex`, `cadillac` | Obstacle explodes, no damage; hippo/scaloneta/trex/cadillac get +50k score and crush lines |
 | F-16 flyover | `carType === "f16"` | `f16` | Hovers 2 units above track, collision handlers return immediately (flies over everything) |
 | T-Rex rampage | `_isCheater()` | `trex` | Smashes through everything with Jurassic Park-themed crush messages, +50k per hit |
+| Hollywood cruise | `_isCheater()` | `cadillac` | Smashes through everything with Hollywood crush messages, +50k per hit, rainbow road |
 | Shield active | `this.shield > 0` | any | Obstacle hit absorbed, shield decremented, no health loss |
 
 When adding a new invincibility state:

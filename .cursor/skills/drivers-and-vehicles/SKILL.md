@@ -70,6 +70,7 @@ Existing custom meshes to reference:
 - `_buildTrexMesh()` — Anshul's secret T-Rex (leavemealone unlock) with animated legs, tail, and jaw
 - `_buildCadillacMesh()` — Aubrey's secret pink Cadillac convertible (hollywood unlock) with tail fins and whitewall tires
 - `_buildOgreMesh()` — Remy's secret ogre (quest unlock) with club, tusks, animated legs and arms
+- `_buildCroonerMesh()` — Justin's secret Driving Crooner sedan (crooner unlock) with fedora/cigar window decals and crooner figure
 
 ## Adding a Secret Unlockable Mode
 
@@ -159,6 +160,7 @@ This means each player has to type the secret code themselves — it doesn't per
 | Anshul | `leavemealone` | `trex` | Yes — no leaderboard | Stomping legs/tail/jaw animation, smashes everything for +50k |
 | Aubrey | `hollywood` | `cadillac` | Yes — no leaderboard | Pink Cadillac convertible, rainbow road, Hollywood smash lines |
 | Remy | `quest` | `ogre` | Yes — no leaderboard | Green ogre with club, castle skyline, ogre/Shrek smash lines |
+| Justin | `crooner` | `crooner` | Yes — no leaderboard | Dark sedan with fedora/cigar window decals, ITYSL Driving Crooner quotes |
 
 ### Spanish UI mode (Scaloneta)
 
@@ -208,11 +210,12 @@ Multiple systems can make the player invincible. All are checked at the top of `
 |-------|--------|----------|--------|
 | Skateboard airborne | `player.isAirborne` | `skateboard` | Obstacle explodes, no damage, "jumped over it" status |
 | DeLorean time travel | `player.isTimeTravelInvisible` | `delorean` | Obstacle explodes, no damage, phases through silently |
-| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex`, `cadillac`, `ogre` | Obstacle explodes, no damage; hippo/scaloneta/trex/cadillac/ogre get +50k score and crush lines |
+| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex`, `cadillac`, `ogre`, `crooner` | Obstacle explodes, no damage; hippo/scaloneta/trex/cadillac/ogre/crooner get +50k score and crush lines |
 | F-16 flyover | `carType === "f16"` | `f16` | Hovers 2 units above track, collision handlers return immediately (flies over everything) |
 | T-Rex rampage | `_isCheater()` | `trex` | Smashes through everything with Jurassic Park-themed crush messages, +50k per hit |
 | Hollywood cruise | `_isCheater()` | `cadillac` | Smashes through everything with Hollywood crush messages, +50k per hit, rainbow road |
 | Ogre rampage | `_isCheater()` | `ogre` | Smashes through everything with ogre/Shrek crush messages, +50k per hit, castle skyline |
+| Driving Crooner | `_isCheater()` | `crooner` | Smashes through everything with ITYSL Driving Crooner quotes, +50k per hit |
 | Shield active | `this.shield > 0` | any | Obstacle hit absorbed, shield decremented, no health loss |
 
 When adding a new invincibility state:

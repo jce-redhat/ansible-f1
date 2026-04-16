@@ -872,6 +872,10 @@ export class UI {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "🧌 The Quest Is Complete! 🧌";
         if (this.el.lcMessage) this.el.lcMessage.textContent =
           "The ogre has conquered the kingdom! But ogres don't do leaderboards — they do swamps.";
+      } else if (cheaterType === "crooner") {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "🎤 It's Simply Too Good! 🎤";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "You're driving with the Driving Crooner, baby! But I gotta figure out how to make money on this — not leaderboards.";
       } else {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
         if (this.el.lcMessage) this.el.lcMessage.textContent =

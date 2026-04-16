@@ -362,6 +362,13 @@ export class Game {
           this.track.setCastle(true);
           this._secretBuffer = "";
         }
+        if (this.currentDriver === "justin" && this.player.carType !== "crooner" && this._secretBuffer.endsWith("crooner")) {
+          this._spawnTransformSmoke();
+          this.player.swapCar("crooner");
+          this.ui.showHippoCrush("🎤 THE DRIVING<br>CROONER 🎤");
+          play(SFX.BOOST_WHOOSH, 0.9);
+          this._secretBuffer = "";
+        }
         if (this.currentDriver === "aubrey" && this.player.carType !== "cadillac" && this._secretBuffer.endsWith("hollywood")) {
           this._spawnTransformSmoke();
           this.player.swapCar("cadillac");
@@ -1018,7 +1025,7 @@ export class Game {
     this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isCheater();
-    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : this.player.carType === "ogre" ? "ogre" : isCheater ? "semi" : null;
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : this.player.carType === "ogre" ? "ogre" : this.player.carType === "crooner" ? "crooner" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
@@ -1049,6 +1056,8 @@ export class Game {
         ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
         : this.player.carType === "ogre"
         ? "Ogres don't do leaderboards. Now get out of my swamp!"
+        : this.player.carType === "crooner"
+        ? "I gotta figure out how to make money on this — not leaderboards!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1076,6 +1085,8 @@ export class Game {
         ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
         : this.player.carType === "ogre"
         ? "Ogres don't do leaderboards. Now get out of my swamp!"
+        : this.player.carType === "crooner"
+        ? "I gotta figure out how to make money on this — not leaderboards!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1451,8 +1462,21 @@ export class Game {
   }
 
   _isCheater() {
-    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac" || this.player.carType === "ogre";
+    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac" || this.player.carType === "ogre" || this.player.carType === "crooner";
   }
+
+  _croonerSmashLines = [
+    "🎤 I GOTTA MAKE MONEY<br>ON THIS! 🎤",
+    "🎤 IT'S SIMPLY<br>TOO GOOD! 🎤",
+    "🎤 THEY'RE TRYING TO<br>MAKE IT LOOK FAKE! 🎤",
+    "🎤 HE'S TRYING TO<br>STEAL MY DECALS! 🎤",
+    "🎤 YOU'RE DRIVING WITH<br>THE DRIVING CROONER, BABY! 🎤",
+    "🎤 THE HAT AND<br>THE CIGAR! 🎤",
+    "🎤 FIVE CARS GOING<br>AROUND STATEWIDE! 🎤",
+    "🎤 GOTTA BE RIGHT NEXT<br>TO ME FOR IT TO LOOK REAL! 🎤",
+    "🎤 SLOPPY STEAKS<br>AT TRUFFONI'S! 🎤",
+    "🎤 I USED TO BE<br>A PIECE OF WORK! 🎤",
+  ];
 
   _ogreSmashLines = [
     "🧌 OGRE SMASH! 🧌",
@@ -1785,6 +1809,12 @@ export class Game {
         this.ui.showPickupPopup("+50,000");
         const line = this._ogreSmashLines[Math.floor(Math.random() * this._ogreSmashLines.length)];
         this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "crooner") {
+        play(SFX.OBSTACLE_HIT, 0.6);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._croonerSmashLines[Math.floor(Math.random() * this._croonerSmashLines.length)];
+        this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Smashed right through it!"), 1200);
       }
@@ -1886,6 +1916,12 @@ export class Game {
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._ogreSmashLines[Math.floor(Math.random() * this._ogreSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "crooner") {
+        play(SFX.OBSTACLE_HIT, 0.6);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._croonerSmashLines[Math.floor(Math.random() * this._croonerSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Plowed right through!"), 1200);

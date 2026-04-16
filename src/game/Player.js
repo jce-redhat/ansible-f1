@@ -59,6 +59,7 @@ export class Player {
     if (type === "trex") return this._buildTrexMesh();
     if (type === "cadillac") return this._buildCadillacMesh();
     if (type === "ogre") return this._buildOgreMesh();
+    if (type === "crooner") return this._buildCroonerMesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -1839,6 +1840,188 @@ export class Player {
     ring.position.y = 0.3;
     this.mesh.add(ring);
     this.shieldRing = ring;
+  }
+
+  _buildCroonerMesh() {
+    const g = new THREE.Group();
+
+    const bodyCol = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2e, metalness: 0.6, roughness: 0.3,
+      emissive: 0x080814, emissiveIntensity: 0.2,
+    });
+    const chrome = new THREE.MeshStandardMaterial({
+      color: 0xddddee, metalness: 0.92, roughness: 0.08,
+    });
+    const black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+    const glass = new THREE.MeshStandardMaterial({
+      color: 0x334466, metalness: 0.3, roughness: 0.15,
+      transparent: true, opacity: 0.4,
+    });
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.92 });
+    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const suitMat = new THREE.MeshStandardMaterial({
+      color: 0x222244, roughness: 0.5, metalness: 0.2,
+    });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xddb088, roughness: 0.7 });
+    const hatMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a, roughness: 0.4, metalness: 0.3,
+    });
+    const decalMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.7,
+    });
+
+    const H = 0.15;
+
+    // Chassis
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 3.4), black);
+    chassis.position.set(0, 0.12 + H, 0);
+    g.add(chassis);
+
+    // Main body — long dark sedan (town car style)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.35, 3.2), bodyCol);
+    body.position.set(0, 0.32 + H, 0);
+    g.add(body);
+
+    // Hood
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.0), bodyCol);
+    hood.position.set(0, 0.52 + H, -0.9);
+    g.add(hood);
+
+    // Front fascia
+    const frontFascia = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.25, 0.06), chrome);
+    frontFascia.position.set(0, 0.32 + H, -1.5);
+    g.add(frontFascia);
+
+    // Front bumper
+    const fBumper = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.1), chrome);
+    fBumper.position.set(0, 0.2 + H, -1.55);
+    g.add(fBumper);
+
+    // Headlights
+    for (const side of [-1, 1]) {
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), hlMat);
+      hl.position.set(side * 0.65, 0.38 + H, -1.54);
+      g.add(hl);
+    }
+
+    // Grille
+    for (let i = 0; i < 6; i++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.12, 0.04), chrome);
+      bar.position.set(-0.35 + i * 0.14, 0.34 + H, -1.53);
+      g.add(bar);
+    }
+
+    // Cabin / roof
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 1.4), bodyCol);
+    roof.position.set(0, 0.78 + H, 0);
+    g.add(roof);
+
+    // A-pillars
+    for (const side of [-1, 1]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.06), bodyCol);
+      pillar.position.set(side * 0.72, 0.64 + H, -0.55);
+      pillar.rotation.x = -0.2;
+      g.add(pillar);
+    }
+
+    // Windshield
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.32, 0.04), glass);
+    windshield.position.set(0, 0.66 + H, -0.55);
+    windshield.rotation.x = -0.25;
+    g.add(windshield);
+
+    // Side windows with fedora/cigar decal silhouettes
+    for (const side of [-1, 1]) {
+      const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 1.0), glass);
+      sideWin.position.set(side * 0.76, 0.64 + H, 0);
+      g.add(sideWin);
+
+      // The famous decal — fedora silhouette on window
+      const brim = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.35), decalMat);
+      brim.position.set(side * 0.78, 0.74 + H, -0.15);
+      g.add(brim);
+      const crown = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.12, 0.2), decalMat);
+      crown.position.set(side * 0.78, 0.8 + H, -0.15);
+      g.add(crown);
+      // Cigar decal
+      const cigar = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.008, 0.18, 4), decalMat);
+      cigar.rotation.x = Math.PI / 2;
+      cigar.rotation.z = side * 0.3;
+      cigar.position.set(side * 0.78, 0.65 + H, -0.05);
+      g.add(cigar);
+    }
+
+    // Rear window
+    const rearWin = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 0.04), glass);
+    rearWin.position.set(0, 0.64 + H, 0.55);
+    rearWin.rotation.x = 0.2;
+    g.add(rearWin);
+
+    // Trunk
+    const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 0.6), bodyCol);
+    trunk.position.set(0, 0.5 + H, 1.2);
+    g.add(trunk);
+
+    // Rear bumper
+    const rBumper = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.08), chrome);
+    rBumper.position.set(0, 0.2 + H, 1.55);
+    g.add(rBumper);
+
+    // Tail lights
+    const tailRed = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+    for (const side of [-1, 1]) {
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.04), tailRed);
+      tail.position.set(side * 0.65, 0.35 + H, 1.56);
+      g.add(tail);
+    }
+
+    // Side trim
+    for (const side of [-1, 1]) {
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.03, 2.8), chrome);
+      trim.position.set(side * 0.86, 0.38 + H, 0);
+      g.add(trim);
+    }
+
+    // Wheels
+    for (const xSign of [-1, 1]) {
+      for (const zPos of [-0.95, 0.95]) {
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 10), rubber);
+        tire.rotation.z = Math.PI / 2;
+        tire.position.set(xSign * 0.9, 0.2 + H, zPos);
+        g.add(tire);
+        const hubcap = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.03, 10), chrome);
+        hubcap.rotation.z = Math.PI / 2;
+        hubcap.position.set(xSign * 0.97, 0.2 + H, zPos);
+        g.add(hubcap);
+      }
+    }
+
+    // The Driving Crooner figure — visible through the driver window
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), skinMat);
+    head.position.set(-0.25, 0.82 + H, -0.15);
+    g.add(head);
+
+    // Fedora
+    const fedBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.02, 8), hatMat);
+    fedBrim.position.set(-0.25, 0.92 + H, -0.15);
+    g.add(fedBrim);
+    const fedCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.1, 8), hatMat);
+    fedCrown.position.set(-0.25, 0.98 + H, -0.15);
+    g.add(fedCrown);
+
+    // Suit torso
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.2), suitMat);
+    torso.position.set(-0.25, 0.6 + H, -0.15);
+    g.add(torso);
+
+    // Gold underglow
+    const glow = new THREE.PointLight(0xffd700, 1.2, 4);
+    glow.position.set(0, 0.15, 0);
+    g.add(glow);
+
+    g.rotation.y = Math.PI;
+    return g;
   }
 
   _buildOgreMesh() {

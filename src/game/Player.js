@@ -38,6 +38,7 @@ export class Player {
     this._trexJaw = null;
     this._ogreArms = null;
     this._ogreLegs = null;
+    this._trainSteam = null;
     this.carType = carType;
     this.mesh = this._buildCarForType(carType);
     this.mesh.position.copy(pos);
@@ -60,6 +61,7 @@ export class Player {
     if (type === "cadillac") return this._buildCadillacMesh();
     if (type === "ogre") return this._buildOgreMesh();
     if (type === "crooner") return this._buildCroonerMesh();
+    if (type === "timetrain") return this._buildTimeTrainMesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -2024,6 +2026,246 @@ export class Player {
     return g;
   }
 
+  _buildTimeTrainMesh() {
+    const g = new THREE.Group();
+
+    const iron = new THREE.MeshStandardMaterial({
+      color: 0x2a2a2a, metalness: 0.8, roughness: 0.25,
+    });
+    const brass = new THREE.MeshStandardMaterial({
+      color: 0xcc9933, metalness: 0.85, roughness: 0.15,
+      emissive: 0x442200, emissiveIntensity: 0.3,
+    });
+    const copper = new THREE.MeshStandardMaterial({
+      color: 0xbb6633, metalness: 0.7, roughness: 0.2,
+    });
+    const steel = new THREE.MeshStandardMaterial({
+      color: 0x556677, metalness: 0.75, roughness: 0.3,
+    });
+    const black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+    const red = new THREE.MeshStandardMaterial({
+      color: 0xaa2211, roughness: 0.5, metalness: 0.3,
+      emissive: 0x331100, emissiveIntensity: 0.2,
+    });
+    const woodMat = new THREE.MeshStandardMaterial({
+      color: 0x664422, roughness: 0.8,
+    });
+    const glowBlue = new THREE.MeshBasicMaterial({ color: 0x00ccff });
+    const glowOrange = new THREE.MeshBasicMaterial({ color: 0xff8800 });
+    const white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    // Locomotive boiler (main cylindrical body)
+    const boiler = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.8, 10), iron);
+    boiler.rotation.z = Math.PI / 2;
+    boiler.rotation.y = Math.PI / 2;
+    boiler.position.set(0, 0.7, -0.2);
+    g.add(boiler);
+
+    // Boiler bands (brass rings)
+    for (let i = 0; i < 5; i++) {
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.025, 6, 12), brass);
+      band.rotation.x = Math.PI / 2;
+      band.position.set(0, 0.7, -1.2 + i * 0.6);
+      g.add(band);
+    }
+
+    // Smokebox (front — wider dark section)
+    const smokebox = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.4, 10), steel);
+    smokebox.rotation.z = Math.PI / 2;
+    smokebox.rotation.y = Math.PI / 2;
+    smokebox.position.set(0, 0.7, -1.5);
+    g.add(smokebox);
+
+    // Smokestack
+    const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.55, 8), brass);
+    stack.position.set(0, 1.28, -1.3);
+    g.add(stack);
+    const stackTop = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.12, 0.12, 8), brass);
+    stackTop.position.set(0, 1.6, -1.3);
+    g.add(stackTop);
+
+    // Steam dome (on top of boiler)
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), brass);
+    dome.scale.y = 0.7;
+    dome.position.set(0, 1.15, -0.4);
+    g.add(dome);
+
+    // Sand dome
+    const sandDome = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), copper);
+    sandDome.scale.y = 0.7;
+    sandDome.position.set(0, 1.15, 0.2);
+    g.add(sandDome);
+
+    // Cab (rear engineer cabin)
+    const cabBase = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 1.0), red);
+    cabBase.position.set(0, 0.75, 1.1);
+    g.add(cabBase);
+    const cabRoof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 1.2), iron);
+    cabRoof.position.set(0, 1.25, 1.1);
+    g.add(cabRoof);
+
+    // Cab windows
+    const winMat = new THREE.MeshStandardMaterial({
+      color: 0x334466, transparent: true, opacity: 0.4, metalness: 0.3,
+    });
+    for (const side of [-1, 1]) {
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.35), winMat);
+      win.rotation.y = side * Math.PI / 2;
+      win.position.set(side * 0.66, 0.9, 1.1);
+      g.add(win);
+    }
+
+    // Chassis / frame
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 3.6), black);
+    frame.position.set(0, 0.18, -0.1);
+    g.add(frame);
+
+    // Cowcatcher (front)
+    const cowShape = new THREE.Shape();
+    cowShape.moveTo(-0.5, 0);
+    cowShape.lineTo(0, -0.25);
+    cowShape.lineTo(0.5, 0);
+    const cowGeo = new THREE.ExtrudeGeometry(cowShape, { depth: 0.06, bevelEnabled: false });
+    const cowcatcher = new THREE.Mesh(cowGeo, iron);
+    cowcatcher.rotation.x = Math.PI / 2;
+    cowcatcher.position.set(0, 0.2, -1.95);
+    g.add(cowcatcher);
+
+    // Drive wheels (large)
+    for (const side of [-1, 1]) {
+      for (const zOff of [-0.6, 0.2]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.1, 12), iron);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(side * 0.65, 0.28, zOff);
+        g.add(wheel);
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 8), brass);
+        hub.rotation.z = Math.PI / 2;
+        hub.position.set(side * 0.7, 0.28, zOff);
+        g.add(hub);
+      }
+      // Small front wheels
+      const fWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 10), iron);
+      fWheel.rotation.z = Math.PI / 2;
+      fWheel.position.set(side * 0.6, 0.18, -1.3);
+      g.add(fWheel);
+      // Rear cab wheel
+      const rWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.08, 10), iron);
+      rWheel.rotation.z = Math.PI / 2;
+      rWheel.position.set(side * 0.6, 0.2, 1.0);
+      g.add(rWheel);
+    }
+
+    // Connecting rods (pistons)
+    for (const side of [-1, 1]) {
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9, 4), brass);
+      rod.rotation.x = Math.PI / 2;
+      rod.position.set(side * 0.72, 0.28, -0.2);
+      g.add(rod);
+    }
+
+    // --- BTTF3 time travel modifications ---
+
+    // Flux capacitor housing (on the smokebox)
+    const fluxBox = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.06), steel);
+    fluxBox.position.set(0, 0.95, -1.72);
+    g.add(fluxBox);
+    // Y-shaped flux lines
+    for (let a = 0; a < 3; a++) {
+      const angle = (a * Math.PI * 2) / 3 - Math.PI / 2;
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.14, 4), glowBlue);
+      tube.position.set(
+        Math.cos(angle) * 0.07, 0.95 + Math.sin(angle) * 0.07, -1.74
+      );
+      tube.rotation.z = angle;
+      g.add(tube);
+    }
+
+    // Hover conversion — no wheels touch the ground, train floats
+    // Glowing hover pads (underneath)
+    for (const zOff of [-1.0, 0, 1.0]) {
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.3), glowBlue);
+      pad.position.set(0, 0.06, zOff);
+      g.add(pad);
+    }
+
+    // Mr. Fusion on the cab roof
+    const fusionBase = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.15, 8), steel);
+    fusionBase.position.set(0, 1.35, 1.1);
+    g.add(fusionBase);
+    const fusionTop = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 0.12, 8), brass);
+    fusionTop.position.set(0, 1.48, 1.1);
+    g.add(fusionTop);
+
+    // Headlight (front lantern)
+    const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), glowOrange);
+    lantern.position.set(0, 1.0, -1.72);
+    g.add(lantern);
+
+    // Bell
+    const bell = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6, 0, Math.PI * 2, 0, Math.PI / 2), brass);
+    bell.position.set(0.25, 1.25, -0.9);
+    g.add(bell);
+
+    // Whistle
+    const whistle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 5), brass);
+    whistle.position.set(-0.2, 1.25, -0.1);
+    g.add(whistle);
+
+    // Side railing / running boards
+    for (const side of [-1, 1]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 2.8), brass);
+      rail.position.set(side * 0.62, 0.38, -0.2);
+      g.add(rail);
+    }
+
+    // Time circuit display on cab side
+    for (const side of [-1, 1]) {
+      const display = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.15, 0.5), black);
+      display.position.set(side * 0.66, 0.95, 1.1);
+      g.add(display);
+      // Three LED rows (destination, present, departed)
+      const ledColors = [0xff0000, 0x00ff00, 0xffaa00];
+      for (let r = 0; r < 3; r++) {
+        const led = new THREE.Mesh(
+          new THREE.BoxGeometry(0.025, 0.03, 0.4),
+          new THREE.MeshBasicMaterial({ color: ledColors[r] })
+        );
+        led.position.set(side * 0.67, 1.0 - r * 0.05, 1.1);
+        g.add(led);
+      }
+    }
+
+    // Exhaust steam particles
+    const steamCount = 30;
+    const steamPositions = new Float32Array(steamCount * 3);
+    for (let i = 0; i < steamCount; i++) {
+      steamPositions[i * 3] = (Math.random() - 0.5) * 0.2;
+      steamPositions[i * 3 + 1] = 1.7 + Math.random() * 0.5;
+      steamPositions[i * 3 + 2] = -1.3;
+    }
+    const steamGeo = new THREE.BufferGeometry();
+    steamGeo.setAttribute("position", new THREE.BufferAttribute(steamPositions, 3));
+    const steamMat = new THREE.PointsMaterial({
+      color: 0xcccccc, size: 0.08, transparent: true, opacity: 0.6,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    this._trainSteam = new THREE.Points(steamGeo, steamMat);
+    g.add(this._trainSteam);
+
+    // Blue time-travel glow underneath
+    const glow = new THREE.PointLight(0x00ccff, 1.5, 5);
+    glow.position.set(0, 0.1, 0);
+    g.add(glow);
+
+    // Warm cab glow
+    const cabGlow = new THREE.PointLight(0xff8844, 0.6, 3);
+    cabGlow.position.set(0, 0.9, 1.1);
+    g.add(cabGlow);
+
+    g.rotation.y = Math.PI;
+    return g;
+  }
+
   _buildOgreMesh() {
     const g = new THREE.Group();
     const inner = new THREE.Group();
@@ -3131,8 +3373,9 @@ export class Player {
     const isF16 = this.carType === "f16";
     const isTrex = this.carType === "trex";
     const isOgreType = this.carType === "ogre";
-    const bob = Math.sin(t * 0.004) * (isF16 ? 0.1 : isTrex ? 0.03 : isOgreType ? 0.04 : isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
-    const hoverLift = isF16 ? 2.0 : isHover ? 0.25 : 0;
+    const isTrain = this.carType === "timetrain";
+    const bob = Math.sin(t * 0.004) * (isF16 ? 0.1 : isTrex ? 0.03 : isOgreType ? 0.04 : isTrain ? 0.06 : isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
+    const hoverLift = isF16 ? 2.0 : isTrain ? 0.35 : isHover ? 0.25 : 0;
 
     if (isSkate && this._skateJumping) {
       this._skateJumpVel -= 18 * dt;
@@ -3206,11 +3449,28 @@ export class Player {
       this._ogreArms[1].rotation.x = -armSwing;
     }
 
+    if (isTrain && this._trainSteam) {
+      const pos = this._trainSteam.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        pos.array[i * 3] += (Math.random() - 0.5) * 0.03;
+        pos.array[i * 3 + 1] += dt * (1.2 + Math.random() * 0.8);
+        pos.array[i * 3 + 2] += (Math.random() - 0.5) * 0.03;
+        if (pos.array[i * 3 + 1] > 2.5) {
+          pos.array[i * 3] = (Math.random() - 0.5) * 0.2;
+          pos.array[i * 3 + 1] = 1.7;
+          pos.array[i * 3 + 2] = -1.3;
+        }
+      }
+      pos.needsUpdate = true;
+    }
+
     this.mesh.rotation.x = isF16
       ? Math.sin(t * 0.003) * 0.04 + Math.cos(t * 0.002) * 0.025
-      : isHover
-        ? Math.sin(t * 0.0025) * 0.035 + Math.cos(t * 0.0017) * 0.02
-        : 0;
+      : isTrain
+        ? Math.sin(t * 0.002) * 0.03 + Math.cos(t * 0.0015) * 0.018
+        : isHover
+          ? Math.sin(t * 0.0025) * 0.035 + Math.cos(t * 0.0017) * 0.02
+          : 0;
 
     if (this._smokeParticles) {
       for (const smoke of this._smokeParticles) {

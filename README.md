@@ -52,6 +52,7 @@ Some drivers have hidden alternate vehicles that transform the gameplay. Type th
 | Aubrey Trotter | `hollywood` | 🌟 Hollywood Mode | Pink 1959 Cadillac Eldorado convertible with tail fins and whitewall tires. Road turns into a rainbow. Indestructible — smashes everything for +50,000 pts with Hollywood/movie-themed callouts. Scores don't count on the leaderboard. |
 | Remy Duplantis | `quest` | 🧌 Ogre Mode | A hulking green ogre with a spiked club, tusks, and loincloth — despite Remy's hatred of all things fantasy. Skyline transforms into a medieval castle. Indestructible — smashes everything for +50,000 pts with ogre/Shrek-themed callouts. Scores don't count on the leaderboard. |
 | Justin Braun | `crooner` | 🎤 Driving Crooner | A dark town-car sedan with the famous fedora & cigar window decals from *I Think You Should Leave*. The Driving Crooner figure sits inside wearing a fedora. Indestructible — smashes everything for +50,000 pts with ITYSL quotes ("I gotta make money on this!", "It's simply too good!"). Scores don't count on the leaderboard. |
+| Roger Lopez | `crossfit` | 🚂 Time Train Mode | The Jules Verne time-traveling locomotive from *Back to the Future Part III*. Hovers above the track with blue glow pads, flux capacitor on the smokebox, Mr. Fusion on the cab, time circuit displays, and a steam-puffing smokestack. Indestructible — smashes everything for +50,000 pts with BTTF quotes. Scores don't count on the leaderboard. |
 
 ## Special Vehicle Abilities
 
@@ -69,6 +70,7 @@ Some vehicles have unique abilities triggered by clicking (instead of honking):
 | **Cadillac** (Aubrey, after unlock) | Cruises through everything — rainbow road, Hollywood smash hits. |
 | **Ogre** (Remy, after unlock) | Clubs everything — castle skyline, ogre smash hits. |
 | **Driving Crooner** (Justin, after unlock) | Plows through everything — ITYSL quotes on every smash. |
+| **Time Train** (Roger, after unlock) | Hover-train smashes everything — BTTF quotes, DeLorean SFX on every hit. |
 
 ## Nuno's Pickup Truck
 

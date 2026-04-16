@@ -71,6 +71,7 @@ Existing custom meshes to reference:
 - `_buildCadillacMesh()` — Aubrey's secret pink Cadillac convertible (hollywood unlock) with tail fins and whitewall tires
 - `_buildOgreMesh()` — Remy's secret ogre (quest unlock) with club, tusks, animated legs and arms
 - `_buildCroonerMesh()` — Justin's secret Driving Crooner sedan (crooner unlock) with fedora/cigar window decals and crooner figure
+- `_buildTimeTrainMesh()` — Roger's secret BTTF3 time-traveling train (crossfit unlock) with hover pads, flux capacitor, steam particles
 
 ## Adding a Secret Unlockable Mode
 
@@ -161,6 +162,7 @@ This means each player has to type the secret code themselves — it doesn't per
 | Aubrey | `hollywood` | `cadillac` | Yes — no leaderboard | Pink Cadillac convertible, rainbow road, Hollywood smash lines |
 | Remy | `quest` | `ogre` | Yes — no leaderboard | Green ogre with club, castle skyline, ogre/Shrek smash lines |
 | Justin | `crooner` | `crooner` | Yes — no leaderboard | Dark sedan with fedora/cigar window decals, ITYSL Driving Crooner quotes |
+| Roger | `crossfit` | `timetrain` | Yes — no leaderboard | BTTF3 Jules Verne train, hovers, steam particles, BTTF smash quotes |
 
 ### Spanish UI mode (Scaloneta)
 
@@ -216,6 +218,7 @@ Multiple systems can make the player invincible. All are checked at the top of `
 | Hollywood cruise | `_isCheater()` | `cadillac` | Smashes through everything with Hollywood crush messages, +50k per hit, rainbow road |
 | Ogre rampage | `_isCheater()` | `ogre` | Smashes through everything with ogre/Shrek crush messages, +50k per hit, castle skyline |
 | Driving Crooner | `_isCheater()` | `crooner` | Smashes through everything with ITYSL Driving Crooner quotes, +50k per hit |
+| Time Train | `_isCheater()` | `timetrain` | Hovers above track, smashes through everything with BTTF quotes, +50k per hit |
 | Shield active | `this.shield > 0` | any | Obstacle hit absorbed, shield decremented, no health loss |
 
 When adding a new invincibility state:

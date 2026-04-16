@@ -876,6 +876,10 @@ export class UI {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "🎤 It's Simply Too Good! 🎤";
         if (this.el.lcMessage) this.el.lcMessage.textContent =
           "You're driving with the Driving Crooner, baby! But I gotta figure out how to make money on this — not leaderboards.";
+      } else if (cheaterType === "timetrain") {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "🚂 Great Scott! 🚂";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "You made it to the future! But where we're going, we don't need leaderboards.";
       } else {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
         if (this.el.lcMessage) this.el.lcMessage.textContent =

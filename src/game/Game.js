@@ -378,6 +378,13 @@ export class Game {
           this._playCroonerSfx(0.9);
           this._secretBuffer = "";
         }
+        if (this.currentDriver === "roger" && this.player.carType !== "timetrain" && this._secretBuffer.endsWith("crossfit")) {
+          this._spawnTransformSmoke();
+          this.player.swapCar("timetrain");
+          this.ui.showHippoCrush("🚂 TIME TRAIN<br>MODE 🚂");
+          play(SFX.DELOREAN, 0.9);
+          this._secretBuffer = "";
+        }
         if (this.currentDriver === "aubrey" && this.player.carType !== "cadillac" && this._secretBuffer.endsWith("hollywood")) {
           this._spawnTransformSmoke();
           this.player.swapCar("cadillac");
@@ -475,6 +482,8 @@ export class Game {
       }
       if (this.player.carType === "hippo") {
         play(SFX.HIPPO_MODE, 0.9);
+      } else if (this.player.carType === "timetrain") {
+        play(SFX.DELOREAN, 0.9);
       } else if (this.player.carType === "ogre") {
         this._playOgreSfx(0.9);
       } else if (this.player.carType === "crooner") {
@@ -1041,7 +1050,7 @@ export class Game {
     this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isCheater();
-    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : this.player.carType === "ogre" ? "ogre" : this.player.carType === "crooner" ? "crooner" : isCheater ? "semi" : null;
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : this.player.carType === "ogre" ? "ogre" : this.player.carType === "crooner" ? "crooner" : this.player.carType === "timetrain" ? "timetrain" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
@@ -1074,6 +1083,8 @@ export class Game {
         ? "Ogres don't do leaderboards. Now get out of my swamp!"
         : this.player.carType === "crooner"
         ? "I gotta figure out how to make money on this — not leaderboards!"
+        : this.player.carType === "timetrain"
+        ? "Where we're going, we don't need leaderboards!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1103,6 +1114,8 @@ export class Game {
         ? "Ogres don't do leaderboards. Now get out of my swamp!"
         : this.player.carType === "crooner"
         ? "I gotta figure out how to make money on this — not leaderboards!"
+        : this.player.carType === "timetrain"
+        ? "Where we're going, we don't need leaderboards!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1478,7 +1491,7 @@ export class Game {
   }
 
   _isCheater() {
-    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac" || this.player.carType === "ogre" || this.player.carType === "crooner";
+    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac" || this.player.carType === "ogre" || this.player.carType === "crooner" || this.player.carType === "timetrain";
   }
 
   _croonerSmashLines = [
@@ -1492,6 +1505,19 @@ export class Game {
     "🎤 GOTTA BE RIGHT NEXT<br>TO ME FOR IT TO LOOK REAL! 🎤",
     "🎤 SLOPPY STEAKS<br>AT TRUFFONI'S! 🎤",
     "🎤 I USED TO BE<br>A PIECE OF WORK! 🎤",
+  ];
+
+  _timeTrainSmashLines = [
+    "🚂 WHERE WE'RE GOING, WE<br>DON'T NEED ROADS! 🚂",
+    "🚂 GREAT SCOTT!<br>88 MILES PER HOUR! 🚂",
+    "🚂 YOUR FUTURE HASN'T<br>BEEN WRITTEN YET! 🚂",
+    "🚂 1.21 GIGAWATTS<br>OF PAIN! 🚂",
+    "🚂 THIS IS HEAVY! 🚂",
+    "🚂 THE FLUX CAPACITOR<br>IS FLUXING! 🚂",
+    "🚂 BACK TO<br>THE FUTURE! 🚂",
+    "🚂 NOBODY CALLS ME<br>CHICKEN! 🚂",
+    "🚂 SCIENCE! 🚂",
+    "🚂 FULL STEAM<br>AHEAD, DOC! 🚂",
   ];
 
   _ogreSfxPool = [SFX.OGRE_GRUNT_1, SFX.OGRE_GRUNT_2];
@@ -1843,6 +1869,12 @@ export class Game {
         this.ui.showPickupPopup("+50,000");
         const line = this._croonerSmashLines[Math.floor(Math.random() * this._croonerSmashLines.length)];
         this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "timetrain") {
+        play(SFX.DELOREAN, 0.7);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._timeTrainSmashLines[Math.floor(Math.random() * this._timeTrainSmashLines.length)];
+        this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Smashed right through it!"), 1200);
       }
@@ -1950,6 +1982,12 @@ export class Game {
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._croonerSmashLines[Math.floor(Math.random() * this._croonerSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "timetrain") {
+        play(SFX.DELOREAN, 0.7);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._timeTrainSmashLines[Math.floor(Math.random() * this._timeTrainSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Plowed right through!"), 1200);

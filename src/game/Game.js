@@ -1757,7 +1757,7 @@ export class Game {
       return;
     }
 
-    if (this.quizEnabled && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
+    if (this.quizEnabled && !this._isCheater() && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
       this.recoveryPrompt = true;
       const showTip = !hasSeenRecoveryTip();
       this.ui.showRecovery(true, showTip, () => {
@@ -1846,7 +1846,7 @@ export class Game {
       return;
     }
 
-    if (this.quizEnabled && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
+    if (this.quizEnabled && !this._isCheater() && this.remediationsUsed < CONFIG.MAX_REMEDIATIONS) {
       this.recoveryPrompt = true;
       const showTip = !hasSeenRecoveryTip();
       this.ui.showRecovery(true, showTip, () => {
@@ -1940,7 +1940,7 @@ export class Game {
         );
       }
     } else if (t === "BOOST_TOKEN") {
-      if (this.player.carType === "hippo") {
+      if (this._isCheater()) {
         const now = performance.now();
         const stacking = now < this.boostUntil;
         const base = stacking ? this.boostUntil : now;
@@ -1948,7 +1948,6 @@ export class Game {
         this.boostUntil = base + CONFIG.BOOST_DURATION * 1500;
         this._runBoostCount += 1;
         play(SFX.BOOST_WHOOSH, 0.85);
-        this.ui.showHippoCrush("🦛 HIPPO TURBO 🦛");
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
       } else if (this.quizEnabled) {

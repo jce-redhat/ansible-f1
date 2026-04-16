@@ -868,6 +868,10 @@ export class UI {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "🌟 And The Oscar Goes To... 🌟";
         if (this.el.lcMessage) this.el.lcMessage.textContent =
           "Darling, you were fabulous! But Hollywood stars don't need leaderboards — they have fans.";
+      } else if (cheaterType === "ogre") {
+        if (this.el.lcTitle) this.el.lcTitle.textContent = "🧌 The Quest Is Complete! 🧌";
+        if (this.el.lcMessage) this.el.lcMessage.textContent =
+          "The ogre has conquered the kingdom! But ogres don't do leaderboards — they do swamps.";
       } else {
         if (this.el.lcTitle) this.el.lcTitle.textContent = "Nice Finish... Cheater";
         if (this.el.lcMessage) this.el.lcMessage.textContent =

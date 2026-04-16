@@ -354,6 +354,14 @@ export class Game {
           play(SFX.OBSTACLE_HIT, 0.9);
           this._secretBuffer = "";
         }
+        if (this.currentDriver === "remy" && this.player.carType !== "ogre" && this._secretBuffer.endsWith("quest")) {
+          this._spawnTransformSmoke();
+          this.player.swapCar("ogre");
+          this.ui.showHippoCrush("🧌 OGRE MODE 🧌");
+          play(SFX.OBSTACLE_HIT, 0.9);
+          this.track.setCastle(true);
+          this._secretBuffer = "";
+        }
         if (this.currentDriver === "aubrey" && this.player.carType !== "cadillac" && this._secretBuffer.endsWith("hollywood")) {
           this._spawnTransformSmoke();
           this.player.swapCar("cadillac");
@@ -680,6 +688,7 @@ export class Game {
     this.ui.setScalonetaHud(false);
     this._rainbowRoad = false;
     this.track.setRainbow(false);
+    this.track.setCastle(false);
 
     this.ui.showBillboard(false);
     this.ui.showGameOver(false);
@@ -1009,7 +1018,7 @@ export class Game {
     this._spawnCelebration(this._orbitCenter);
 
     const isCheater = this._isCheater();
-    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : isCheater ? "semi" : null;
+    const cheaterType = this.player.carType === "hippo" ? "hippo" : this.player.carType === "scaloneta" ? "scaloneta" : this.player.carType === "f16" ? "f16" : this.player.carType === "trex" ? "trex" : this.player.carType === "cadillac" ? "cadillac" : this.player.carType === "ogre" ? "ogre" : isCheater ? "semi" : null;
     this.ui.setLevelCompleteStats({
       score: this.score,
       hits: this.obstaclesHit,
@@ -1038,6 +1047,8 @@ export class Game {
         ? "T-Rex arms are too short to reach the leaderboard. Nice try though!"
         : this.player.carType === "cadillac"
         ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
+        : this.player.carType === "ogre"
+        ? "Ogres don't do leaderboards. Now get out of my swamp!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1063,6 +1074,8 @@ export class Game {
         ? "T-Rex arms are too short to reach the leaderboard. Nice try though!"
         : this.player.carType === "cadillac"
         ? "Sorry darling, Hollywood stars don't do leaderboards. Too glamorous!"
+        : this.player.carType === "ogre"
+        ? "Ogres don't do leaderboards. Now get out of my swamp!"
         : "Nice try, but you can't set a high score as Andrius. Too easy!";
       this.ui.setStatus(msg, 4000);
       return;
@@ -1438,8 +1451,21 @@ export class Game {
   }
 
   _isCheater() {
-    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac";
+    return this._isSemiTruck() || this.player.carType === "hippo" || this.player.carType === "scaloneta" || this.player.carType === "f16" || this.player.carType === "trex" || this.player.carType === "cadillac" || this.player.carType === "ogre";
   }
+
+  _ogreSmashLines = [
+    "🧌 OGRE SMASH! 🧌",
+    "🧌 GET OUT OF<br>MY SWAMP! 🧌",
+    "🧌 CLUBBED! 🧌",
+    "🧌 BETTER OUT<br>THAN IN! 🧌",
+    "🧌 ONION<br>LAYERS! 🧌",
+    "🧌 WHAT ARE YE<br>DOING IN MY LANE?! 🧌",
+    "🧌 THIS IS<br>MY ROAD! 🧌",
+    "🧌 OGRES ARE<br>LIKE ONIONS! 🧌",
+    "🧌 FEE FI<br>FO FUM! 🧌",
+    "🧌 DO THE<br>ROAR! 🧌",
+  ];
 
   _hollywoodSmashLines = [
     "🌟 LIGHTS, CAMERA,<br>DESTRUCTION! 🌟",
@@ -1753,6 +1779,12 @@ export class Game {
         this.ui.showPickupPopup("+50,000");
         const line = this._hollywoodSmashLines[Math.floor(Math.random() * this._hollywoodSmashLines.length)];
         this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "ogre") {
+        play(SFX.OBSTACLE_HIT, 0.7);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._ogreSmashLines[Math.floor(Math.random() * this._ogreSmashLines.length)];
+        this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Smashed right through it!"), 1200);
       }
@@ -1848,6 +1880,12 @@ export class Game {
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
         const line = this._hollywoodSmashLines[Math.floor(Math.random() * this._hollywoodSmashLines.length)];
+        this.ui.showHippoCrush(line);
+      } else if (this.player.carType === "ogre") {
+        play(SFX.OBSTACLE_HIT, 0.7);
+        this.score += 50000;
+        this.ui.showPickupPopup("+50,000");
+        const line = this._ogreSmashLines[Math.floor(Math.random() * this._ogreSmashLines.length)];
         this.ui.showHippoCrush(line);
       } else {
         this.ui.setStatus(this._t("Plowed right through!"), 1200);

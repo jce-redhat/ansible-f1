@@ -50,6 +50,7 @@ Some drivers have hidden alternate vehicles that transform the gameplay. Type th
 | Alex Walczyk | `topgun` | ✈️ Top Gun Mode | F-16 fighter jet that hovers above the track. Flies over all obstacles and cars. Click to drop bombs that explode on impact — anything caught in the blast radius is destroyed for +50,000 pts with Top Gun callouts. Scores don't count on the leaderboard. |
 | Anshul Behl | `leavemealone` | 🦖 T-Rex Mode | A T-Rex stomps down the road with animated legs, swaying tail, and snapping jaw. Indestructible — smashes everything for +50,000 pts with Jurassic Park-themed callouts. Scores don't count on the leaderboard. |
 | Aubrey Trotter | `hollywood` | 🌟 Hollywood Mode | Pink 1959 Cadillac Eldorado convertible with tail fins and whitewall tires. Road turns into a rainbow. Indestructible — smashes everything for +50,000 pts with Hollywood/movie-themed callouts. Scores don't count on the leaderboard. |
+| Remy Duplantis | `quest` | 🧌 Ogre Mode | A hulking green ogre with a spiked club, tusks, and loincloth — despite Remy's hatred of all things fantasy. Skyline transforms into a medieval castle. Indestructible — smashes everything for +50,000 pts with ogre/Shrek-themed callouts. Scores don't count on the leaderboard. |
 
 ## Special Vehicle Abilities
 
@@ -65,6 +66,7 @@ Some vehicles have unique abilities triggered by clicking (instead of honking):
 | **F-16** (Alex, after unlock) | Drop bomb — bomb falls to the ground and explodes, destroying anything in the blast radius. |
 | **T-Rex** (Anshul, after unlock) | Stomps everything — indestructible dino rampage. |
 | **Cadillac** (Aubrey, after unlock) | Cruises through everything — rainbow road, Hollywood smash hits. |
+| **Ogre** (Remy, after unlock) | Clubs everything — castle skyline, ogre smash hits. |
 
 ## Nuno's Pickup Truck
 

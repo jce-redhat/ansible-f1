@@ -742,19 +742,138 @@ export class Track {
   }
 
   _skyline() {
-    const skylineGroup = new THREE.Group();
-    skylineGroup.position.set(0, 0, -120);
-    this.group.add(skylineGroup);
+    this._skylineGroup = new THREE.Group();
+    this._skylineGroup.position.set(0, 0, -120);
+    this.group.add(this._skylineGroup);
 
     const s = this.theme.scenery;
-    if (s === "city") this._citySkyline(skylineGroup);
-    else if (s === "durham") this._durhamSkyline(skylineGroup);
-    else if (s === "forest") this._mountainSkyline(skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
-    else if (s === "desert") this._mountainSkyline(skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
-    else if (s === "swamp") this._swampSkyline(skylineGroup);
-    else if (s === "snow") this._snowMountainSkyline(skylineGroup);
-    else if (s === "water") this._waterSkyline(skylineGroup);
-    else if (s === "coast") this._coastSkyline(skylineGroup);
+    if (s === "city") this._citySkyline(this._skylineGroup);
+    else if (s === "durham") this._durhamSkyline(this._skylineGroup);
+    else if (s === "forest") this._mountainSkyline(this._skylineGroup, 0x3a5a4a, 0x4a6a5a, 0x556b55, 0xeeffee);
+    else if (s === "desert") this._mountainSkyline(this._skylineGroup, 0xa08050, 0xb89060, 0xc49868, 0xffe8c0);
+    else if (s === "swamp") this._swampSkyline(this._skylineGroup);
+    else if (s === "snow") this._snowMountainSkyline(this._skylineGroup);
+    else if (s === "water") this._waterSkyline(this._skylineGroup);
+    else if (s === "coast") this._coastSkyline(this._skylineGroup);
+
+    this._castleMode = false;
+    this._savedSkyChildren = null;
+  }
+
+  setCastle(on) {
+    if (!this._skylineGroup) return;
+    if (on && !this._castleMode) {
+      this._castleMode = true;
+      this._savedSkyChildren = [...this._skylineGroup.children];
+      while (this._skylineGroup.children.length) {
+        this._skylineGroup.remove(this._skylineGroup.children[0]);
+      }
+      this._castleSkyline(this._skylineGroup);
+    } else if (!on && this._castleMode) {
+      this._castleMode = false;
+      while (this._skylineGroup.children.length) {
+        const c = this._skylineGroup.children[0];
+        this._skylineGroup.remove(c);
+        c.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.dispose) o.material.dispose(); } });
+      }
+      if (this._savedSkyChildren) {
+        for (const c of this._savedSkyChildren) this._skylineGroup.add(c);
+        this._savedSkyChildren = null;
+      }
+    }
+  }
+
+  _castleSkyline(g) {
+    const stone = new THREE.MeshStandardMaterial({
+      color: 0x6a6a6a, roughness: 0.9, metalness: 0.1,
+      emissive: 0x1a1a1a, emissiveIntensity: 0.3,
+    });
+    const darkStone = new THREE.MeshStandardMaterial({
+      color: 0x4a4a4a, roughness: 0.95, metalness: 0.1,
+      emissive: 0x111111, emissiveIntensity: 0.2,
+    });
+    const roofMat = new THREE.MeshStandardMaterial({
+      color: 0x4a2a5a, roughness: 0.6, metalness: 0.2,
+      emissive: 0x2a1535, emissiveIntensity: 0.4,
+    });
+    const windowMat = new THREE.MeshBasicMaterial({
+      color: 0xffcc44, transparent: true, opacity: 0.8,
+    });
+    const flagMat = new THREE.MeshBasicMaterial({ color: 0xcc2222 });
+
+    // Main castle wall
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(60, 18, 3), stone);
+    wall.position.set(0, 9, 0);
+    g.add(wall);
+
+    // Battlements (crenellations along the top)
+    for (let i = -28; i <= 28; i += 3) {
+      const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3, 3.2), darkStone);
+      merlon.position.set(i, 19.5, 0);
+      g.add(merlon);
+    }
+
+    // Central keep (large tower)
+    const keep = new THREE.Mesh(new THREE.BoxGeometry(12, 35, 8), stone);
+    keep.position.set(0, 17.5, -3);
+    g.add(keep);
+    const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(8, 10, 4), roofMat);
+    keepRoof.position.set(0, 40, -3);
+    keepRoof.rotation.y = Math.PI / 4;
+    g.add(keepRoof);
+
+    // Keep windows
+    for (let row = 0; row < 3; row++) {
+      for (const side of [-3, 0, 3]) {
+        const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 0.5), windowMat);
+        win.position.set(side, 15 + row * 8, 1.5);
+        g.add(win);
+      }
+    }
+
+    // Corner towers
+    for (const x of [-25, -12, 12, 25]) {
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.5, 28, 8), stone);
+      tower.position.set(x, 14, 0);
+      g.add(tower);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(4, 8, 8), roofMat);
+      roof.position.set(x, 32, 0);
+      g.add(roof);
+      // Tower windows
+      for (let row = 0; row < 2; row++) {
+        const win = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.5, 0.3), windowMat);
+        win.position.set(x, 12 + row * 9, 3);
+        g.add(win);
+      }
+      // Flag
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 4, 4), darkStone);
+      pole.position.set(x, 38, 0);
+      g.add(pole);
+      const flag = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.5, 0.05), flagMat);
+      flag.position.set(x + 1.3, 39, 0);
+      g.add(flag);
+    }
+
+    // Gate / portcullis
+    const gate = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 1), darkStone);
+    gate.position.set(0, 4, 2);
+    g.add(gate);
+    const gateArch = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 1, 8, 1, false, 0, Math.PI), darkStone);
+    gateArch.rotation.z = Math.PI;
+    gateArch.rotation.y = Math.PI / 2;
+    gateArch.position.set(0, 8, 2);
+    g.add(gateArch);
+
+    // Torches flanking the gate
+    const torchLight = new THREE.MeshBasicMaterial({ color: 0xff8800 });
+    for (const side of [-3.5, 3.5]) {
+      const bracket = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2, 4), darkStone);
+      bracket.position.set(side, 7, 2.5);
+      g.add(bracket);
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), torchLight);
+      flame.position.set(side, 8.2, 2.5);
+      g.add(flame);
+    }
   }
 
   _citySkyline(skylineGroup) {

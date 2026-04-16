@@ -69,6 +69,7 @@ Existing custom meshes to reference:
 - `_buildF16Mesh()` — Alex's secret F-16 fighter jet (topgun unlock) with jet flame particles
 - `_buildTrexMesh()` — Anshul's secret T-Rex (leavemealone unlock) with animated legs, tail, and jaw
 - `_buildCadillacMesh()` — Aubrey's secret pink Cadillac convertible (hollywood unlock) with tail fins and whitewall tires
+- `_buildOgreMesh()` — Remy's secret ogre (quest unlock) with club, tusks, animated legs and arms
 
 ## Adding a Secret Unlockable Mode
 
@@ -128,6 +129,10 @@ All secret modes trigger a grey smoke particle burst when the car transforms. Th
 
 When Aubrey's cadillac mode activates, `this._rainbowRoad = true` and `this.track.setRainbow(true)` are called. The `Track.setRainbow(on)` method stores the flag, and `Track.update()` cycles the road and edge materials through rainbow hues using `setHSL()` on each frame. The road hue cycles via `performance.now()` and the edge strips use the complementary hue. When returning to menu, `track.setRainbow(false)` restores original colors.
 
+### Castle skyline (Ogre / Quest mode)
+
+When Remy's ogre mode activates, `this.track.setCastle(true)` is called. `Track.setCastle(on)` saves the current skyline children, clears the skyline group, and builds a medieval castle skyline with a central keep, corner towers with purple roofs, battlements, lit windows, flags, a portcullis gate, and flanking torches. When returning to menu, `track.setCastle(false)` restores the original skyline.
+
 ### Secret mode revert on back-to-menu
 
 All secret modes automatically revert when the player returns to the main menu. In `backToMenu()`:
@@ -153,6 +158,7 @@ This means each player has to type the secret code themselves — it doesn't per
 | Alex | `topgun` | `f16` | Yes — no leaderboard | Hovers above track, flies over everything, click to drop bombs |
 | Anshul | `leavemealone` | `trex` | Yes — no leaderboard | Stomping legs/tail/jaw animation, smashes everything for +50k |
 | Aubrey | `hollywood` | `cadillac` | Yes — no leaderboard | Pink Cadillac convertible, rainbow road, Hollywood smash lines |
+| Remy | `quest` | `ogre` | Yes — no leaderboard | Green ogre with club, castle skyline, ogre/Shrek smash lines |
 
 ### Spanish UI mode (Scaloneta)
 
@@ -202,10 +208,11 @@ Multiple systems can make the player invincible. All are checked at the top of `
 |-------|--------|----------|--------|
 | Skateboard airborne | `player.isAirborne` | `skateboard` | Obstacle explodes, no damage, "jumped over it" status |
 | DeLorean time travel | `player.isTimeTravelInvisible` | `delorean` | Obstacle explodes, no damage, phases through silently |
-| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex`, `cadillac` | Obstacle explodes, no damage; hippo/scaloneta/trex/cadillac get +50k score and crush lines |
+| Cheater mode | `_isCheater()` | `hippo`, `semi_truck`, `scaloneta`, `f16`, `trex`, `cadillac`, `ogre` | Obstacle explodes, no damage; hippo/scaloneta/trex/cadillac/ogre get +50k score and crush lines |
 | F-16 flyover | `carType === "f16"` | `f16` | Hovers 2 units above track, collision handlers return immediately (flies over everything) |
 | T-Rex rampage | `_isCheater()` | `trex` | Smashes through everything with Jurassic Park-themed crush messages, +50k per hit |
 | Hollywood cruise | `_isCheater()` | `cadillac` | Smashes through everything with Hollywood crush messages, +50k per hit, rainbow road |
+| Ogre rampage | `_isCheater()` | `ogre` | Smashes through everything with ogre/Shrek crush messages, +50k per hit, castle skyline |
 | Shield active | `this.shield > 0` | any | Obstacle hit absorbed, shield decremented, no health loss |
 
 When adding a new invincibility state:

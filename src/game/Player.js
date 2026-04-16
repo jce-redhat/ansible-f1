@@ -36,6 +36,8 @@ export class Player {
     this._trexLegs = null;
     this._trexTail = null;
     this._trexJaw = null;
+    this._ogreArms = null;
+    this._ogreLegs = null;
     this.carType = carType;
     this.mesh = this._buildCarForType(carType);
     this.mesh.position.copy(pos);
@@ -56,6 +58,7 @@ export class Player {
     if (type === "f16") return this._buildF16Mesh();
     if (type === "trex") return this._buildTrexMesh();
     if (type === "cadillac") return this._buildCadillacMesh();
+    if (type === "ogre") return this._buildOgreMesh();
     if (type === "f1_yellow") return this._buildF1({
       livery: 0xffd000, liveryEmit: 0x332800,
       accent: 0xff6600, accentEmit: 0x331100,
@@ -1838,6 +1841,179 @@ export class Player {
     this.shieldRing = ring;
   }
 
+  _buildOgreMesh() {
+    const g = new THREE.Group();
+    const skinColor = new THREE.Color(0x5a8a3a);
+    const mat = new THREE.MeshStandardMaterial({
+      color: skinColor, roughness: 0.65, metalness: 0.05,
+      emissive: skinColor.clone().multiplyScalar(0.2), emissiveIntensity: 1,
+    });
+    const darkMat = new THREE.MeshStandardMaterial({
+      color: skinColor.clone().multiplyScalar(0.6), roughness: 0.8, metalness: 0.05,
+    });
+    const bellyMat = new THREE.MeshStandardMaterial({
+      color: skinColor.clone().lerp(new THREE.Color(0xaaaa77), 0.3), roughness: 0.7,
+    });
+    const clothMat = new THREE.MeshStandardMaterial({
+      color: 0x5a3a1a, roughness: 0.9,
+      emissive: new THREE.Color(0x2a1a08), emissiveIntensity: 0.2,
+    });
+    const tuskMat = new THREE.MeshStandardMaterial({ color: 0xddddbb, roughness: 0.4, metalness: 0.3 });
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+    const clubMat = new THREE.MeshStandardMaterial({
+      color: 0x6a4a1a, roughness: 0.8,
+      emissive: new THREE.Color(0x3a2510), emissiveIntensity: 0.3,
+    });
+    const spikeMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
+    const footMat = new THREE.MeshStandardMaterial({ color: skinColor.clone().multiplyScalar(0.55), roughness: 0.9 });
+
+    const S = 0.55;
+
+    // Upper body group (hunched forward)
+    const upper = new THREE.Group();
+    upper.position.set(0, 1.1 * S, 0);
+    upper.rotation.x = 0.2;
+
+    // Belly
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.85 * S, 6, 6), bellyMat);
+    belly.position.set(0, 0.1 * S, 0.15 * S);
+    belly.scale.set(1.0, 0.8, 0.9);
+    upper.add(belly);
+
+    // Chest
+    const chest = new THREE.Mesh(new THREE.SphereGeometry(0.75 * S, 6, 6), mat);
+    chest.position.set(0, 0.7 * S, 0);
+    chest.scale.set(1.2, 0.9, 0.85);
+    upper.add(chest);
+
+    // Shoulder hump
+    const hump = new THREE.Mesh(new THREE.SphereGeometry(0.7 * S, 5, 5), mat);
+    hump.position.set(0, 1.2 * S, -0.15 * S);
+    hump.scale.set(1.3, 0.7, 1.0);
+    upper.add(hump);
+
+    // Head group
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.5 * S, 0.35 * S);
+
+    const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.6 * S, 6, 6), mat);
+    cranium.scale.set(1.1, 0.85, 0.95);
+    headGroup.add(cranium);
+
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.9 * S, 0.15 * S, 0.35 * S), darkMat);
+    brow.position.set(0, 0.15 * S, 0.35 * S);
+    headGroup.add(brow);
+
+    // Eyes
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.09 * S, 4, 4), eyeMat);
+    eyeL.position.set(0.22 * S, 0.08 * S, 0.5 * S);
+    headGroup.add(eyeL);
+    const eyeR = eyeL.clone();
+    eyeR.position.x = -0.22 * S;
+    headGroup.add(eyeR);
+
+    // Jaw
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.65 * S, 0.25 * S, 0.45 * S), darkMat);
+    jaw.position.set(0, -0.25 * S, 0.25 * S);
+    headGroup.add(jaw);
+
+    // Tusks
+    const tuskL = new THREE.Mesh(new THREE.ConeGeometry(0.07 * S, 0.35 * S, 4), tuskMat);
+    tuskL.position.set(0.25 * S, -0.1 * S, 0.45 * S);
+    tuskL.rotation.x = -0.5;
+    tuskL.rotation.z = -0.2;
+    headGroup.add(tuskL);
+    const tuskR = tuskL.clone();
+    tuskR.position.x = -0.25 * S;
+    tuskR.rotation.z = 0.2;
+    headGroup.add(tuskR);
+
+    upper.add(headGroup);
+
+    // Right arm (with club)
+    const armR = new THREE.Group();
+    armR.position.set(0.85 * S, 0.9 * S, 0);
+    armR.rotation.z = -0.15;
+    const upperArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.25 * S, 1.0 * S, 6), mat);
+    upperArmR.position.y = -0.5 * S;
+    armR.add(upperArmR);
+    const forearmR = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * S, 0.22 * S, 0.9 * S, 6), mat);
+    forearmR.position.set(0, -1.1 * S, 0.1 * S);
+    forearmR.rotation.x = 0.2;
+    armR.add(forearmR);
+    const fistR = new THREE.Mesh(new THREE.SphereGeometry(0.22 * S, 4, 4), darkMat);
+    fistR.position.set(0, -1.6 * S, 0.15 * S);
+    armR.add(fistR);
+    // Club
+    const clubHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.08 * S, 1.8 * S, 5), clubMat);
+    clubHandle.position.set(0.05 * S, -1.0 * S, 0.25 * S);
+    clubHandle.rotation.x = 0.3;
+    armR.add(clubHandle);
+    const clubKnob = new THREE.Mesh(new THREE.SphereGeometry(0.2 * S, 4, 4), clubMat);
+    clubKnob.position.set(0.05 * S, -0.15 * S, 0.5 * S);
+    armR.add(clubKnob);
+    for (let sp = 0; sp < 3; sp++) {
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.04 * S, 0.15 * S, 4), spikeMat);
+      spike.position.set(
+        0.05 * S + Math.cos(sp * 2.1) * 0.18 * S,
+        -0.15 * S,
+        0.5 * S + Math.sin(sp * 2.1) * 0.18 * S
+      );
+      armR.add(spike);
+    }
+    upper.add(armR);
+
+    // Left arm
+    const armL = new THREE.Group();
+    armL.position.set(-0.85 * S, 0.9 * S, 0);
+    armL.rotation.z = 0.15;
+    const upperArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.25 * S, 1.0 * S, 6), mat);
+    upperArmL.position.y = -0.5 * S;
+    armL.add(upperArmL);
+    const forearmL = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * S, 0.22 * S, 0.9 * S, 6), mat);
+    forearmL.position.set(0, -1.1 * S, 0.1 * S);
+    forearmL.rotation.x = 0.2;
+    armL.add(forearmL);
+    const fistL = new THREE.Mesh(new THREE.SphereGeometry(0.22 * S, 4, 4), darkMat);
+    fistL.position.set(0, -1.6 * S, 0.15 * S);
+    armL.add(fistL);
+    upper.add(armL);
+
+    g.add(upper);
+
+    // Belt / loincloth
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * S, 0.5 * S, 0.35 * S, 8), clothMat);
+    belt.position.y = 0.95 * S;
+    g.add(belt);
+    const flap = new THREE.Mesh(new THREE.BoxGeometry(0.5 * S, 0.5 * S, 0.08 * S), clothMat);
+    flap.position.set(0, 0.65 * S, 0.4 * S);
+    g.add(flap);
+
+    // Legs
+    this._ogreLegs = [];
+    this._ogreArms = [armL, armR];
+    for (const side of [-1, 1]) {
+      const legPivot = new THREE.Group();
+      legPivot.position.set(side * 0.3 * S, 0.85 * S, 0);
+      const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.28 * S, 0.32 * S, 0.7 * S, 6), darkMat);
+      legMesh.position.y = -0.35 * S;
+      legPivot.add(legMesh);
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.4 * S, 0.12 * S, 0.55 * S), footMat);
+      foot.position.set(0, -0.75 * S, 0.12 * S);
+      legPivot.add(foot);
+      g.add(legPivot);
+      this._ogreLegs.push({ group: legPivot, phase: side * Math.PI });
+    }
+
+    // Green underglow
+    const glow = new THREE.PointLight(0x55aa33, 1.2, 4);
+    glow.position.set(0, 0.2, 0);
+    g.add(glow);
+
+    g.rotation.y = Math.PI;
+    return g;
+  }
+
   _buildCadillacMesh() {
     const g = new THREE.Group();
     const pink = new THREE.MeshStandardMaterial({
@@ -2769,7 +2945,8 @@ export class Player {
     const isSkate = this.carType === "skateboard";
     const isF16 = this.carType === "f16";
     const isTrex = this.carType === "trex";
-    const bob = Math.sin(t * 0.004) * (isF16 ? 0.1 : isTrex ? 0.03 : isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
+    const isOgreType = this.carType === "ogre";
+    const bob = Math.sin(t * 0.004) * (isF16 ? 0.1 : isTrex ? 0.03 : isOgreType ? 0.04 : isHover ? 0.08 : isHippo ? 0.06 : isSkate ? 0.02 : 0.04);
     const hoverLift = isF16 ? 2.0 : isHover ? 0.25 : 0;
 
     if (isSkate && this._skateJumping) {
@@ -2788,7 +2965,7 @@ export class Player {
 
     this.mesh.rotation.z = THREE.MathUtils.lerp(
       this.mesh.rotation.z,
-      -(this.mesh.position.x - tx) * (isF16 ? 0.35 : isTrex ? 0.08 : isHippo ? 0.1 : isSkate ? 0.15 : 0.22),
+      -(this.mesh.position.x - tx) * (isF16 ? 0.35 : isTrex ? 0.08 : isOgreType ? 0.08 : isHippo ? 0.1 : isSkate ? 0.15 : 0.22),
       0.2
     );
     this.mesh.rotation.y = Math.sin(t * 0.002) * 0.02;
@@ -2828,6 +3005,20 @@ export class Player {
     }
     if (isTrex && this._trexJaw) {
       this._trexJaw.rotation.x = Math.sin(t * 0.006) * 0.08 + 0.05;
+    }
+
+    const isOgre = this.carType === "ogre";
+    if (isOgre && this._ogreLegs) {
+      const stride = 10;
+      for (const leg of this._ogreLegs) {
+        const swing = Math.sin(t * 0.001 * stride + leg.phase) * 0.35;
+        leg.group.rotation.x = swing;
+      }
+    }
+    if (isOgre && this._ogreArms) {
+      const armSwing = Math.sin(t * 0.005) * 0.2;
+      this._ogreArms[0].rotation.x = armSwing;
+      this._ogreArms[1].rotation.x = -armSwing;
     }
 
     this.mesh.rotation.x = isF16

@@ -3261,53 +3261,58 @@ export class Player {
       g.add(pedal);
     }
 
-    // ── RIDER ──
+    // ── RIDER (sits on seat, leans forward to bars) ──
     const rider = new THREE.Group();
     rider.position.set(0, 0, 0);
 
-    // Legs (cycling position, one up one down)
+    // Hips — anchor point connecting torso to legs
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.10, 0.18), shorts);
+    hips.position.set(0, 0.92, -0.25);
+    rider.add(hips);
+
+    // Legs (attached at hips, reach down to pedals)
     this._bikeLegs = [];
-    // Right leg (down position)
-    const rThigh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.12), shorts);
-    rThigh.position.set(0.14, 0.72, -0.15);
-    rThigh.rotation.x = 0.6;
+    // Right leg
+    const rThigh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.34, 0.12), shorts);
+    rThigh.position.set(0.12, 0.72, -0.20);
+    rThigh.rotation.x = 0.5;
     rider.add(rThigh);
-    const rShin = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.32, 0.10), skin);
-    rShin.position.set(0.14, 0.46, 0.02);
-    rShin.rotation.x = -0.3;
+    const rShin = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.30, 0.10), skin);
+    rShin.position.set(0.12, 0.48, -0.06);
+    rShin.rotation.x = -0.2;
     rider.add(rShin);
     const rFoot = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.06, 0.16), shoeMat);
-    rFoot.position.set(0.20, 0.36, 0.0);
+    rFoot.position.set(0.18, 0.36, -0.05);
     rider.add(rFoot);
     this._bikeLegs.push({ thigh: rThigh, shin: rShin, foot: rFoot, phase: 0 });
 
-    // Left leg (up position)
-    const lThigh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.12), shorts);
-    lThigh.position.set(-0.14, 0.72, -0.15);
-    lThigh.rotation.x = -0.3;
+    // Left leg
+    const lThigh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.34, 0.12), shorts);
+    lThigh.position.set(-0.12, 0.72, -0.20);
+    lThigh.rotation.x = -0.2;
     rider.add(lThigh);
-    const lShin = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.32, 0.10), skin);
-    lShin.position.set(-0.14, 0.46, 0.02);
-    lShin.rotation.x = 0.4;
+    const lShin = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.30, 0.10), skin);
+    lShin.position.set(-0.12, 0.48, -0.06);
+    lShin.rotation.x = 0.3;
     rider.add(lShin);
     const lFoot = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.06, 0.16), shoeMat);
-    lFoot.position.set(-0.20, 0.36, 0.0);
+    lFoot.position.set(-0.18, 0.36, -0.05);
     rider.add(lFoot);
     this._bikeLegs.push({ thigh: lThigh, shin: lShin, foot: lFoot, phase: Math.PI });
 
-    // Torso (leaning forward, cycling position)
+    // Torso (leaning forward from hips toward handlebars)
     const torso = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.38, 0.20), jersey);
-    torso.position.set(0, 1.12, 0.10);
+    torso.position.set(0, 1.10, -0.08);
     torso.rotation.x = -0.55;
     rider.add(torso);
     // Jersey stripe
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.06, 0.21), jerseyAccent);
-    stripe.position.set(0, 1.06, 0.10);
+    stripe.position.set(0, 1.04, -0.08);
     stripe.rotation.x = -0.55;
     rider.add(stripe);
     // Maple leaf on back (red diamond shape)
     const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.10, 0.01), redMat);
-    leaf.position.set(0, 1.14, 0.21);
+    leaf.position.set(0, 1.12, 0.03);
     leaf.rotation.x = -0.55;
     leaf.rotation.z = Math.PI / 4;
     rider.add(leaf);
@@ -3315,59 +3320,62 @@ export class Player {
     // Arms (reaching forward to handlebars)
     for (const s of [-1, 1]) {
       const upper = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.26, 0.09), jersey);
-      upper.position.set(s * 0.20, 1.18, 0.28);
+      upper.position.set(s * 0.20, 1.16, 0.10);
       upper.rotation.x = -1.0;
       rider.add(upper);
       const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.08), skin);
-      forearm.position.set(s * 0.22, 1.10, 0.44);
+      forearm.position.set(s * 0.22, 1.08, 0.26);
       forearm.rotation.x = -0.5;
       rider.add(forearm);
       const hand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), skin);
-      hand.position.set(s * 0.22, 1.06, 0.54);
+      hand.position.set(s * 0.22, 1.04, 0.36);
       rider.add(hand);
     }
 
     // Head
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.24), skin);
-    head.position.set(0, 1.46, 0.22);
+    head.position.set(0, 1.44, 0.04);
     head.rotation.x = -0.2;
     rider.add(head);
 
     // Cycling helmet
     const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), helmetMat);
     helmet.scale.set(1, 0.75, 1.3);
-    helmet.position.set(0, 1.58, 0.24);
+    helmet.position.set(0, 1.56, 0.06);
     rider.add(helmet);
     // Helmet vents
     for (let i = 0; i < 3; i++) {
       const vent = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.12), new THREE.MeshStandardMaterial({ color: 0x001133 }));
-      vent.position.set((i - 1) * 0.06, 1.64, 0.24);
+      vent.position.set((i - 1) * 0.06, 1.62, 0.06);
       rider.add(vent);
     }
 
     // Sunglasses
     for (const s of [-1, 1]) {
       const lens = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.04, 0.03), lensMat);
-      lens.position.set(s * 0.06, 1.48, 0.09);
+      lens.position.set(s * 0.06, 1.46, -0.09);
       rider.add(lens);
     }
     const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.015, 0.03), chromeMat);
-    bridge.position.set(0, 1.48, 0.09);
+    bridge.position.set(0, 1.46, -0.09);
     rider.add(bridge);
 
     // Eyes behind glasses
     for (const s of [-1, 1]) {
       const eyeW = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), white);
-      eyeW.position.set(s * 0.06, 1.47, 0.08);
+      eyeW.position.set(s * 0.06, 1.45, -0.10);
       rider.add(eyeW);
       const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.013, 6, 4), pupilMat);
-      pupil.position.set(s * 0.06, 1.47, 0.06);
+      pupil.position.set(s * 0.06, 1.45, -0.12);
       rider.add(pupil);
     }
 
     g.add(rider);
     this._bikeRider = rider;
     this._bikePedalAngle = 0;
+
+    // Flip entire bike to face -Z (forward direction)
+    g.rotation.y = Math.PI;
 
     const glow = new THREE.PointLight(0x0055ff, 0.5, 8);
     glow.position.set(0, 0.3, 0);

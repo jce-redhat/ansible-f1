@@ -112,6 +112,15 @@ export class UI {
       lcRankBanner: document.getElementById("lc-rank-banner"),
       lcLbBody: document.getElementById("lc-lb-body"),
       lcLbScroll: document.getElementById("lc-lb-scroll"),
+
+      godzillaHud: document.getElementById("godzilla-hud"),
+      gzTime: document.getElementById("gz-time"),
+      gzScore: document.getElementById("gz-score"),
+      gzCrushed: document.getElementById("gz-crushed"),
+      godzillaScore: document.getElementById("godzilla-score"),
+      gzFinalScore: document.getElementById("gz-final-score"),
+      gzFinalCrushed: document.getElementById("gz-final-crushed"),
+      gzFinalPct: document.getElementById("gz-final-pct"),
     };
 
     this._selectedDriver = "anshul";
@@ -199,6 +208,7 @@ export class UI {
     on("btn-hud-info", () => this.onHudInfoOpen && this.onHudInfoOpen());
     on("btn-hud-close", () => this.onHudInfoClose && this.onHudInfoClose());
     on("btn-mobile-secret", () => this.onMobileSecret && this.onMobileSecret());
+    on("btn-gz-back", () => { this.hideGodzillaScore(); if (this.onMenu) this.onMenu(); });
 
     on("btn-quiz-skip", () => this.onQuizSkip && this.onQuizSkip());
     on("btn-choose-driver", () => this._openDriverSelect("main_menu"));
@@ -1673,5 +1683,42 @@ export class UI {
       ctx.fillStyle = "#0044aa";
       ctx.fillRect(W * 0.61, 20, 12, 3);
     }
+  }
+
+  hideAll() {
+    this.el.mainMenu.classList.add("hidden");
+    this.el.pauseMenu.classList.add("hidden");
+    this.el.gameOver.classList.add("hidden");
+    this.el.quiz.classList.add("hidden");
+    this.el.hud.classList.add("hidden");
+    this.el.levelSelect.classList.add("hidden");
+    this.el.driverSelect.classList.add("hidden");
+    if (this.el.levelComplete) this.el.levelComplete.classList.add("hidden");
+    if (this.el.billboardOverlay) this.el.billboardOverlay.classList.add("hidden");
+    if (this.el.recovery) this.el.recovery.classList.add("hidden");
+    if (this.el.attractScores) this.el.attractScores.classList.add("hidden");
+    this.closeMobileHud();
+  }
+
+  showGodzillaHud(visible) {
+    if (this.el.godzillaHud) this.el.godzillaHud.classList.toggle("hidden", !visible);
+  }
+
+  updateGodzillaHud(timeLeft, score, crushed) {
+    if (this.el.gzTime) this.el.gzTime.textContent = Math.ceil(timeLeft);
+    if (this.el.gzScore) this.el.gzScore.textContent = score;
+    if (this.el.gzCrushed) this.el.gzCrushed.textContent = crushed;
+  }
+
+  showGodzillaScore(score, crushed, total) {
+    const pct = total > 0 ? Math.round((crushed / total) * 100) : 0;
+    if (this.el.gzFinalScore) this.el.gzFinalScore.textContent = score;
+    if (this.el.gzFinalCrushed) this.el.gzFinalCrushed.textContent = crushed;
+    if (this.el.gzFinalPct) this.el.gzFinalPct.textContent = pct + "%";
+    if (this.el.godzillaScore) this.el.godzillaScore.classList.remove("hidden");
+  }
+
+  hideGodzillaScore() {
+    if (this.el.godzillaScore) this.el.godzillaScore.classList.add("hidden");
   }
 }

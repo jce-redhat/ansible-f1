@@ -427,6 +427,28 @@
         <button type="button" id="btn-level-back" class="btn" style="margin-top:1rem">Back</button>
       </div>
 
+      <!-- Godzilla Mode HUD -->
+      <div id="godzilla-hud" class="godzilla-hud hidden" aria-hidden="true">
+        <div class="gz-title">🦎 GODZILLA MODE 🦎</div>
+        <div class="gz-stats">
+          <div class="gz-stat"><span class="gz-label">TIME</span><span id="gz-time" class="gz-value">60</span></div>
+          <div class="gz-stat"><span class="gz-label">SCORE</span><span id="gz-score" class="gz-value">0</span></div>
+          <div class="gz-stat"><span class="gz-label">CRUSHED</span><span id="gz-crushed" class="gz-value">0</span></div>
+        </div>
+        <div class="gz-hint">WASD to move &bull; Crush buildings!</div>
+      </div>
+
+      <!-- Godzilla Score Summary -->
+      <div id="godzilla-score" class="overlay panel hidden">
+        <h2 class="gz-score-title">🦎 RAMPAGE OVER 🦎</h2>
+        <div class="gz-score-grid">
+          <div class="gz-score-row"><span>Score</span><strong id="gz-final-score">0</strong></div>
+          <div class="gz-score-row"><span>Buildings Crushed</span><strong id="gz-final-crushed">0</strong></div>
+          <div class="gz-score-row"><span>Destruction</span><strong id="gz-final-pct">0%</strong></div>
+        </div>
+        <button type="button" id="btn-gz-back" class="btn" style="margin-top:1.5rem">Back to Menu</button>
+      </div>
+
       <div id="debug-panel" class="debug-panel">
         <button type="button" id="btn-debug-toggle" class="btn-debug-toggle">DEBUG - ADMIN ONLY</button>
         <div id="debug-tools" class="debug-tools hidden">

@@ -26,6 +26,7 @@ import {
 } from "../utils/storage.js";
 import { preload, play, startLoop, stopLoop, startBgm } from "../utils/audio.js";
 import { submitGlobalScore } from "../utils/firebase.js";
+import { GodzillaMode } from "./GodzillaMode.js";
 
 const SFX = {
   SHIELD_HIT: "./assets/audio/shield-hit.wav",
@@ -69,7 +70,7 @@ const QUEST_BGM = "./assets/audio/quest-bgm.mp3";
 preload(Object.values(SFX));
 
 /**
- * @typedef {'boot'|'main_menu'|'running'|'quiz'|'paused'|'game_over'|'billboard'} GameState
+ * @typedef {'boot'|'main_menu'|'running'|'quiz'|'paused'|'game_over'|'billboard'|'godzilla'} GameState
  */
 
 const ES = {
@@ -227,6 +228,9 @@ export class Game {
     this._celebCrowd = [];
     this._celebConfetti = [];
     this._secretBuffer = "";
+    this._globalSecretBuffer = "";
+
+    this._godzillaMode = new GodzillaMode(scene, camera);
 
     // Attract mode (demo play behind main menu)
     this._attractActive = false;
@@ -250,6 +254,23 @@ export class Game {
 
   _bindKeys() {
     window.addEventListener("keydown", (e) => {
+      if (this.state === "godzilla") {
+        if (e.code === "Escape") {
+          this._exitGodzilla();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        this._globalSecretBuffer = (this._globalSecretBuffer + e.key.toLowerCase()).slice(-12);
+        if (this._globalSecretBuffer.endsWith("godzilla")) {
+          this._globalSecretBuffer = "";
+          this._enterGodzilla();
+          return;
+        }
+      }
+
       if (this.state === "main_menu" && this._attractScoreShowing) {
         this._attractScoreShowing = false;
         this.ui.showAttractScores(false);
@@ -444,6 +465,35 @@ export class Game {
     if (s.sfx) play(s.sfx, 0.9);
     if (s.extra) s.extra();
     this._secretBuffer = "";
+  }
+
+  _enterGodzilla() {
+    if (this.state === "godzilla") return;
+    this._preGodzillaState = this.state;
+
+    if (this._attractActive) this._stopAttractMode();
+    stopLoop();
+
+    const hidden = [];
+    if (this.player.mesh) hidden.push(this.player.mesh);
+    if (this.track && this.track.group) hidden.push(this.track.group);
+    for (const e of this.spawner.obstacles) if (e.mesh) hidden.push(e.mesh);
+    for (const e of this.spawner.pickups) if (e.mesh) hidden.push(e.mesh);
+
+    this.ui.hideAll();
+    this.state = "godzilla";
+    this._godzillaMode.enter(hidden);
+    this.ui.showGodzillaHud(true);
+  }
+
+  _exitGodzilla() {
+    const finalScore = this._godzillaMode.score;
+    const finalCrushed = this._godzillaMode.crushed;
+    const totalBuildings = this._godzillaMode.totalBuildings;
+    this._godzillaMode.exit();
+    this.ui.showGodzillaHud(false);
+    this.backToMenu();
+    this.ui.showGodzillaScore(finalScore, finalCrushed, totalBuildings);
   }
 
   _bindQuizUi() {
@@ -1274,6 +1324,13 @@ export class Game {
     const now = performance.now();
     let dt = Math.min(0.05, (now - this._lastTs) / 1000);
     this._lastTs = now;
+
+    if (this.state === "godzilla") {
+      const done = this._godzillaMode.update(dt, now);
+      this.ui.updateGodzillaHud(this._godzillaMode.timeLeft, this._godzillaMode.score, this._godzillaMode.crushed);
+      if (done) this._exitGodzilla();
+      return;
+    }
 
     if (this.state === "boot") {
       this._updateCamera(dt, now);

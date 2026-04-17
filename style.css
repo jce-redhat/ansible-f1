@@ -2586,6 +2586,100 @@ body {
   }
 }
 
+/* --- Godzilla Mode HUD --- */
+.godzilla-hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1rem 0.6rem;
+  pointer-events: none;
+  z-index: 500;
+}
+.gz-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.4rem;
+  color: #44ff44;
+  text-shadow: 0 0 12px rgba(0, 255, 0, 0.6), 2px 2px 0 #000;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+  animation: gzPulse 1.5s ease-in-out infinite;
+}
+@keyframes gzPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.gz-stats {
+  display: flex;
+  gap: 2rem;
+}
+.gz-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gz-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.gz-value {
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.6rem;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 2px 2px 0 #000;
+}
+.gz-hint {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.4rem;
+  letter-spacing: 1px;
+}
+
+/* Godzilla score overlay */
+.gz-score-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.2rem;
+  color: #44ff44;
+  text-shadow: 0 0 12px rgba(0, 255, 0, 0.5);
+  margin-bottom: 1.5rem;
+}
+.gz-score-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.gz-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+.gz-score-row strong {
+  font-size: 1.1rem;
+  color: #fff;
+  font-family: "Press Start 2P", monospace;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .gz-title { font-size: 0.9rem; }
+  .gz-stats { gap: 1rem; }
+  .gz-value { font-size: 1rem; }
+  .gz-label { font-size: 0.5rem; }
+  .gz-hint { display: none; }
+}
+
 .hidden {
   display: none !important;
 }

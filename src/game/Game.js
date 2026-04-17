@@ -2261,6 +2261,11 @@ export class Game {
         play(SFX.BOOST_WHOOSH, 0.85);
         this.score += 50000;
         this.ui.showPickupPopup("+50,000");
+      } else if (performance.now() < this.boostUntil) {
+        this.boostUntil += CONFIG.BOOST_EXTEND_ON_PICKUP * 1000;
+        play(SFX.BOOST_WHOOSH, 0.6);
+        this.ui.showPickupPopup(this._t("Boost Extended!"));
+        this.ui.setStatus(this._isScaloneta ? "¡Turbo extendido!" : "Boost extended!", CONFIG.STATUS_MESSAGE_MS);
       } else if (this.quizEnabled) {
         this._openBoostQuiz();
       } else {

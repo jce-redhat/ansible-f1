@@ -2517,6 +2517,69 @@ body {
   .hud-close-btn:active {
     background: rgba(255, 255, 255, 0.2);
   }
+
+  /* Mobile driver select: scrollable compact grid */
+  #driver-select.panel {
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 0.6rem;
+  }
+  .driver-select-title {
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+  }
+  .driver-select-hint {
+    font-size: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .driver-cards {
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .driver-card {
+    width: 90px;
+    padding: 0.4rem;
+  }
+  .driver-card-photo {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 0.25rem;
+  }
+  .driver-card-name {
+    font-size: 0.55rem;
+    margin: 0.15rem 0 0.1rem;
+  }
+  .driver-card-origin {
+    font-size: 0.45rem;
+  }
+  .driver-card-tag {
+    font-size: 0.4rem;
+    padding: 0.1rem 0.35rem;
+  }
+  .driver-cards.compact .driver-card-photo {
+    width: 36px;
+    height: 36px;
+  }
+  .driver-detail {
+    margin-top: 0.5rem;
+  }
+  .driver-detail-photo {
+    width: 70px;
+    height: 70px;
+  }
+  .driver-detail-name {
+    font-size: 0.8rem;
+  }
+  .driver-detail-bio {
+    font-size: 0.55rem;
+  }
+  #btn-select-driver,
+  #btn-driver-back {
+    font-size: 0.7rem;
+    padding: 0.5rem 1.2rem;
+  }
 }
 
 .hidden {

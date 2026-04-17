@@ -51,6 +51,7 @@ export class GodzillaMode {
     this._shakeAmp = 0;
     this._fireActive = false;
     this._fireTimer = 0;
+    this._crushSfxPlaying = false;
 
     this._camTheta = Math.PI;
     this._camPhi = 0.45;
@@ -443,10 +444,13 @@ export class GodzillaMode {
     const geo = new THREE.CircleGeometry(size, 8);
     const mat = new THREE.MeshStandardMaterial({
       color: 0x222222, roughness: 1, transparent: true, opacity: 0.6,
+      depthWrite: false,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
     const mark = new THREE.Mesh(geo, mat);
     mark.rotation.x = -Math.PI / 2;
-    mark.position.set(x, 0.02, z);
+    mark.position.set(x, 0.05, z);
+    mark.renderOrder = 1;
     this.group.add(mark);
   }
 
@@ -1184,10 +1188,12 @@ export class GodzillaMode {
     this._spawnRubble(b);
     this._spawnScorchMark(b.mesh.position.x, b.mesh.position.z, b.w, b.d);
 
-    if (this.crushed % 3 === 0) {
-      play(SFX_CRUSH, 0.7);
-    } else {
-      play(SFX_STOMP, 0.6);
+    if (!this._crushSfxPlaying) {
+      this._crushSfxPlaying = true;
+      const a = new Audio(SFX_STOMP);
+      a.volume = 0.6;
+      a.onended = () => { this._crushSfxPlaying = false; };
+      a.play().catch(() => { this._crushSfxPlaying = false; });
     }
   }
 

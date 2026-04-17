@@ -333,51 +333,96 @@ export class GodzillaMode {
 
   _buildEiffelTower(cx, cz) {
     const tGroup = new THREE.Group();
-    const ironColor = 0x665544;
-    const mat = new THREE.MeshStandardMaterial({ color: ironColor, roughness: 0.5 });
+    const iron = 0x665544;
+    const mat = new THREE.MeshStandardMaterial({ color: iron, roughness: 0.5 });
 
-    const legW = 0.8;
-    const baseSpread = 4;
-    const towerH = 28;
+    const baseW = 7;
+    const platY1 = 8;
+    const platY2 = 16;
+    const topY = 24;
+    const spireY = 30;
+
+    const topSpread1 = 2.2;
 
     for (const [sx, sz] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
-      const legGeo = new THREE.BoxGeometry(legW, towerH * 0.4, legW);
+      const bx = sx * baseW / 2;
+      const bz = sz * baseW / 2;
+      const tx = sx * topSpread1 / 2;
+      const tz = sz * topSpread1 / 2;
+      const dx = tx - bx;
+      const dy = platY1;
+      const legLen = Math.sqrt(dx * dx + dy * dy + (tz - bz) ** 2);
+      const legGeo = new THREE.BoxGeometry(0.6, legLen, 0.6);
       const leg = new THREE.Mesh(legGeo, mat);
-      leg.position.set(sx * baseSpread * 0.5, towerH * 0.2, sz * baseSpread * 0.5);
-      leg.rotation.z = sx * -0.15;
-      leg.rotation.x = sz * 0.15;
+      leg.position.set((bx + tx) / 2, platY1 / 2, (bz + tz) / 2);
+      const angleZ = Math.atan2(dx, dy);
+      const angleX = Math.atan2(tz - bz, dy);
+      leg.rotation.z = -angleZ;
+      leg.rotation.x = angleX;
       leg.castShadow = true;
       tGroup.add(leg);
     }
 
-    const platGeo = new THREE.BoxGeometry(baseSpread * 0.9, 0.5, baseSpread * 0.9);
-    const plat = new THREE.Mesh(platGeo, mat);
-    plat.position.y = towerH * 0.35;
-    tGroup.add(plat);
+    const arch = new THREE.BoxGeometry(baseW * 0.35, 0.4, baseW * 0.35);
+    for (const y of [platY1 * 0.35, platY1 * 0.65]) {
+      const bar = new THREE.Mesh(arch, mat);
+      const frac = y / platY1;
+      const s = 1 - frac * (1 - topSpread1 / baseW);
+      bar.scale.set(s, 1, s);
+      bar.position.y = y;
+      tGroup.add(bar);
+    }
 
-    const midGeo = new THREE.BoxGeometry(2, towerH * 0.35, 2);
+    const p1Geo = new THREE.BoxGeometry(topSpread1 + 1.5, 0.6, topSpread1 + 1.5);
+    const p1 = new THREE.Mesh(p1Geo, mat);
+    p1.position.y = platY1;
+    tGroup.add(p1);
+
+    const rGeo = new THREE.BoxGeometry(0.5, 0.3, topSpread1 + 1.5);
+    for (const sx of [-1, 1]) {
+      const rail = new THREE.Mesh(rGeo, mat);
+      rail.position.set(sx * (topSpread1 / 2 + 0.6), platY1 + 0.45, 0);
+      tGroup.add(rail);
+    }
+
+    const midW = 1.6;
+    const midGeo = new THREE.BoxGeometry(midW, platY2 - platY1, midW);
     const mid = new THREE.Mesh(midGeo, mat);
-    mid.position.y = towerH * 0.35 + towerH * 0.175;
+    mid.position.y = (platY1 + platY2) / 2;
     mid.castShadow = true;
     tGroup.add(mid);
 
-    const platGeo2 = new THREE.BoxGeometry(2.5, 0.4, 2.5);
-    const plat2 = new THREE.Mesh(platGeo2, mat);
-    plat2.position.y = towerH * 0.7;
-    tGroup.add(plat2);
+    for (let y = platY1 + 1.5; y < platY2 - 1; y += 2) {
+      const crossGeo = new THREE.BoxGeometry(midW + 0.6, 0.25, midW + 0.6);
+      const cross = new THREE.Mesh(crossGeo, mat);
+      cross.position.y = y;
+      tGroup.add(cross);
+    }
 
-    const spireGeo = new THREE.ConeGeometry(0.4, towerH * 0.3, 4);
+    const p2Geo = new THREE.BoxGeometry(midW + 1, 0.5, midW + 1);
+    const p2 = new THREE.Mesh(p2Geo, mat);
+    p2.position.y = platY2;
+    tGroup.add(p2);
+
+    const upperW = 0.8;
+    const upperGeo = new THREE.BoxGeometry(upperW, topY - platY2, upperW);
+    const upper = new THREE.Mesh(upperGeo, mat);
+    upper.position.y = (platY2 + topY) / 2;
+    upper.castShadow = true;
+    tGroup.add(upper);
+
+    const spireGeo = new THREE.ConeGeometry(0.35, spireY - topY, 4);
     const spire = new THREE.Mesh(spireGeo, mat);
-    spire.position.y = towerH * 0.7 + towerH * 0.15;
+    spire.position.y = topY + (spireY - topY) / 2;
     spire.castShadow = true;
     tGroup.add(spire);
 
-    const tipGeo = new THREE.SphereGeometry(0.3, 8, 8);
+    const tipGeo = new THREE.SphereGeometry(0.25, 8, 8);
     const tipMat = new THREE.MeshStandardMaterial({
       color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.6,
     });
     const tip = new THREE.Mesh(tipGeo, tipMat);
-    tip.position.y = towerH * 0.85 + 0.3;
+    tip.position.y = spireY + 0.25;
     tGroup.add(tip);
 
     tGroup.position.set(cx, 0, cz);
@@ -385,7 +430,7 @@ export class GodzillaMode {
 
     this.buildings.push({
       mesh: tGroup,
-      w: baseSpread + 2, h: towerH, d: baseSpread + 2,
+      w: baseW + 2, h: spireY, d: baseW + 2,
       alive: true, crushing: false, crushT: 0, origY: 0,
     });
   }

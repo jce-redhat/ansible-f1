@@ -904,11 +904,14 @@ export class GodzillaMode {
       this._godzillaPos.x = Math.max(-bound, Math.min(bound, this._godzillaPos.x));
       this._godzillaPos.z = Math.max(-bound, Math.min(bound, this._godzillaPos.z));
 
-      const targetFacing = Math.atan2(mx, mz);
-      let diff = targetFacing - this._facing;
-      while (diff > Math.PI) diff -= 2 * Math.PI;
-      while (diff < -Math.PI) diff += 2 * Math.PI;
-      this._facing += diff * Math.min(1, GODZILLA_TURN_SPEED * dt * 5);
+      const hasForward = this._touchActive ? inputZ > 0.1 : (this._keys.w || this._keys.a || this._keys.d);
+      if (hasForward) {
+        const targetFacing = Math.atan2(mx, mz);
+        let diff = targetFacing - this._facing;
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+        this._facing += diff * Math.min(1, GODZILLA_TURN_SPEED * dt * 5);
+      }
     }
 
     this.godzilla.position.set(this._godzillaPos.x, 0, this._godzillaPos.z);

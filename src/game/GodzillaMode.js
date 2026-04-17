@@ -191,14 +191,23 @@ export class GodzillaMode {
     ground.receiveShadow = true;
     this.group.add(ground);
 
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x606060, roughness: 0.85 });
+    const roadMat = new THREE.MeshStandardMaterial({ color: 0x707070, roughness: 0.8 });
+    const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0xb0aa98, roughness: 0.9 });
     const roadWidth = 5;
+    const sidewalkW = 0.6;
     for (let x = -CITY_SIZE + GRID_SPACING; x < CITY_SIZE; x += GRID_SPACING) {
       const rGeo = new THREE.PlaneGeometry(roadWidth, CITY_SIZE * 2);
       const road = new THREE.Mesh(rGeo, roadMat);
       road.rotation.x = -Math.PI / 2;
       road.position.set(x, 0.01, 0);
       this.group.add(road);
+      for (const s of [-1, 1]) {
+        const swGeo = new THREE.PlaneGeometry(sidewalkW, CITY_SIZE * 2);
+        const sw = new THREE.Mesh(swGeo, sidewalkMat);
+        sw.rotation.x = -Math.PI / 2;
+        sw.position.set(x + s * (roadWidth / 2 + sidewalkW / 2), 0.02, 0);
+        this.group.add(sw);
+      }
     }
     for (let z = -CITY_SIZE + GRID_SPACING; z < CITY_SIZE; z += GRID_SPACING) {
       const rGeo = new THREE.PlaneGeometry(CITY_SIZE * 2, roadWidth);
@@ -206,6 +215,13 @@ export class GodzillaMode {
       road.rotation.x = -Math.PI / 2;
       road.position.set(0, 0.01, z);
       this.group.add(road);
+      for (const s of [-1, 1]) {
+        const swGeo = new THREE.PlaneGeometry(CITY_SIZE * 2, sidewalkW);
+        const sw = new THREE.Mesh(swGeo, sidewalkMat);
+        sw.rotation.x = -Math.PI / 2;
+        sw.position.set(0, 0.02, z + s * (roadWidth / 2 + sidewalkW / 2));
+        this.group.add(sw);
+      }
     }
 
     this.buildings = [];
@@ -271,6 +287,7 @@ export class GodzillaMode {
     }
     this.totalBuildings = this.buildings.length;
 
+    this._buildStreetTrees(roadWidth, sidewalkW);
     this._buildMountains();
 
     const sun = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -288,6 +305,47 @@ export class GodzillaMode {
     this.group.add(ambient);
 
     this._buildClouds();
+  }
+
+  _buildStreetTrees(roadWidth, sidewalkW) {
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9 });
+    const leafColors = [0x3a8a3a, 0x4a9a4a, 0x2d7a2d, 0x5aaa5a];
+    const trunkGeo = new THREE.CylinderGeometry(0.12, 0.15, 1.2, 5);
+    const leafGeo = new THREE.SphereGeometry(0.7, 6, 5);
+
+    const treeEdge = roadWidth / 2 + sidewalkW + 0.5;
+    for (let x = -CITY_SIZE + GRID_SPACING; x < CITY_SIZE; x += GRID_SPACING) {
+      for (let along = -CITY_SIZE + 4; along < CITY_SIZE; along += 6 + Math.random() * 4) {
+        if (Math.random() > 0.6) continue;
+        for (const s of [-1, 1]) {
+          const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+          trunk.position.set(x + s * treeEdge, 0.6, along);
+          this.group.add(trunk);
+          const lc = leafColors[Math.floor(Math.random() * leafColors.length)];
+          const lMat = new THREE.MeshStandardMaterial({ color: lc, roughness: 0.8 });
+          const leaf = new THREE.Mesh(leafGeo, lMat);
+          leaf.position.set(x + s * treeEdge, 1.5 + Math.random() * 0.3, along);
+          leaf.scale.y = 0.7 + Math.random() * 0.3;
+          this.group.add(leaf);
+        }
+      }
+    }
+    for (let z = -CITY_SIZE + GRID_SPACING; z < CITY_SIZE; z += GRID_SPACING) {
+      for (let along = -CITY_SIZE + 4; along < CITY_SIZE; along += 6 + Math.random() * 4) {
+        if (Math.random() > 0.6) continue;
+        for (const s of [-1, 1]) {
+          const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+          trunk.position.set(along, 0.6, z + s * treeEdge);
+          this.group.add(trunk);
+          const lc = leafColors[Math.floor(Math.random() * leafColors.length)];
+          const lMat = new THREE.MeshStandardMaterial({ color: lc, roughness: 0.8 });
+          const leaf = new THREE.Mesh(leafGeo, lMat);
+          leaf.position.set(along, 1.5 + Math.random() * 0.3, z + s * treeEdge);
+          leaf.scale.y = 0.7 + Math.random() * 0.3;
+          this.group.add(leaf);
+        }
+      }
+    }
   }
 
   _buildClouds() {
@@ -312,7 +370,7 @@ export class GodzillaMode {
       const spread = CITY_SIZE * 1.5;
       cGroup.position.set(
         (Math.random() - 0.5) * spread * 2,
-        40 + Math.random() * 30,
+        25 + Math.random() * 20,
         (Math.random() - 0.5) * spread * 2
       );
       this.group.add(cGroup);
@@ -331,13 +389,62 @@ export class GodzillaMode {
     this.group.add(mark);
   }
 
-  _buildMountains() {
-    const ring = CITY_SIZE + 5;
-    const depth = 60;
+  _buildMountainCluster(cx, cz, mainH) {
     const rockColors = [0x7a8a6a, 0x8a9a78, 0x6a7a5a, 0x9aaa88, 0x808868, 0x708060, 0xa0a888];
     const snowColor = 0xeeeeff;
+    const mGroup = new THREE.Group();
 
-    const peaksPerSide = 18;
+    const subPeaks = 2 + Math.floor(Math.random() * 3);
+    for (let p = 0; p < subPeaks; p++) {
+      const isMain = p === 0;
+      const h = isMain ? mainH : mainH * (0.4 + Math.random() * 0.5);
+      const baseR = h * (0.6 + Math.random() * 0.4);
+      const segs = 6 + Math.floor(Math.random() * 4);
+      const color = rockColors[Math.floor(Math.random() * rockColors.length)];
+      const geo = new THREE.ConeGeometry(baseR, h, segs);
+      const verts = geo.attributes.position;
+      for (let v = 0; v < verts.count; v++) {
+        const y = verts.getY(v);
+        if (y < h * 0.48 && y > -h * 0.48) {
+          verts.setX(v, verts.getX(v) + (Math.random() - 0.5) * baseR * 0.25);
+          verts.setZ(v, verts.getZ(v) + (Math.random() - 0.5) * baseR * 0.25);
+        }
+      }
+      verts.needsUpdate = true;
+      geo.computeVertexNormals();
+
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true });
+      const peak = new THREE.Mesh(geo, mat);
+      const ox = isMain ? 0 : (Math.random() - 0.5) * baseR * 1.2;
+      const oz = isMain ? 0 : (Math.random() - 0.5) * baseR * 1.2;
+      peak.position.set(ox, h / 2 - 3, oz);
+      peak.scale.set(1, 1, 0.7 + Math.random() * 0.5);
+      peak.rotation.y = Math.random() * Math.PI;
+      peak.castShadow = true;
+      mGroup.add(peak);
+
+      if (h > 28) {
+        const capH = h * 0.18;
+        const capR = baseR * 0.3;
+        const capGeo = new THREE.ConeGeometry(capR, capH, segs);
+        const capMat = new THREE.MeshStandardMaterial({ color: snowColor, roughness: 0.9, flatShading: true });
+        const cap = new THREE.Mesh(capGeo, capMat);
+        cap.position.set(ox, peak.position.y + h / 2 - capH / 2 + 0.5, oz);
+        cap.scale.copy(peak.scale);
+        cap.rotation.y = peak.rotation.y;
+        mGroup.add(cap);
+      }
+    }
+
+    mGroup.position.set(cx, 0, cz);
+    this.group.add(mGroup);
+  }
+
+  _buildMountains() {
+    const ring = CITY_SIZE + 10;
+    const depth = 65;
+
+    const peaksPerSide = 14;
     const sides = [
       { axis: "x", sign: -1 },
       { axis: "x", sign: 1 },
@@ -349,66 +456,22 @@ export class GodzillaMode {
       for (let i = 0; i < peaksPerSide; i++) {
         const t = (i / (peaksPerSide - 1)) * 2 - 1;
         const along = t * (CITY_SIZE + depth * 0.5);
-        const outDist = ring + Math.random() * depth * 0.6;
-
-        const baseW = 20 + Math.random() * 25;
-        const baseD = 18 + Math.random() * 20;
-        const h = 15 + Math.random() * 35;
-
-        const color = rockColors[Math.floor(Math.random() * rockColors.length)];
-        const coneGeo = new THREE.ConeGeometry(baseW / 2, h, 5 + Math.floor(Math.random() * 3));
-        const coneMat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true });
-        const peak = new THREE.Mesh(coneGeo, coneMat);
-
-        if (side.axis === "x") {
-          peak.position.set(side.sign * outDist, h / 2 - 2, along);
-        } else {
-          peak.position.set(along, h / 2 - 2, side.sign * outDist);
-        }
-        peak.scale.z = baseD / baseW;
-        peak.rotation.y = Math.random() * Math.PI;
-        peak.castShadow = true;
-        this.group.add(peak);
-
-        if (h > 35) {
-          const capH = h * 0.2;
-          const capR = baseW / 2 * 0.35;
-          const capGeo = new THREE.ConeGeometry(capR, capH, 5);
-          const capMat = new THREE.MeshStandardMaterial({ color: snowColor, roughness: 0.9, flatShading: true });
-          const cap = new THREE.Mesh(capGeo, capMat);
-          cap.position.copy(peak.position);
-          cap.position.y = peak.position.y + h / 2 - capH / 2 + 0.5;
-          cap.scale.z = baseD / baseW;
-          cap.rotation.y = peak.rotation.y;
-          this.group.add(cap);
-        }
+        const outDist = ring + Math.random() * depth * 0.5;
+        const h = 18 + Math.random() * 30;
+        const cx = side.axis === "x" ? side.sign * outDist : along;
+        const cz = side.axis === "z" ? side.sign * outDist : along;
+        this._buildMountainCluster(cx, cz, h);
       }
     }
 
-    for (let c = 0; c < 12; c++) {
-      const angle = (c / 12) * Math.PI * 2 + Math.random() * 0.3;
+    for (let c = 0; c < 10; c++) {
+      const angle = (c / 10) * Math.PI * 2 + Math.random() * 0.4;
       const dist = ring + depth * 0.3 + Math.random() * depth * 0.4;
-      const x = Math.cos(angle) * dist;
-      const z = Math.sin(angle) * dist;
-      const baseW = 25 + Math.random() * 25;
-      const h = 18 + Math.random() * 30;
-      const color = rockColors[Math.floor(Math.random() * rockColors.length)];
-      const geo = new THREE.ConeGeometry(baseW / 2, h, 6);
-      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true });
-      const peak = new THREE.Mesh(geo, mat);
-      peak.position.set(x, h / 2 - 2, z);
-      peak.rotation.y = Math.random() * Math.PI;
-      peak.castShadow = true;
-      this.group.add(peak);
-
-      if (h > 35) {
-        const capGeo = new THREE.ConeGeometry(baseW / 2 * 0.35, h * 0.2, 5);
-        const capMat = new THREE.MeshStandardMaterial({ color: snowColor, roughness: 0.9, flatShading: true });
-        const cap = new THREE.Mesh(capGeo, capMat);
-        cap.position.set(x, peak.position.y + h / 2 - h * 0.1 + 0.5, z);
-        cap.rotation.y = peak.rotation.y;
-        this.group.add(cap);
-      }
+      this._buildMountainCluster(
+        Math.cos(angle) * dist,
+        Math.sin(angle) * dist,
+        20 + Math.random() * 25
+      );
     }
 
     const outerGeo = new THREE.PlaneGeometry(CITY_SIZE * 6, CITY_SIZE * 6);
@@ -421,30 +484,30 @@ export class GodzillaMode {
   }
 
   _addWindows(bGroup, w, h, d) {
-    const winW = 0.4;
-    const winH = 0.5;
-    const floorH = 2;
+    const winW = 0.25;
+    const winH = 0.35;
+    const floorH = 1.4;
     const floors = Math.floor(h / floorH);
 
     const winMat = new THREE.MeshStandardMaterial({
-      color: WINDOW_COLOR, emissive: WINDOW_COLOR, emissiveIntensity: 0.3,
-      roughness: 0.3,
+      color: WINDOW_COLOR, emissive: WINDOW_COLOR, emissiveIntensity: 0.5,
+      roughness: 0.2,
     });
     const winDarkMat = new THREE.MeshStandardMaterial({
       color: WINDOW_DARK, roughness: 0.5,
     });
     const winGeo = new THREE.PlaneGeometry(winW, winH);
 
-    const colsX = Math.max(1, Math.floor(w / 1.2));
-    const colsZ = Math.max(1, Math.floor(d / 1.2));
+    const colsX = Math.max(2, Math.floor(w / 0.7));
+    const colsZ = Math.max(2, Math.floor(d / 0.7));
 
     for (let f = 0; f < floors; f++) {
-      const wy = f * floorH + floorH * 0.6;
-      if (wy > h - 0.5) break;
-      const lit = Math.random() > 0.3;
-      const mat = lit ? winMat : winDarkMat;
+      const wy = f * floorH + floorH * 0.55;
+      if (wy > h - 0.4) break;
 
       for (let c = 0; c < colsX; c++) {
+        const lit = Math.random() > 0.35;
+        const mat = lit ? winMat : winDarkMat;
         const wx = -w / 2 + (w / (colsX + 1)) * (c + 1);
         const wf = new THREE.Mesh(winGeo, mat);
         wf.position.set(wx, wy, d / 2 + 0.01);
@@ -455,6 +518,8 @@ export class GodzillaMode {
         bGroup.add(wb);
       }
       for (let c = 0; c < colsZ; c++) {
+        const lit = Math.random() > 0.35;
+        const mat = lit ? winMat : winDarkMat;
         const wz = -d / 2 + (d / (colsZ + 1)) * (c + 1);
         const wl = new THREE.Mesh(winGeo, mat);
         wl.position.set(-w / 2 - 0.01, wy, wz);
@@ -603,20 +668,60 @@ export class GodzillaMode {
     g.add(head);
     this._parts.head = head;
 
-    const jawGeo = new THREE.BoxGeometry(1.8, 0.6, 1.8);
+    const snoutGeo = new THREE.BoxGeometry(1.4, 1.0, 1.2);
+    const snout = new THREE.Mesh(snoutGeo, greenMat);
+    snout.position.set(0, 7.8, 1.4);
+    g.add(snout);
+
+    const browGeo = new THREE.BoxGeometry(2.2, 0.4, 0.6);
+    const brow = new THREE.Mesh(browGeo, darkGreenMat);
+    brow.position.set(0, 8.7, 0.9);
+    g.add(brow);
+
+    const nostrilGeo = new THREE.SphereGeometry(0.1, 6, 6);
+    const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x1a3a12, roughness: 0.8 });
+    for (const sx of [-0.3, 0.3]) {
+      const nostril = new THREE.Mesh(nostrilGeo, nostrilMat);
+      nostril.position.set(sx, 7.9, 2.0);
+      g.add(nostril);
+    }
+
+    const jawGeo = new THREE.BoxGeometry(1.4, 0.5, 1.4);
     const jaw = new THREE.Mesh(jawGeo, darkGreenMat);
-    jaw.position.set(0, 7, 0.4);
+    jaw.position.set(0, 7, 0.8);
     g.add(jaw);
     this._parts.jaw = jaw;
 
-    const eyeGeo = new THREE.SphereGeometry(0.25, 8, 8);
+    const toothMat = new THREE.MeshStandardMaterial({ color: 0xffffee, roughness: 0.4 });
+    const toothGeo = new THREE.ConeGeometry(0.08, 0.25, 4);
+    const teethPositions = [-0.5, -0.25, 0, 0.25, 0.5];
+    for (const tx of teethPositions) {
+      const topTooth = new THREE.Mesh(toothGeo, toothMat);
+      topTooth.position.set(tx, 7.45, 1.45);
+      topTooth.rotation.x = Math.PI;
+      g.add(topTooth);
+      const botTooth = new THREE.Mesh(toothGeo, toothMat);
+      botTooth.position.set(tx, 7.15, 1.45);
+      g.add(botTooth);
+    }
+
+    const eyeGeo = new THREE.SphereGeometry(0.28, 8, 8);
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.35, 8, 8);
+    const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
     const eyeMat = new THREE.MeshStandardMaterial({ color: eye, emissive: eye, emissiveIntensity: 0.8 });
-    const lEye = new THREE.Mesh(eyeGeo, eyeMat);
-    lEye.position.set(-0.6, 8.3, 1);
-    g.add(lEye);
-    const rEye = new THREE.Mesh(eyeGeo, eyeMat);
-    rEye.position.set(0.6, 8.3, 1);
-    g.add(rEye);
+    const pupilGeo = new THREE.SphereGeometry(0.12, 6, 6);
+    const pupilMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
+    for (const sx of [-0.65, 0.65]) {
+      const white = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+      white.position.set(sx, 8.35, 1.05);
+      g.add(white);
+      const iris = new THREE.Mesh(eyeGeo, eyeMat);
+      iris.position.set(sx, 8.35, 1.2);
+      g.add(iris);
+      const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+      pupil.position.set(sx, 8.35, 1.35);
+      g.add(pupil);
+    }
 
     const armGeo = new THREE.BoxGeometry(0.7, 2, 0.7);
     const lArm = new THREE.Mesh(armGeo, greenMat);

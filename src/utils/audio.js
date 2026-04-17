@@ -100,6 +100,14 @@ export function startBgm(url, volume = 0.1) {
   _bgmEl.play().catch(() => {});
 }
 
+export function pauseBgm() {
+  if (_bgmEl && !_bgmEl.paused) _bgmEl.pause();
+}
+
+export function resumeBgm() {
+  if (_bgmEl && _bgmEl.paused && !_musicMuted) _bgmEl.play().catch(() => {});
+}
+
 // --- Mute toggles ---
 export function isSfxMuted() {
   return _sfxMuted;

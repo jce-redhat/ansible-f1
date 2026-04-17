@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { play } from "../utils/audio.js";
+import { play, pauseBgm, resumeBgm } from "../utils/audio.js";
 
 const CITY_SIZE = 120;
 const GRID_SPACING = 12;
@@ -13,7 +13,7 @@ const FIRE_RADIUS = 3;
 
 const SFX_CRUSH = "./assets/audio/train-explosion.m4a";
 const SFX_STOMP = "./assets/audio/obstacle-hit.wav";
-const SFX_ROAR = "./assets/audio/train-whistle.m4a";
+const SFX_ROAR = "./assets/audio/godzilla.mp3";
 const SFX_FIRE = "./assets/audio/boost-whoosh.wav";
 
 const BUILDING_COLORS = [
@@ -121,6 +121,7 @@ export class GodzillaMode {
 
     this._setupTouchControls();
 
+    pauseBgm();
     play(SFX_ROAR, 0.9);
   }
 
@@ -164,6 +165,7 @@ export class GodzillaMode {
     this._fireActive = false;
     this.godzilla = null;
     this._parts = {};
+    resumeBgm();
   }
 
   _disposeGroup(g) {
